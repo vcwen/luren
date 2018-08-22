@@ -5,9 +5,9 @@ import nodepath from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
+import lurenGlobal from '../lib/Global'
 import { Constructor } from '../types/Constructor'
 import { IRouteMetadata } from './Route'
-import lurenGlobal from '../lib/Global'
 
 export interface ICtrlOptions {
   plural?: string
@@ -29,7 +29,7 @@ const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor) => {
   _.defaults(metadata, {
     name: constructor.name.split(/controller$/i)[0],
     prefix: ''
-  }) as any
+  })
   if (!metadata.plural) {
     metadata.plural = pluralize.plural(decamelize(metadata.name, '-'))
   }

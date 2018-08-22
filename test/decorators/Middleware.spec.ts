@@ -31,6 +31,7 @@ describe('Middleware decorator', () => {
       @PreController(middleware1, middleware2)
       class TestController {}
       const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.PRE)).toHaveLength(2)
       expect(middlewares.get(Phase.PRE)).toEqual([middleware1, middleware2])
     })
@@ -61,6 +62,7 @@ describe('Middleware decorator', () => {
       @PostController(middleware1, middleware2)
       class TestController {}
       const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.POST)).toHaveLength(2)
       expect(middlewares.get(Phase.POST)).toEqual([middleware1, middleware2])
     })
@@ -75,7 +77,7 @@ describe('Middleware decorator', () => {
       @Controller()
       class TestController {
         @PreRoute(middleware1)
-        @Get
+        @Get()
         public test(ctx: IRouterContext) {
           ctx.body = 'ok'
         }
@@ -97,13 +99,14 @@ describe('Middleware decorator', () => {
       @PostController(middleware1, middleware2)
       class TestController {
         @PreRoute(middleware1, middleware2)
-        @Get
+        @Get()
         public test(ctx: IRouterContext) {
           ctx.body = 'ok'
         }
       }
       const ctrl = new TestController()
       const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.PRE)).toHaveLength(2)
       expect(middlewares.get(Phase.PRE)).toEqual([middleware1, middleware2])
     })
@@ -117,7 +120,7 @@ describe('Middleware decorator', () => {
       @Controller()
       class TestController {
         @PostRoute(middleware1)
-        @Get
+        @Get()
         public test(ctx: IRouterContext) {
           ctx.body = 'ok'
         }
@@ -139,13 +142,14 @@ describe('Middleware decorator', () => {
       @PostController(middleware1, middleware2)
       class TestController {
         @PostRoute(middleware1, middleware2)
-        @Get
+        @Get()
         public test(ctx: IRouterContext) {
           ctx.body = 'ok'
         }
       }
       const ctrl = new TestController()
       const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.POST)).toHaveLength(2)
       expect(middlewares.get(Phase.POST)).toEqual([middleware1, middleware2])
     })

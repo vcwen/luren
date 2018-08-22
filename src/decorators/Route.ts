@@ -38,13 +38,6 @@ export function Route(options?: IRouteOptions): PropertyDecorator {
   }
 }
 
-interface IMethodifyOptions {
-  private?: boolean
-  name?: string
-  path?: string
-  desc?: string
-}
-
 function methodifyRouteDecorator(method: HttpMethod) {
   return (options?: IRouteOptions): PropertyDecorator => {
     return (target: object, propertyKey: string) => {
@@ -60,31 +53,22 @@ function methodifyRouteDecorator(method: HttpMethod) {
   }
 }
 
-export function Get(options: IMethodifyOptions): PropertyDecorator
-export function Get(target: object, propertyKey: string): void
-export function Get() {
-  return methodifyRouteDecorator(HttpMethod.GET).apply(null, arguments)
+export function Get(options?: IRouteOptions): PropertyDecorator {
+  return methodifyRouteDecorator(HttpMethod.GET)(options)
 }
 
-export function Post(options: IMethodifyOptions): PropertyDecorator
-export function Post(target: object, propertyKey: string): void
-export function Post() {
-  return methodifyRouteDecorator(HttpMethod.POST).apply(null, arguments)
+export function Post(options?: IRouteOptions) {
+  return methodifyRouteDecorator(HttpMethod.POST)(options)
 }
 
-export function Put(options: IMethodifyOptions): PropertyDecorator
-export function Put(target: object, propertyKey: string): void
-export function Put() {
-  return methodifyRouteDecorator(HttpMethod.PUT).apply(null, arguments)
+export function Put(options?: IRouteOptions): PropertyDecorator {
+  return methodifyRouteDecorator(HttpMethod.PUT)(options)
 }
 
-export function Patch(options: IMethodifyOptions): PropertyDecorator
-export function Patch(target: object, propertyKey: string): void
-export function Patch() {
-  return methodifyRouteDecorator(HttpMethod.PATCH).apply(null, arguments)
+export function Patch(options?: IRouteOptions): PropertyDecorator {
+  return methodifyRouteDecorator(HttpMethod.PATCH)(options)
 }
-export function Delete(options: IMethodifyOptions): PropertyDecorator
-export function Delete(target: object, propertyKey: string): void
-export function Delete() {
-  return methodifyRouteDecorator(HttpMethod.DELETE).apply(null, arguments)
+
+export function Delete(options?: IRouteOptions): PropertyDecorator {
+  return methodifyRouteDecorator(HttpMethod.DELETE)(options)
 }

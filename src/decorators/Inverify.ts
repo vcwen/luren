@@ -1,8 +1,8 @@
+import { interfaces } from 'inversify'
 import _ from 'lodash'
 import 'reflect-metadata'
-import { Constructor } from '../types/Constructor'
-import { interfaces } from 'inversify'
 import lurenGlobal from '../lib/Global'
+import { Constructor } from '../types/Constructor'
 
 export function Bind<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
   return (constructor: Constructor) => {

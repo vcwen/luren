@@ -11,7 +11,8 @@ describe('Param', () => {
         @Param({ name: 'name', source: 'path' }) name: string,
         @Param({ name: 'age', source: 'query' }) age: number
       ) {
-        // console.log('>>>>>')
+        // tslint:disable-next-line:no-console
+        console.log('>>>>>' + name + age)
       }
     }
     const ctrl = new TestController()
@@ -27,7 +28,8 @@ describe('Param', () => {
     @Controller()
     class TestController {
       public test(@Param({ name: 'name' }) name: string) {
-        // console.log('>>>')
+        // tslint:disable-next-line:no-console
+        console.log('>>>' + name)
       }
     }
     const ctrl = new TestController()

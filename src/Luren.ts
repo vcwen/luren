@@ -1,5 +1,5 @@
-import Router from 'koa-router'
 import Koa from 'koa'
+import Router from 'koa-router'
 import { loadControllers } from './lib/Helper'
 interface IMiddlewares {
   session: { pre: any[]; post: any }
@@ -14,7 +14,11 @@ export class Luren {
   constructor(router?: Router, preInit?: (koa: Koa, router: Router) => Promise<void>) {
     this.koa = new Koa()
     this.router = router ? router : new Router()
-    this.preInit = preInit ? preInit : async () => {}
+    this.preInit = preInit
+      ? preInit
+      : async () => {
+          // empty
+        }
   }
   public applyMiddlewares(...midlewares: any[]): void
   public applyMiddlewares(options: object, ...midlewares: any[]): void

@@ -6,18 +6,15 @@ import { Delete, Get, Post, Put } from '../../src/decorators/Route'
 import { createAction, createController, createRoute, createRoutes } from '../../src/lib/Helper'
 import { ok, redirect } from '../../src/lib/HttpStatus'
 jest.disableAutomock()
-@Controller
+@Controller()
 class TestController {
-  @Post
+  @Post()
   public doSomething() {
     // console.log('do something')
     return 'something'
   }
   @Put({ path: 'hello' })
-  public async sayHello(
-    @Param({ name: 'to' })
-    to: string
-  ) {
+  public async sayHello(@Param({ name: 'to' }) to: string) {
     return 'hello ' + to
   }
   @Get({ path: '' })
@@ -28,75 +25,53 @@ class TestController {
   public async deleteName() {
     // delete
   }
-  @Get
-  public async queryParam(
-    @Param({ name: 'name', source: 'query' })
-    name: string
-  ) {
+  @Get()
+  public async queryParam(@Param({ name: 'name', source: 'query' }) name: string) {
     return name
   }
-  @Get
-  public async pathParam(
-    @Param({ name: 'name', source: 'path' })
-    name: string
-  ) {
+  @Get()
+  public async pathParam(@Param({ name: 'name', source: 'path' }) name: string) {
     return name
   }
-  @Get
-  public async bodyParam(
-    @Param({ name: 'name', source: 'body' })
-    name: string
-  ) {
+  @Get()
+  public async bodyParam(@Param({ name: 'name', source: 'body' }) name: string) {
     return name
   }
-  @Get
-  public async headerParam(
-    @Param({ name: 'name', source: 'header' })
-    name: string
-  ) {
+  @Get()
+  public async headerParam(@Param({ name: 'name', source: 'header' }) name: string) {
     return name
   }
-  @Get
-  public async contextParam(
-    @Param({ name: 'ctx', source: 'context' })
-    ctx: any
-  ) {
+  @Get()
+  public async contextParam(@Param({ name: 'ctx', source: 'context' }) ctx: any) {
     return ctx.name
   }
-  @Get
-  public async requiredParam(
-    @Param({ name: 'name', required: true })
-    name: string
-  ) {
+  @Get()
+  public async requiredParam(@Param({ name: 'name', required: true }) name: string) {
     return name
   }
-  @Get
-  public async numberParam(
-    @Param({ name: 'rank', type: 'number', required: true })
-    rank: number
-  ) {
+  @Get()
+  public async numberParam(@Param({ name: 'rank', type: 'number', required: true }) rank: number) {
     return rank
   }
-  @Get
+  @Get()
   public async superstructParam(
-    @Param({ name: 'filter', type: { where: 'object?', order: 'string?', limit: 'number?' } })
-    filter: any
+    @Param({ name: 'filter', type: { where: 'object?', order: 'string?', limit: 'number?' } }) filter: any
   ) {
     return filter
   }
-  @Get
+  @Get()
   public async httpStatusResponse() {
     return ok('hello')
   }
-  @Get
+  @Get()
   public async redirectResponse() {
     return redirect('http://test.com')
   }
-  @Get
+  @Get()
   public async boomErrorResponse() {
     throw badRequest('bad query data')
   }
-  @Get
+  @Get()
   public async errorResponse() {
     throw new Error('something wrong')
   }
@@ -202,6 +177,7 @@ describe('Helper', () => {
         params: {},
         header: {},
         throw(code: number, desc: string) {
+          // tslint:disable-next-line:no-magic-numbers
           expect(code).toBe(400)
           expect(desc).toBe('name is required')
         }
@@ -226,6 +202,7 @@ describe('Helper', () => {
         params: {},
         header: {},
         throw(code: number, desc: string) {
+          // tslint:disable-next-line:no-magic-numbers
           expect(code).toBe(401)
           expect(desc).not.toBeUndefined()
         }
@@ -240,6 +217,7 @@ describe('Helper', () => {
         params: {},
         header: {},
         throw(code: number, desc: string) {
+          // tslint:disable-next-line:no-magic-numbers
           expect(code).toBe(401)
           expect(desc).not.toBeUndefined()
         }
@@ -275,12 +253,14 @@ describe('Helper', () => {
         }
       } as any
       await action(ctx)
+      // tslint:disable-next-line:no-magic-numbers
       expect(ctx.status).toBe(302)
     })
     it('action should deal with boom error', async () => {
       const action = createAction(controller, 'boomErrorResponse')
       const ctx = {
         throw(code: number, desc: string) {
+          // tslint:disable-next-line:no-magic-numbers
           expect(code).toBe(400)
           expect(desc).toEqual('bad query data')
         }
@@ -297,7 +277,7 @@ describe('Helper', () => {
   })
   describe('createRoute', () => {
     it('should create the specific route', async () => {
-      const route = createRoute(controller, 'sayHello')
+      const route: any = createRoute(controller, 'sayHello')
       expect(route.method).toEqual('put')
       expect(route.path).toEqual('/hello')
     })
@@ -312,7 +292,7 @@ describe('Helper', () => {
 
   describe('setupController', () => {
     it('should load the controller', () => {
-      const router = createController(controller)
+      const router: any = createController(controller.constructor as any)
       expect(router.routes['get:/tests'].method).toEqual('get')
       expect(router.routes['delete:/tests'].method).toEqual('delete')
       expect(router.routes['post:/tests/doSomething'].method).toEqual('post')

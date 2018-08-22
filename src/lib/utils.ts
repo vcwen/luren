@@ -16,6 +16,7 @@ const normalizeType = (type: string): [string, boolean] => {
   const match = regex.exec(type)
   if (match) {
     const prop = match[1]
+    // tslint:disable-next-line:no-magic-numbers
     if (match[2]) {
       return [prop, false]
     } else {
@@ -31,6 +32,7 @@ const normalizeProp = (decoratedProp: string): [string, boolean] => {
   const match = regex.exec(decoratedProp)
   if (match) {
     const prop = match[1]
+    // tslint:disable-next-line:no-magic-numbers
     if (match[2]) {
       return [prop, false]
     } else {

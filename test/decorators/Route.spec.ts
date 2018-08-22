@@ -45,13 +45,13 @@ describe('Get', () => {
   it('should invoke directly when param is constructor', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Get
+      @Get()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, TestController)
+    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, ctrl)
     expect(routes.get('getName')).toEqual({ method: 'GET', name: 'getName', path: 'getName', private: false })
   })
   it('should return decorator function when schema options is set', () => {
@@ -82,13 +82,13 @@ describe('POST', () => {
   it('should invoke directly when param is constructor', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Post
+      @Post()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, TestController)
+    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, ctrl)
     expect(routes.get('getName')).toEqual({ method: 'POST', name: 'getName', path: 'getName', private: false })
   })
   it('should return decorator function when schema options is set', () => {
@@ -119,13 +119,13 @@ describe('PUT', () => {
   it('should invoke directly when param is constructor', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Put
+      @Put()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, TestController)
+    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, ctrl)
     expect(routes.get('getName')).toEqual({ method: 'PUT', name: 'getName', path: 'getName', private: false })
   })
   it('should return decorator function when schema options is set', () => {
@@ -156,13 +156,13 @@ describe('PATCH', () => {
   it('should invoke directly when param is constructor', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Patch
+      @Patch()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, TestController)
+    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, ctrl)
     expect(routes.get('getName')).toEqual({ method: 'PATCH', name: 'getName', path: 'getName', private: false })
   })
   it('should return decorator function when schema options is set', () => {
@@ -192,13 +192,13 @@ describe('DELETE', () => {
   it('should invoke directly when param is constructor', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Delete
+      @Delete()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, TestController)
+    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTE, ctrl)
     expect(routes.get('getName')).toEqual({ method: 'DELETE', name: 'getName', path: 'getName', private: false })
   })
   it('should return decorator function when schema options is set', () => {
