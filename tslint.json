@@ -9,7 +9,7 @@
     "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"],
     "object-literal-shorthand": true,
     "no-trailing-whitespace": true,
-    "no-magic-numbers": [true, -1, 0, 1, 1000],
+    "no-magic-numbers": [true, -1, 0, 1, 2, 1000],
     "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
     "no-unsafe-finally": true,
     "object-literal-sort-keys": false

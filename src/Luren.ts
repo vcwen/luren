@@ -1,6 +1,6 @@
 import Koa from 'koa'
 import Router from 'koa-router'
-import { loadControllers } from './lib/Helper'
+import { importFiles, loadControllers } from './lib/Helper'
 interface IMiddlewares {
   session: { pre: any[]; post: any }
   all: { pre: any; post: any[] }
@@ -49,6 +49,7 @@ export class Luren {
   private async initialize() {
     const koa = this.koa
     const router = this.router
+    await importFiles(__dirname)
     await this.preInit(koa, router)
     loadControllers(router)
     koa.use(router.routes()).use(router.allowedMethods())

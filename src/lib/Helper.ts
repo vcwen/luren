@@ -1,17 +1,19 @@
 import Boom from 'boom'
+import { promises as fs } from 'fs'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
-import { get } from 'lodash'
 import _ from 'lodash'
+import { get } from 'lodash'
+import nodepath from 'path'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
+import { ICtrlMetadata } from '../decorators/Controller'
 import { IParamMetadata } from '../decorators/Param'
 import { IRouteMetadata } from '../decorators/Route'
 import { Constructor } from '../types/Constructor'
 import lurentGlobal from './Global'
 import { HttpStatus } from './HttpStatus'
-
 declare module 'koa' {
   // tslint:disable-next-line:interface-name
   interface Request {
@@ -36,7 +38,6 @@ export function createController(controller: Constructor) {
   const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
   applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
   const routes = createRoutes(new controller())
-
   routes.forEach((route) => {
     const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
     applyRouteMiddlewares(router, beforeRouteMiddlewares, route.method, route.path)
@@ -131,7 +132,7 @@ export function createAction(controller: object, propKey: string) {
   return action
 }
 
-export function createRoute(controller: object, propKey: string) {
+export function createRoute(controller: object, propKey: string, ctrlMetata: ICtrlMetadata) {
   const routeMetadata: IRouteMetadata = Reflect.getOwnMetadata(
     MetadataKey.ROUTE,
     Reflect.getPrototypeOf(controller),
@@ -143,18 +144,19 @@ export function createRoute(controller: object, propKey: string) {
   const action = createAction(controller, propKey)
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: routeMetadata.path,
+    path: nodepath.join(ctrlMetata.path, routeMetadata.path),
     action,
     middleware: { before: [], after: [] }
   }
 }
 
 export function createRoutes(controller: object): List<any> {
+  const ctrlMetadata: ICtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
   const routes: List<any> = List()
-  const props = _.keysIn(Reflect.getPrototypeOf(controller))
+  const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
   return routes.withMutations((rs) => {
     for (const prop of props) {
-      rs.push(createRoute(controller, prop))
+      rs.push(createRoute(controller, prop, ctrlMetadata))
     }
   })
 }
@@ -166,4 +168,27 @@ export const loadControllers = (router: Router) => {
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router
+}
+export const importFiles = async (root: string) => {
+  const paths = await fs.readdir(root)
+  for (let path of paths) {
+    path = nodepath.resolve(root, path)
+
+    const stat = await fs.lstat(path)
+    if (stat.isDirectory()) {
+      importFiles(path)
+    } else if (stat.isFile()) {
+      try {
+        if (path.endsWith('.ts') || path.endsWith('.js')) {
+          // tslint:disable-next-line:no-console
+          // console.log(path)
+          await import(path)
+        }
+      } catch (err) {
+        // tslint:disable-next-line:no-console
+        console.error(err)
+        // ignore the error
+      }
+    }
+  }
 }

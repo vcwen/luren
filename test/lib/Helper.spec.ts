@@ -1,5 +1,6 @@
 import { badRequest } from 'boom'
 import 'reflect-metadata'
+import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Controller } from '../../src/decorators/Controller'
 import { Param } from '../../src/decorators/Param'
 import { Delete, Get, Post, Put } from '../../src/decorators/Route'
@@ -277,7 +278,7 @@ describe('Helper', () => {
   })
   describe('createRoute', () => {
     it('should create the specific route', async () => {
-      const route: any = createRoute(controller, 'sayHello')
+      const route: any = createRoute(controller, 'sayHello', Reflect.getMetadata(MetadataKey.CONTROLLER, controller))
       expect(route.method).toEqual('put')
       expect(route.path).toEqual('/hello')
     })

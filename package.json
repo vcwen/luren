@@ -1,9 +1,9 @@
 {
   "name": "luren",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Luren is a simple framework based on Koa2",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "repository": "https://github.com/vcwen/luren.git",
   "author": "vincent.wen <wenwei1202@gmail.com>",
   "license": "MIT",
@@ -30,6 +30,7 @@
     "@types/pluralize": "^0.0.29",
     "@types/superstruct": "^0.5.0",
     "ts-jest": "^23.1.4",
+    "ts-node": "^7.0.1",
     "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.0.1"
   },

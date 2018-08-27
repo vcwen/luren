@@ -1,18 +1,20 @@
 import decamelize from 'decamelize'
+import { List, Map } from 'immutable'
 import _ from 'lodash'
 import path from 'path'
-import nodepath from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import lurenGlobal from '../lib/Global'
+import { normalizeSchema } from '../lib/utils'
 import { Constructor } from '../types/Constructor'
-import { IRouteMetadata } from './Route'
+import { IResultMetadata } from './Result'
 
 export interface ICtrlOptions {
   plural?: string
   prefix?: string
   name?: string
+  generic?: { [key: string]: any }
   desc?: string
 }
 
@@ -22,6 +24,7 @@ export interface ICtrlMetadata {
   prefix: string
   path: string
   desc?: string
+  generic?: { [key: string]: any }
 }
 
 const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor) => {
@@ -37,13 +40,16 @@ const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor) => {
   return metadata
 }
 
-const fixRouteMetadata = (ctrl: Constructor, ctrlMetadata: ICtrlMetadata) => {
-  const props = _.keysIn(ctrl.prototype)
+const fixResultMetadata = (ctrl: Constructor, genericMap: Map<string, any>) => {
+  const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(ctrl)).filter((prop) => prop !== 'constructor')
+
   props.forEach((prop) => {
-    const routeMetadata: IRouteMetadata = Reflect.getOwnMetadata(MetadataKey.ROUTE, ctrl.prototype, prop)
-    if (routeMetadata) {
-      routeMetadata.path = nodepath.join(ctrlMetadata.path, routeMetadata.path)
-      Reflect.defineMetadata(MetadataKey.ROUTE, routeMetadata, ctrl.prototype, prop)
+    const resultMetadataList: List<IResultMetadata> = Reflect.getOwnMetadata(MetadataKey.RESULT, ctrl.prototype, prop)
+    if (resultMetadataList) {
+      const resultMetadata = resultMetadataList.find((value) => !!value.isGeneric)
+      if (resultMetadata && resultMetadata.isGeneric) {
+        resultMetadata.schema = normalizeSchema(resultMetadata.rawSchema, genericMap)
+      }
     }
   })
 }
@@ -58,6 +64,8 @@ export function Controller(options?: ICtrlOptions) {
       metadata = getCtrlMetadata({}, constructor)
     }
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor)
-    fixRouteMetadata(constructor, metadata)
+    if (metadata.generic) {
+      fixResultMetadata(constructor, Map(metadata.generic))
+    }
   }
 }

@@ -4,7 +4,7 @@ import MetadataKey from '../constants/MetadataKey'
 import { Constructor } from '../types/Constructor'
 
 export interface IModelOptions {
-  name?: string
+  name: string
   desc?: string
 }
 

@@ -22,7 +22,7 @@ export interface IRouteMetadata {
 
 const getRouteMetadata = (options: any, _: object, propertyKey: string) => {
   const metadata = clone(options)
-  defaults(metadata, { method: HttpMethod.GET, name: propertyKey, path: propertyKey, private: false })
+  defaults(metadata, { method: HttpMethod.GET, name: propertyKey, path: '/' + propertyKey, private: false })
   return metadata
 }
 
