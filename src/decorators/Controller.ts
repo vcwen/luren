@@ -1,5 +1,6 @@
 import decamelize from 'decamelize'
 import { List, Map } from 'immutable'
+import { injectable } from 'inversify';
 import _ from 'lodash'
 import path from 'path'
 import pluralize from 'pluralize'
@@ -56,6 +57,7 @@ const fixResultMetadata = (ctrl: Constructor, genericMap: Map<string, any>) => {
 
 export function Controller(options?: ICtrlOptions) {
   return (constructor: Constructor) => {
+    injectable()(constructor)
     lurenGlobal.registerController(constructor)
     let metadata: ICtrlMetadata
     if (options) {

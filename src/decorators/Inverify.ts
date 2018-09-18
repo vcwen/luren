@@ -1,8 +1,8 @@
-import { interfaces } from 'inversify'
-import _ from 'lodash'
+import { injectable, interfaces } from 'inversify'
 import 'reflect-metadata'
 import lurenGlobal from '../lib/Global'
 import { Constructor } from '../types/Constructor'
+export {inject as Inject} from 'inversify'
 
 export function Bind<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
   return (constructor: Constructor) => {
@@ -11,5 +11,12 @@ export function Bind<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
     } else {
       lurenGlobal.inversifyBind(constructor, constructor)
     }
+  }
+}
+
+export function Injectable<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
+  return (constructor: Constructor) => {
+    injectable()(constructor)
+    Bind(serviceId)(constructor)
   }
 }

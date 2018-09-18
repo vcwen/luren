@@ -3,6 +3,7 @@ import { Container, interfaces } from 'inversify'
 import { Constructor } from '../types/Constructor'
 
 export interface IGlobal {
+  getContainer(): Container
   registerController(constructor: Constructor): void
   getControllers(): List<Constructor>
   inversifyBind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: Constructor): void
@@ -11,6 +12,7 @@ class Global implements IGlobal {
   private container: Container = new Container()
   private controllers: List<Constructor> = List()
   public registerController(constructor: Constructor) {
+    this.container.bind(constructor).to(constructor)
     this.controllers = this.controllers.push(constructor)
   }
   public getControllers() {
@@ -18,6 +20,9 @@ class Global implements IGlobal {
   }
   public inversifyBind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: Constructor) {
     this.container.bind(serviceIdentifier).to(constructor)
+  }
+  public getContainer() {
+    return this.container
   }
 }
 

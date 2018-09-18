@@ -2,7 +2,6 @@ import Boom from 'boom'
 import { promises as fs } from 'fs'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
-import _ from 'lodash'
 import { get } from 'lodash'
 import nodepath from 'path'
 import 'reflect-metadata'
@@ -32,12 +31,13 @@ const applyRouteMiddlewares = (router: Router, middlewares: any[], method: strin
   })
 }
 
-export function createController(controller: Constructor) {
+export function createController(constructor: Constructor) {
   const router = new Router()
   const ctrlMiddlewares: Map<string, any[]> = Map()
   const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
   applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
-  const routes = createRoutes(new controller())
+  const ctrl = lurentGlobal.getContainer().get(constructor)
+  const routes = createRoutes(ctrl)
   routes.forEach((route) => {
     const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
     applyRouteMiddlewares(router, beforeRouteMiddlewares, route.method, route.path)

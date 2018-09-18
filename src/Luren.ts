@@ -6,19 +6,16 @@ interface IMiddlewares {
   all: { pre: any; post: any[] }
   [key: string]: { pre: any; post: any[]; [key: string]: any[] }
 }
+
 export class Luren {
   private koa: Koa
   private router: Router
-  private preInit: (koa: Koa, router: Router) => Promise<void>
+  private preInit?: (koa: Koa, router: Router) => Promise<void>
   private middlewares: IMiddlewares = {} as any
   constructor(router?: Router, preInit?: (koa: Koa, router: Router) => Promise<void>) {
     this.koa = new Koa()
     this.router = router ? router : new Router()
     this.preInit = preInit
-      ? preInit
-      : async () => {
-          // empty
-        }
   }
   public applyMiddlewares(...midlewares: any[]): void
   public applyMiddlewares(options: object, ...midlewares: any[]): void
@@ -50,7 +47,9 @@ export class Luren {
     const koa = this.koa
     const router = this.router
     await importFiles(__dirname)
-    await this.preInit(koa, router)
+    if (this.preInit) {
+      await this.preInit(koa, router)
+    }
     loadControllers(router)
     koa.use(router.routes()).use(router.allowedMethods())
   }
