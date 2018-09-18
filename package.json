@@ -26,9 +26,11 @@
   },
   "devDependencies": {
     "@types/decamelize": "^1.2.0",
+    "@types/jest": "^23.3.2",
     "@types/lodash": "^4.14.116",
     "@types/pluralize": "^0.0.29",
     "@types/superstruct": "^0.5.0",
+    "jest": "^23.6.0",
     "ts-jest": "^23.1.4",
     "ts-node": "^7.0.1",
     "tslint-config-prettier": "^1.15.0",
