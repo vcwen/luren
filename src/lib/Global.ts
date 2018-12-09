@@ -1,28 +1,24 @@
-import { List } from 'immutable'
-import { Container, interfaces } from 'inversify'
+import { List, Map } from 'immutable'
+import { Container } from 'inversify'
 import { Constructor } from '../types/Constructor'
 
 export interface IGlobal {
   getContainer(): Container
   registerController(constructor: Constructor): void
-  getControllers(): List<Constructor>
-  inversifyBind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: Constructor): void
+  getControllerIds(): List<symbol>
 }
 class Global implements IGlobal {
-  private container: Container = new Container()
-  private controllers: List<Constructor> = List()
+  private _container: Container = new Container()
+  private _controllers: Map<symbol, Constructor> = Map()
   public registerController(constructor: Constructor) {
-    this.container.bind(constructor).to(constructor)
-    this.controllers = this.controllers.push(constructor)
+    this._container.bind(constructor).to(constructor)
+    this._controllers = this._controllers.set(Symbol(constructor.name), constructor)
   }
-  public getControllers() {
-    return this.controllers
-  }
-  public inversifyBind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: Constructor) {
-    this.container.bind(serviceIdentifier).to(constructor)
+  public getControllerIds() {
+    return List(this._controllers.keys())
   }
   public getContainer() {
-    return this.container
+    return this._container
   }
 }
 

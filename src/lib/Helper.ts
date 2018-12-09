@@ -1,5 +1,4 @@
 import Boom from 'boom'
-import { promises as fs } from 'fs'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
 import { get } from 'lodash'
@@ -10,8 +9,7 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { ICtrlMetadata } from '../decorators/Controller'
 import { IParamMetadata } from '../decorators/Param'
 import { IRouteMetadata } from '../decorators/Route'
-import { Constructor } from '../types/Constructor'
-import lurentGlobal from './Global'
+import lurenGlobal from './Global'
 import { HttpStatus } from './HttpStatus'
 declare module 'koa' {
   // tslint:disable-next-line:interface-name
@@ -31,17 +29,17 @@ const applyRouteMiddlewares = (router: Router, middlewares: any[], method: strin
   })
 }
 
-export function createController(constructor: Constructor) {
-  const router = new Router()
+export function createController(ctrlId: symbol) {
+  const router: any = new Router()
   const ctrlMiddlewares: Map<string, any[]> = Map()
   const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
   applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
-  const ctrl = lurentGlobal.getContainer().get(constructor)
+  const ctrl = lurenGlobal.getContainer().get(ctrlId)
   const routes = createRoutes(ctrl)
   routes.forEach((route) => {
     const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
     applyRouteMiddlewares(router, beforeRouteMiddlewares, route.method, route.path)
-    ;(router as any)[route.method](route.path, route.action)
+    router[route.method](route.path, route.action)
     const afterRouteMiddlewares = get(route, 'middlewares.after', [])
     applyRouteMiddlewares(router, afterRouteMiddlewares, route.method, route.path)
   })
@@ -61,7 +59,12 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<IParamMetadata> = L
         value = ctx.params[paramMeta.name]
         break
       case 'body':
-        value = ctx.request.body[paramMeta.name]
+        if (paramMeta.root) {
+          value = ctx.request.body
+        } else {
+          value = ctx.request.body && ctx.request.body[paramMeta.name]
+        }
+
         break
       case 'header':
         value = ctx.header[paramMeta.name]
@@ -89,21 +92,23 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<IParamMetadata> = L
     const struct = paramMeta.struct
     try {
       value = struct(value)
-    } catch (ex) {
-      throw Boom.badRequest(ex)
+    } catch (err) {
+      ctx.throw(HttpStatusCode.BAD_REQUEST, err.message)
     }
     return value
   })
 }
 
-const processRoute = async (ctx: IRouterContext, controller: object, propKey: string, args: any[]) => {
-  const response = await (controller as any)[propKey].apply(controller, args)
+const processRoute = async (ctx: IRouterContext, controller: any, propKey: string, args: any[]) => {
+  const response = await controller[propKey].apply(controller, args)
   if (response instanceof HttpStatus) {
     ctx.status = response.statusCode
-    ctx.body = response.body
-    if (response.redirectUrl) {
-      ctx.status = response.statusCode
-      ctx.redirect(response.redirectUrl)
+    switch (response.statusCode) {
+      case HttpStatusCode.MOVED_PERMANENTLY:
+      case HttpStatusCode.FOUND:
+        return ctx.redirect(response.body)
+      default:
+        ctx.body = response.body
     }
   } else {
     ctx.body = response
@@ -125,14 +130,14 @@ export function createAction(controller: object, propKey: string) {
       if (Boom.isBoom(err)) {
         ctx.throw(err.output.statusCode, err.message)
       } else {
-        throw err
+        ctx.throw(err)
       }
     }
   }
   return action
 }
 
-export function createRoute(controller: object, propKey: string, ctrlMetata: ICtrlMetadata) {
+export function createRoute(controller: object, propKey: string, ctrlMetadata: ICtrlMetadata) {
   const routeMetadata: IRouteMetadata = Reflect.getOwnMetadata(
     MetadataKey.ROUTE,
     Reflect.getPrototypeOf(controller),
@@ -144,7 +149,7 @@ export function createRoute(controller: object, propKey: string, ctrlMetata: ICt
   const action = createAction(controller, propKey)
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: nodepath.join(ctrlMetata.path, routeMetadata.path),
+    path: nodepath.join(ctrlMetadata.path, routeMetadata.path),
     action,
     middleware: { before: [], after: [] }
   }
@@ -152,43 +157,19 @@ export function createRoute(controller: object, propKey: string, ctrlMetata: ICt
 
 export function createRoutes(controller: object): List<any> {
   const ctrlMetadata: ICtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
-  const routes: List<any> = List()
   const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
-  return routes.withMutations((rs) => {
-    for (const prop of props) {
-      rs.push(createRoute(controller, prop, ctrlMetadata))
-    }
-  })
+  return List(
+    props.map((prop) => {
+      return createRoute(controller, prop, ctrlMetadata)
+    })
+  )
 }
 
 export const loadControllers = (router: Router) => {
-  const ctrls = lurentGlobal.getControllers()
-  ctrls.forEach((item) => {
-    const ctrl = createController(item)
+  const ctrlIds = lurenGlobal.getControllerIds()
+  ctrlIds.forEach((id) => {
+    const ctrl = createController(id)
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router
-}
-export const importFiles = async (root: string) => {
-  const paths = await fs.readdir(root)
-  for (let path of paths) {
-    path = nodepath.resolve(root, path)
-
-    const stat = await fs.lstat(path)
-    if (stat.isDirectory()) {
-      importFiles(path)
-    } else if (stat.isFile()) {
-      try {
-        if (path.endsWith('.ts') || path.endsWith('.js')) {
-          // tslint:disable-next-line:no-console
-          // console.log(path)
-          await import(path)
-        }
-      } catch (err) {
-        // tslint:disable-next-line:no-console
-        console.error(err)
-        // ignore the error
-      }
-    }
-  }
 }

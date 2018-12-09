@@ -2,12 +2,13 @@ import { List } from 'immutable'
 import { clone, defaults } from 'lodash'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
-import { IJsonSchema, normalizeSchema, structSchemaFromJsonSchema } from '../lib/utils'
+import { IJsonSchema, jsonSchemaToStructSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export interface IParamOptions {
   name: string
   source?: 'query' | 'path' | 'header' | 'body' | 'context'
   type?: any
+  schema?: any
   required?: boolean
   desc?: string
   root?: boolean
@@ -38,8 +39,11 @@ const getParamMetadata = (options: any, index: number, target: object, propertyK
     required: false,
     root: false
   })
-  options.schema = normalizeSchema(options.type)
-  options.struct = structSchemaFromJsonSchema(options.schema, options.required)
+  if (!options.schema && options.type) {
+    options.schema = normalizeSimpleSchema(options.type)
+  }
+
+  options.struct = jsonSchemaToStructSchema(options.schema, options.required)
   return options
 }
 

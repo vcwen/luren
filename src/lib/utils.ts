@@ -1,4 +1,3 @@
-import { Map } from 'immutable'
 import _ from 'lodash'
 import 'reflect-metadata'
 import { struct } from 'superstruct'
@@ -13,6 +12,7 @@ export interface IJsonSchema {
   items?: IJsonSchema
   required?: string[]
   description?: string
+  [prop: string]: any
 }
 
 const normalizeType = (type: string): [string, boolean] => {
@@ -31,29 +31,8 @@ const normalizeType = (type: string): [string, boolean] => {
   }
 }
 
-const isGenericType = (type: string) => {
-  const regex = /<\s*(\w+)\s*>\s*(\?)?/
-  return regex.test(type)
-}
-
-const normalizeGenericType = (type: string, generic: Map<string, IJsonSchema>): [IJsonSchema, boolean] => {
-  const regex = /<\s*(\w+)\s*>\s*(\?)?/
-  const match = regex.exec(type)
-  if (match) {
-    const key = match[1]
-    const required = match[2] ? false : true
-    if (generic.has(key)) {
-      return [generic.get(key) as IJsonSchema, required]
-    } else {
-      throw new TypeError('Can not find generic type:' + key)
-    }
-  } else {
-    throw new Error('Invalid type:' + type)
-  }
-}
-
 const normalizeProp = (decoratedProp: string): [string, boolean] => {
-  const regex = /(\?)?$/
+  const regex = /(\w+?)(\?)?$/
   const match = regex.exec(decoratedProp)
   if (match) {
     const prop = match[1]
@@ -68,18 +47,14 @@ const normalizeProp = (decoratedProp: string): [string, boolean] => {
   }
 }
 
-const _convertSchemaToJsonSchema = (schema: any, genericMap: Map<string, IJsonSchema> = Map()): [any, boolean] => {
+const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
   if (typeof schema === 'string') {
-    if (isGenericType(schema)) {
-      return normalizeGenericType(schema, genericMap)
-    } else {
-      const [type, required] = normalizeType(schema)
-      return [{ type }, required]
-    }
+    const [type, required] = normalizeType(schema)
+    return [{ type }, required]
   } else if (Array.isArray(schema)) {
     const propSchema: any = { type: 'array' }
     if (schema[0]) {
-      const itemSchema = _convertSchemaToJsonSchema(schema[0], genericMap)
+      const itemSchema = convertSimpleSchemaToJsonSchema(schema[0])
       propSchema.items = itemSchema
     } else {
       throw new TypeError('Array items is required.')
@@ -90,7 +65,7 @@ const _convertSchemaToJsonSchema = (schema: any, genericMap: Map<string, IJsonSc
     const requiredProps = [] as string[]
     for (const prop in schema) {
       if (schema.hasOwnProperty(prop)) {
-        const [propSchema, propRequired] = _convertSchemaToJsonSchema(schema[prop], genericMap)
+        const [propSchema, propRequired] = convertSimpleSchemaToJsonSchema(schema[prop])
         const [propName, required] = normalizeProp(prop)
         if (jsonSchema.properties) {
           jsonSchema.properties[propName] = propSchema
@@ -116,37 +91,25 @@ const _convertSchemaToJsonSchema = (schema: any, genericMap: Map<string, IJsonSc
   }
 }
 
-export const convertSchemaToJsonSchema = (schema: any, genericMap?: Map<string, IJsonSchema>) => {
-  const [jsonSchema] = _convertSchemaToJsonSchema(schema, genericMap)
-  return jsonSchema
-}
-
-export const normalizeSchema = (schema: any, genericMap?: Map<string, IJsonSchema>): IJsonSchema => {
+export const normalizeSimpleSchema = (schema: any): IJsonSchema => {
   if (_.isEmpty(schema)) {
     throw new Error('Invalid schema.')
   }
-  if (schema.type === 'object' && schema.properties) {
-    return _.cloneDeep(schema)
-  } else {
-    return convertSchemaToJsonSchema(schema, genericMap)
-  }
+  const [jsonSchema] = convertSimpleSchemaToJsonSchema(schema)
+  return jsonSchema
 }
 
 const isPrimitiveType = (type: string) => {
-  if (type === 'object' || type === 'array') {
-    return false
-  } else {
-    return true
-  }
+  return !(type === 'object' || type === 'array')
 }
 
-export const structSchemaFromJsonSchema = (schema: IJsonSchema, required: boolean = false) => {
+export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean = false) => {
   let structSchema: any = {}
   if (isPrimitiveType(schema.type)) {
     structSchema = schema.type
   } else if (schema.type === 'array') {
     if (schema.items && !_.isEmpty(schema.items)) {
-      structSchema = struct.list([structSchemaFromJsonSchema(schema.items)])
+      structSchema = struct.list([jsonSchemaToStructSchema(schema.items)])
     } else {
       structSchema = 'array'
     }
@@ -156,7 +119,7 @@ export const structSchemaFromJsonSchema = (schema: IJsonSchema, required: boolea
       const requiredProps = schema.required || ([] as string[])
       for (const prop in schemaDetail) {
         if (schemaDetail.hasOwnProperty(prop)) {
-          structSchema[prop] = structSchemaFromJsonSchema(schemaDetail[prop], requiredProps.includes(prop))
+          structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop))
         }
       }
       structSchema = struct.partial(structSchema)

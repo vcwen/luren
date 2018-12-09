@@ -6,4 +6,4 @@ const server = new Luren()
 // })
 
 // tslint:disable-next-line:no-magic-numbers
-server.start(3000)
+server.listen(3000)
