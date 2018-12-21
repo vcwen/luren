@@ -1,4 +1,4 @@
-import { injectable, interfaces } from 'inversify'
+import { injectable,inject, interfaces } from 'inversify'
 import 'reflect-metadata'
 import lurenGlobal from '../lib/Global'
 import { Constructor } from '../types/Constructor'
@@ -15,3 +15,5 @@ export function Injectable<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
     }
   }
 }
+
+export const Inject = inject

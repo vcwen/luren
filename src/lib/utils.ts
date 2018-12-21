@@ -105,28 +105,33 @@ const isPrimitiveType = (type: string) => {
 
 export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean = false) => {
   let structSchema: any = {}
-  if (isPrimitiveType(schema.type)) {
-    structSchema = schema.type
-  } else if (schema.type === 'array') {
-    if (schema.items && !_.isEmpty(schema.items)) {
-      structSchema = struct.list([jsonSchemaToStructSchema(schema.items)])
-    } else {
-      structSchema = 'array'
-    }
+  if(Array.isArray(schema.type)) {
+    struct.union(schema.type)
   } else {
-    if (schema.properties) {
-      const schemaDetail = schema.properties
-      const requiredProps = schema.required || ([] as string[])
-      for (const prop in schemaDetail) {
-        if (schemaDetail.hasOwnProperty(prop)) {
-          structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop))
-        }
+    if (isPrimitiveType(schema.type)) {
+      structSchema = schema.type
+    } else if (schema.type === 'array') {
+      if (schema.items && !_.isEmpty(schema.items)) {
+        structSchema = struct.list([jsonSchemaToStructSchema(schema.items)])
+      } else {
+        structSchema = 'array'
       }
-      structSchema = struct.partial(structSchema)
     } else {
-      structSchema = 'object'
+      if (schema.properties) {
+        const schemaDetail = schema.properties
+        const requiredProps = schema.required || ([] as string[])
+        for (const prop in schemaDetail) {
+          if (schemaDetail.hasOwnProperty(prop)) {
+            structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop))
+          }
+        }
+        structSchema = struct.partial(structSchema)
+      } else {
+        structSchema = 'object'
+      }
     }
   }
+
   if (required) {
     return struct(structSchema)
   } else {
