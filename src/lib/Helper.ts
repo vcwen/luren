@@ -2,14 +2,14 @@ import Boom from 'boom'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
 import { get } from 'lodash'
-import nodepath from 'path'
+import Path from 'path'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
-import { ICtrlMetadata } from '../decorators/Controller'
-import { IParamMetadata } from '../decorators/Param'
-import { IRouteMetadata } from '../decorators/Route'
-import lurenGlobal from './Global'
+import { CtrlMetadata } from '../decorators/Controller'
+import { ParamMetadata } from '../decorators/Param'
+import { RouteMetadata } from '../decorators/Route'
+import { getContainer, getControllerIds } from './global'
 import { HttpStatus } from './HttpStatus'
 declare module 'koa' {
   // tslint:disable-next-line:interface-name
@@ -34,7 +34,7 @@ export function createController(ctrlId: symbol) {
   const ctrlMiddlewares: Map<string, any[]> = Map()
   const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
   applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
-  const ctrl = lurenGlobal.getContainer().get(ctrlId)
+  const ctrl = getContainer().get(ctrlId)
   const routes = createRoutes(ctrl)
   routes.forEach((route) => {
     const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
@@ -48,7 +48,7 @@ export function createController(ctrlId: symbol) {
   return router
 }
 
-const getParams = (ctx: IRouterContext, paramsMetadata: List<IParamMetadata> = List()) => {
+const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = List()) => {
   return paramsMetadata.map((paramMeta) => {
     let value: any
     switch (paramMeta.source) {
@@ -116,7 +116,7 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
 }
 
 export function createAction(controller: object, propKey: string) {
-  const paramsMetadata: List<IParamMetadata> =
+  const paramsMetadata: List<ParamMetadata> =
     Reflect.getOwnMetadata(MetadataKey.PARAM, Reflect.getPrototypeOf(controller), propKey) || List()
 
   const action = async (ctx: IRouterContext, next?: any) => {
@@ -137,8 +137,8 @@ export function createAction(controller: object, propKey: string) {
   return action
 }
 
-export function createRoute(controller: object, propKey: string, ctrlMetadata: ICtrlMetadata) {
-  const routeMetadata: IRouteMetadata = Reflect.getOwnMetadata(
+export function createRoute(controller: object, propKey: string, ctrlMetadata: CtrlMetadata) {
+  const routeMetadata: RouteMetadata = Reflect.getOwnMetadata(
     MetadataKey.ROUTE,
     Reflect.getPrototypeOf(controller),
     propKey
@@ -149,14 +149,14 @@ export function createRoute(controller: object, propKey: string, ctrlMetadata: I
   const action = createAction(controller, propKey)
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: nodepath.join(ctrlMetadata.path, routeMetadata.path),
+    path: Path.join(ctrlMetadata.path, routeMetadata.path),
     action,
     middleware: { before: [], after: [] }
   }
 }
 
 export function createRoutes(controller: object): List<any> {
-  const ctrlMetadata: ICtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
+  const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
   const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
   return List(
     props.map((prop) => {
@@ -166,7 +166,7 @@ export function createRoutes(controller: object): List<any> {
 }
 
 export const loadControllers = (router: Router) => {
-  const ctrlIds = lurenGlobal.getControllerIds()
+  const ctrlIds = getControllerIds()
   ctrlIds.forEach((id) => {
     const ctrl = createController(id)
     router.use(ctrl.routes(), ctrl.allowedMethods())

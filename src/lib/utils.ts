@@ -103,9 +103,9 @@ const isPrimitiveType = (type: string) => {
   return !(type === 'object' || type === 'array')
 }
 
-export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean = false) => {
+export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean = false, strict: boolean = false) => {
   let structSchema: any = {}
-  if(Array.isArray(schema.type)) {
+  if (Array.isArray(schema.type)) {
     struct.union(schema.type)
   } else {
     if (isPrimitiveType(schema.type)) {
@@ -122,10 +122,12 @@ export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean 
         const requiredProps = schema.required || ([] as string[])
         for (const prop in schemaDetail) {
           if (schemaDetail.hasOwnProperty(prop)) {
-            structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop))
+            structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop), strict)
           }
         }
-        structSchema = struct.partial(structSchema)
+        if (!strict) {
+          structSchema = struct.partial(structSchema)
+        }
       } else {
         structSchema = 'object'
       }

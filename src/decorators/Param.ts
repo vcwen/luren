@@ -1,65 +1,74 @@
 import { List } from 'immutable'
-import { clone, defaults } from 'lodash'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { IJsonSchema, jsonSchemaToStructSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export interface IParamOptions {
-  name: string
+  name?: string
   source?: 'query' | 'path' | 'header' | 'body' | 'context'
-  type?: any
-  schema?: any
+  type?: string | { [prop: string]: any }
+  schema?: IJsonSchema
   required?: boolean
   desc?: string
   root?: boolean
   format?: 'string'
+  strict?: boolean
 }
 
-export interface IParamMetadata {
-  name: string
-  source: 'query' | 'path' | 'header' | 'body' | 'context'
-  schema: IJsonSchema
-  required: boolean
-  root: boolean
-  desc?: string
-  struct: any
+export class ParamMetadata {
+  public name: string
+  public source: 'query' | 'path' | 'header' | 'body' | 'context'
+  public schema!: IJsonSchema
+  public required: boolean = false
+  public root: boolean = false
+  public format?: string
+  public strict: boolean = true
+  public desc?: string
+  public struct: any
+  constructor(name: string, source: 'query' | 'path' | 'header' | 'body' | 'context', required: boolean = false) {
+    this.name = name
+    this.source = source
+    this.required = required
+  }
 }
 
-const getParamMetadata = (options: any, index: number, target: object, propertyKey: string) => {
-  options = clone(options)
+const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
+  const metadata = new ParamMetadata(options.name || propertyKey, options.source || 'query', options.required)
+  if (options.schema) {
+    metadata.schema = options.schema
+  } else {
+    metadata.schema = normalizeSimpleSchema(options.type || 'string')
+  }
+  if (options.root) {
+    metadata.root = true
+  }
+  if (options.strict) {
+    metadata.strict = true
+  }
+  metadata.format = options.format
+  metadata.struct = jsonSchemaToStructSchema(metadata.schema, options.required, options.strict)
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAM, target, propertyKey) || List()
   if (paramsMetadata.has(index)) {
-    const existingOptions = paramsMetadata.get(index) || {}
-    options = Object.assign({}, existingOptions, options)
+    const existingMetadata = paramsMetadata.get(index) || {}
+    return Object.assign({}, existingMetadata, metadata)
+  } else {
+    return metadata
   }
-  defaults(options, {
-    name: propertyKey,
-    source: 'query',
-    type: 'string',
-    required: false,
-    root: false
-  })
-  if (!options.schema && options.type) {
-    options.schema = normalizeSimpleSchema(options.type)
-  }
-
-  options.struct = jsonSchemaToStructSchema(options.schema, options.required)
-  return options
 }
 
-const defineParamMetadata = (options: any, index: number, target: object, propertyKey: string) => {
+const defineParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
   const paramMetadata = getParamMetadata(options, index, target, propertyKey)
-  const paramsMetadata: List<any> = Reflect.getMetadata(MetadataKey.PARAM, target, propertyKey) || List()
+  const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAM, target, propertyKey) || List()
   Reflect.defineMetadata(MetadataKey.PARAM, paramsMetadata.set(index, paramMetadata), target, propertyKey)
 }
 
-export function Param(options: IParamOptions) {
+export function Param(options: IParamOptions = {}) {
   return (target: object, propertyKey: string, index: number) => {
     defineParamMetadata(options, index, target, propertyKey)
   }
 }
 
-export function Required(options: IParamOptions) {
+export function Required(options: IParamOptions = {}) {
   return (target: object, propertyKey: string, index: number) => {
     defineParamMetadata(Object.assign({}, options, { required: true }), index, target, propertyKey)
   }

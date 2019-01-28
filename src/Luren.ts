@@ -9,6 +9,7 @@ import { loadControllers } from './lib/Helper'
 
 enum MiddlewareName {
   ALL = 'ALL',
+  SECURITY = 'SECURITY',
   BODY_PARSER = 'BODY_PARSER'
 }
 
@@ -26,7 +27,6 @@ export class Luren {
   private _middlewares: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
   constructor(preInit?: (app: Luren) => Promise<void>) {
     this._koa = new Koa()
-    this.use(helmet())
     this._router = new Router()
     // tslint:disable-next-line:no-empty
     this.preInit = preInit ? preInit : async () => {}
@@ -43,6 +43,9 @@ export class Luren {
     return this._router
   }
   public use(middleware: IMiddleware, name: string = MiddlewareName.ALL, phase?: Phase) {
+    if (name === MiddlewareName.ALL && !phase) {
+      phase = Phase.POST
+    }
     const m: any = this._middlewares.get(name) || { pre: [], post: [], middleware: undefined }
     if (phase) {
       m[phase].push(middleware)
@@ -57,6 +60,7 @@ export class Luren {
     }
     const router = this._router
     await this.preInit(this)
+    this.use(helmet(), MiddlewareName.SECURITY)
     this.use(bodyParser(), MiddlewareName.BODY_PARSER)
     this._loadMiddlewares()
     loadControllers(router)
@@ -65,7 +69,7 @@ export class Luren {
   }
   private _loadMiddleware(
     name: string,
-    options: { pre: boolean; middleware: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
+    options: { pre: boolean; middleware?: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
   ) {
     const item = this._middlewares.get(name)
     if (!item) {
@@ -86,6 +90,8 @@ export class Luren {
     }
   }
   private _loadMiddlewares() {
-    this._loadMiddleware(MiddlewareName.ALL, { pre: true, middleware: true })
+    this._loadMiddleware(MiddlewareName.ALL, { pre: true })
+    this._loadMiddleware(MiddlewareName.SECURITY)
+    this._loadMiddleware(MiddlewareName.BODY_PARSER)
   }
 }

@@ -1,73 +1,48 @@
 import decamelize from 'decamelize'
-import { List, Map } from 'immutable'
-import { injectable } from 'inversify';
+import { injectable } from 'inversify'
 import _ from 'lodash'
-import path from 'path'
+import Path from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
-import lurenGlobal from '../lib/Global'
-import { normalizeSchema } from '../lib/utils'
+import { registerController } from '../lib/global'
 import { Constructor } from '../types/Constructor'
-import { IResultMetadata } from './Result'
 
 export interface ICtrlOptions {
+  path?: string
   plural?: string
   prefix?: string
   name?: string
-  generic?: { [key: string]: any }
   desc?: string
 }
 
-export interface ICtrlMetadata {
-  name: string
-  plural: string
-  prefix: string
-  path: string
-  desc?: string
-  generic?: { [key: string]: any }
+export class CtrlMetadata {
+  public name: string
+  public plural?: string
+  public prefix: string = ''
+  public path: string
+  public desc?: string
+  constructor(name: string, path: string, desc?: string) {
+    this.name = name
+    this.path = path
+    this.desc = desc
+  }
 }
 
 const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor) => {
-  const metadata: ICtrlMetadata = _.clone(options) as any
-  _.defaults(metadata, {
-    name: constructor.name.split(/controller$/i)[0],
-    prefix: ''
-  })
-  if (!metadata.plural) {
-    metadata.plural = pluralize.plural(decamelize(metadata.name, '-'))
-  }
-  metadata.path = path.join('/', metadata.prefix, metadata.plural)
+  const name = options.name || constructor.name.split(/controller$/i)[0]
+  const prefix = options.prefix || ''
+  const plural = options.plural || pluralize.plural(decamelize(name, '-'))
+  const path = options.path || Path.join('/', prefix, plural)
+  const metadata = new CtrlMetadata(name, path, options.desc)
   return metadata
 }
 
-const fixResultMetadata = (ctrl: Constructor, genericMap: Map<string, any>) => {
-  const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(ctrl)).filter((prop) => prop !== 'constructor')
-
-  props.forEach((prop) => {
-    const resultMetadataList: List<IResultMetadata> = Reflect.getOwnMetadata(MetadataKey.RESULT, ctrl.prototype, prop)
-    if (resultMetadataList) {
-      const resultMetadata = resultMetadataList.find((value) => !!value.isGeneric)
-      if (resultMetadata && resultMetadata.isGeneric) {
-        resultMetadata.schema = normalizeSchema(resultMetadata.rawSchema, genericMap)
-      }
-    }
-  })
-}
-
-export function Controller(options?: ICtrlOptions) {
+export function Controller(options: ICtrlOptions = {}) {
   return (constructor: Constructor) => {
     injectable()(constructor)
-    lurenGlobal.registerController(constructor)
-    let metadata: ICtrlMetadata
-    if (options) {
-      metadata = getCtrlMetadata(options, constructor)
-    } else {
-      metadata = getCtrlMetadata({}, constructor)
-    }
+    registerController(constructor)
+    const metadata = getCtrlMetadata(options, constructor)
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor)
-    if (metadata.generic) {
-      fixResultMetadata(constructor, Map(metadata.generic))
-    }
   }
 }

@@ -1,2 +1,2 @@
-export { IGlobal, global } from './Global'
+export { getContainer, registerController } from './global'
 export { ok, redirect } from './HttpStatus'

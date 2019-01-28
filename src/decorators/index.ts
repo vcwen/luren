@@ -1,5 +1,5 @@
 export { Controller, ICtrlOptions } from './Controller'
-export { Bind } from './Inverify'
+export { Injectable } from './Inverify'
 export { PreController, PostController, PreRoute, PostRoute } from './Middleware'
 export { Model, Prop, IModelOptions, IPropOptions } from './Model'
 export { Param, IParamOptions } from './Param'

@@ -1,17 +1,17 @@
-import { injectable,inject, interfaces } from 'inversify'
+import { inject, injectable, interfaces } from 'inversify'
 import 'reflect-metadata'
-import lurenGlobal from '../lib/Global'
+import { getContainer } from '../lib/global'
 import { Constructor } from '../types/Constructor'
 export { inject } from 'inversify'
 
 export function Injectable<T>(serviceId?: interfaces.ServiceIdentifier<T>) {
   return (constructor: Constructor) => {
     injectable()(constructor)
-    const container = lurenGlobal.getContainer()
+    const container = getContainer()
     if (serviceId) {
       container.bind(serviceId).to(constructor)
     } else {
-      container.bind(constructor).to(constructor)
+      container.bind(Symbol.for(constructor.name)).to(constructor)
     }
   }
 }

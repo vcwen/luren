@@ -1,5 +1,6 @@
 export enum MetadataKey {
   CONTROLLER = 'CONTROLLER',
+  GENERICS = 'GENERICS',
   MIDDLEWARES = 'MIDDLEWARES',
   ROUTE = 'ROUTE',
   PARAM = 'PARAM',
