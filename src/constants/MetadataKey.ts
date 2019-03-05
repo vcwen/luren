@@ -6,14 +6,15 @@ export enum MetadataKey {
   PARAM = 'PARAM',
   RESULT = 'RESULT',
   ERROR = 'ERROR',
-  MODEL = 'MODEL',
   PROP = 'PROP',
   COLLECTION = 'COLLECTION',
   FIELD = 'FIELD',
   EMBEDDED = 'EMBEDDED',
   INDEX = 'INDEX',
   VALIDATOR = 'VALIDATOR',
-  HOOK = 'HOOK'
+  HOOK = 'HOOK',
+  SCHEMA = 'SCHEMA',
+  MODEL = 'MODEL'
 }
 
 export default MetadataKey

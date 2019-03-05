@@ -8,15 +8,10 @@ import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
 import { CtrlMetadata } from '../decorators/Controller'
 import { ParamMetadata } from '../decorators/Param'
+import { ResultMetadata } from '../decorators/Result'
 import { RouteMetadata } from '../decorators/Route'
-import { getContainer, getControllerIds } from './global'
 import { HttpStatus } from './HttpStatus'
-declare module 'koa' {
-  // tslint:disable-next-line:interface-name
-  interface Request {
-    body: any
-  }
-}
+import { transform } from './utils'
 
 const applyCtrlMiddlewares = (router: Router, middlewares: any[]) => {
   middlewares.forEach((middleware) => {
@@ -29,12 +24,11 @@ const applyRouteMiddlewares = (router: Router, middlewares: any[], method: strin
   })
 }
 
-export function createController(ctrlId: symbol) {
-  const router: any = new Router()
+export function createController(ctrl: object) {
+  const router = new Router()
   const ctrlMiddlewares: Map<string, any[]> = Map()
   const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
   applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
-  const ctrl = getContainer().get(ctrlId)
   const routes = createRoutes(ctrl)
   routes.forEach((route) => {
     const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
@@ -59,10 +53,11 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         value = ctx.params[paramMeta.name]
         break
       case 'body':
+        const request: any = ctx.request
         if (paramMeta.root) {
-          value = ctx.request.body
+          value = request.body
         } else {
-          value = ctx.request.body && ctx.request.body[paramMeta.name]
+          value = request.body && request.body[paramMeta.name]
         }
 
         break
@@ -111,7 +106,14 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
         ctx.body = response.body
     }
   } else {
-    ctx.body = response
+    const resultMetadataMap: Map<number, ResultMetadata> =
+      Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
+    const resultMetadata = resultMetadataMap.get(HttpStatusCode.OK)
+    if (resultMetadata && resultMetadata.strict) {
+      ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+    } else {
+      ctx.body = response
+    }
   }
 }
 
@@ -147,9 +149,10 @@ export function createRoute(controller: object, propKey: string, ctrlMetadata: C
     return
   }
   const action = createAction(controller, propKey)
+  const version = routeMetadata.version || ctrlMetadata.version || ''
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: Path.join(ctrlMetadata.path, routeMetadata.path),
+    path: Path.join('/api', version, ctrlMetadata.path, routeMetadata.path),
     action,
     middleware: { before: [], after: [] }
   }
@@ -165,10 +168,9 @@ export function createRoutes(controller: object): List<any> {
   )
 }
 
-export const loadControllers = (router: Router) => {
-  const ctrlIds = getControllerIds()
-  ctrlIds.forEach((id) => {
-    const ctrl = createController(id)
+export const loadControllers = (router: Router, controllers: List<object>) => {
+  controllers.forEach((item) => {
+    const ctrl = createController(item)
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router

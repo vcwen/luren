@@ -1,8 +1,7 @@
-import { Inject, Injectable } from './decorators/Inverify'
+import { injectable } from 'inversify'
 
-@Injectable('TestService')
+@injectable()
 export class TestService {
-  @Inject('')
   public test!: string
   public greeting() {
     // tslint:disable-next-line:no-console

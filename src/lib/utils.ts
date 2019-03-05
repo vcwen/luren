@@ -1,8 +1,11 @@
+import Ajv from 'ajv'
+import { promises as fs } from 'fs'
 import _ from 'lodash'
+import Path from 'path'
 import 'reflect-metadata'
 import { struct } from 'superstruct'
 import { MetadataKey } from '../constants/MetadataKey'
-import { IModelMetadata } from '../decorators/Model'
+import { SchemaMetadata } from '../decorators/Schema'
 
 export interface IJsonSchema {
   title?: string
@@ -80,12 +83,8 @@ const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
     }
     return [jsonSchema, false]
   } else if (typeof schema === 'function') {
-    const modelMetadata: IModelMetadata = Reflect.getMetadata(MetadataKey.MODEL, schema)
-    if (modelMetadata) {
-      return [{ $ref: `#/models/${modelMetadata.name}` }, false]
-    } else {
-      throw new TypeError('Invalid schema:' + schema)
-    }
+    const schemaMetadata: SchemaMetadata = Reflect.getMetadata(MetadataKey.SCHEMA, schema)
+    return [schemaMetadata.schema, false]
   } else {
     throw new TypeError('Invalid schema:' + schema)
   }
@@ -138,5 +137,71 @@ export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean 
     return struct(structSchema)
   } else {
     return struct.optional(structSchema)
+  }
+}
+const ajv = new Ajv()
+export const transform = (value: any, schema: any, rootSchema: any) => {
+  if (schema.allOf) {
+    schema = _.merge({}, ...(schema.allOf as any[]))
+  }
+  if (schema.$ref) {
+    // reference, only support embedded definitions
+    const path = _.tail(schema.$ref.split('/')).join('.')
+    const ref = _.get(rootSchema, path)
+    schema = _.merge(_.omit(schema, '$ref'), ref)
+  }
+  if (schema.type) {
+    if (schema.type === 'object') {
+      const result = {} as any
+      const props = Object.getOwnPropertyNames(schema.properties)
+      for (const prop of props) {
+        result[prop] = transform(value[prop], schema.properties[prop], rootSchema)
+      }
+      if (schema.additionalProperties) {
+        const otherProps = _.difference(Object.getOwnPropertyNames(value), props)
+        for (const p of otherProps) {
+          result[p] = value[p]
+        }
+      }
+      return result
+    } else if (schema.type === 'array') {
+      const items: any[] = value
+      return items.map((item) => transform(item, schema.items, rootSchema))
+    } else {
+      return value
+    }
+  } else {
+    if (schema.anyOf) {
+      // find the first valid one and use it
+      const schemas = schema.anyOf as any[]
+      for (const s of schemas) {
+        if (ajv.validate(s, value)) {
+          return transform(value, s, rootSchema)
+        }
+      }
+    } else if (schema.oneOf) {
+      // find the first valid one and use it
+      const schemas = schema.anyOf as any[]
+      for (const s of schemas) {
+        if (ajv.validate(s, value)) {
+          return transform(value, s, rootSchema)
+        }
+      }
+    } else {
+      // when no above keys, it might be 'const' or 'enum' without type
+      return value
+    }
+  }
+}
+
+export const importModule = async (path: string, base?: string) => {
+  if (base) {
+    path = Path.resolve(base, path)
+  }
+  const files = await fs.readdir(path)
+  for (const file of files) {
+    if ((file.endsWith('.js') || file.endsWith('.ts')) && !file.endsWith('.d.ts')) {
+      await import(Path.resolve(path, file))
+    }
   }
 }

@@ -21,7 +21,6 @@ describe('Route', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
       @Route({
-        private: true,
         name: 'MyTest',
         path: '/testPath',
         method: HttpMethod.POST,
@@ -58,7 +57,6 @@ describe('Get', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
       @Get({
-        private: true,
         name: 'MyTest',
         path: '/testPath',
         desc: 'get the name of app'
@@ -95,7 +93,6 @@ describe('POST', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
       @Post({
-        private: true,
         name: 'CreateTest',
         path: '/create',
         desc: 'create a mock of app'
@@ -132,7 +129,6 @@ describe('PUT', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
       @Put({
-        private: true,
         name: 'UpdateTest',
         path: '/test',
         desc: 'update'
@@ -205,7 +201,6 @@ describe('DELETE', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
       @Delete({
-        private: true,
         name: 'DeleteTest',
         path: '/test'
       })

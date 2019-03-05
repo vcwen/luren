@@ -7,6 +7,7 @@ export interface IRouteOptions {
   name?: string
   path?: string
   method?: HttpMethod
+  version?: string
   desc?: string
 }
 
@@ -14,11 +15,13 @@ export class RouteMetadata {
   public name: string
   public path: string
   public method: HttpMethod
+  public version?: string
   public desc?: string
-  constructor(name: string, method: HttpMethod, path: string, desc?: string) {
+  constructor(name: string, method: HttpMethod, path: string, version?: string, desc?: string) {
     this.name = name
     this.method = method
     this.path = path
+    this.version = version
     this.desc = desc
   }
 }
@@ -27,7 +30,7 @@ const getRouteMetadata = (options: IRouteOptions, _: object, propertyKey: string
   const name = options.name || propertyKey
   const method = options.method || HttpMethod.GET
   const path = options.path || '/' + propertyKey
-  const metadata = new RouteMetadata(name, method, path, options.desc)
+  const metadata = new RouteMetadata(name, method, path, options.version, options.desc)
   return metadata
 }
 

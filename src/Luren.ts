@@ -1,10 +1,12 @@
-import { Map } from 'immutable'
+import { List, Map } from 'immutable'
+import { Container } from 'inversify'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'
 import helmet from 'koa-helmet'
 import Router, { IMiddleware } from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
+import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { loadControllers } from './lib/Helper'
 
 enum MiddlewareName {
@@ -22,15 +24,15 @@ export class Luren {
   private _initialized: boolean = false
   private _koa: Koa
   private _router: Router
-  private preInit: (app: Luren) => Promise<void>
-  // tslint:disable-next-line:ban-types
+  private _container?: Container
+  private _controllers: List<object> = List()
   private _middlewares: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
-  constructor(preInit?: (app: Luren) => Promise<void>) {
+  constructor(container?: Container) {
     this._koa = new Koa()
     this._router = new Router()
-    // tslint:disable-next-line:no-empty
-    this.preInit = preInit ? preInit : async () => {}
+    this._container = container
   }
+
   public async listen(port: number) {
     await this.initialize()
     return new Promise<Server>((resolve) => {
@@ -58,15 +60,23 @@ export class Luren {
     if (this._initialized) {
       return
     }
-    const router = this._router
-    await this.preInit(this)
+
     this.use(helmet(), MiddlewareName.SECURITY)
     this.use(bodyParser(), MiddlewareName.BODY_PARSER)
     this._loadMiddlewares()
-    loadControllers(router)
+    if (this._container) {
+      const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
+      this._controllers = this._controllers.concat(ctrls)
+    }
+    const router = this._router
+    loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
     this._initialized = true
   }
+  public registerControllers(...controllers: object[]) {
+    this._controllers = this._controllers.concat(controllers)
+  }
+
   private _loadMiddleware(
     name: string,
     options: { pre: boolean; middleware?: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
