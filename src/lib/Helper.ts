@@ -2,6 +2,7 @@ import Boom from 'boom'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
 import { get } from 'lodash'
+import { isEmpty } from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
@@ -95,24 +96,44 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
 }
 
 const processRoute = async (ctx: IRouterContext, controller: any, propKey: string, args: any[]) => {
-  const response = await controller[propKey].apply(controller, args)
-  if (response instanceof HttpStatus) {
-    ctx.status = response.statusCode
-    switch (response.statusCode) {
-      case HttpStatusCode.MOVED_PERMANENTLY:
-      case HttpStatusCode.FOUND:
-        return ctx.redirect(response.body)
-      default:
-        ctx.body = response.body
-    }
-  } else {
-    const resultMetadataMap: Map<number, ResultMetadata> =
-      Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
-    const resultMetadata = resultMetadataMap.get(HttpStatusCode.OK)
-    if (resultMetadata && resultMetadata.strict) {
-      ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+  try {
+    const response = await controller[propKey].apply(controller, args)
+    if (response instanceof HttpStatus) {
+      ctx.status = response.statusCode
+      switch (response.statusCode) {
+        case HttpStatusCode.MOVED_PERMANENTLY:
+        case HttpStatusCode.FOUND:
+          return ctx.redirect(response.body)
+        default:
+          ctx.body = response.body
+      }
     } else {
-      ctx.body = response
+      const resultMetadataMap: Map<number, ResultMetadata> =
+        Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
+      const resultMetadata = resultMetadataMap.get(HttpStatusCode.OK)
+      if (resultMetadata && resultMetadata.strict) {
+        ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+      } else {
+        ctx.body = response
+      }
+    }
+  } catch (err) {
+    if (Boom.isBoom(err)) {
+      ctx.status = err.output.statusCode
+      const response = !isEmpty(err.output.payload.attributes)
+        ? err.output.payload.attributes
+        : err.output.payload.message
+      const resultMetadataMap: Map<number, ResultMetadata> =
+        Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
+      const resultMetadata = resultMetadataMap.get(err.output.statusCode)
+      if (resultMetadata && resultMetadata.strict) {
+        ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+      } else {
+        ctx.body = response
+      }
+    } else {
+      ctx.status = HttpStatusCode.INTERNAL_SERVER_EROR
+      ctx.body = err.message || err
     }
   }
 }
@@ -129,11 +150,7 @@ export function createAction(controller: object, propKey: string) {
         await next()
       }
     } catch (err) {
-      if (Boom.isBoom(err)) {
-        ctx.throw(err.output.statusCode, err.message)
-      } else {
-        ctx.throw(err)
-      }
+      ctx.throw(err)
     }
   }
   return action
