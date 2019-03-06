@@ -74,7 +74,10 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
     }
 
     if (paramMeta.required && !value) {
-      ctx.throw(HttpStatusCode.BAD_REQUEST, paramMeta.name + ' is required')
+      ctx.throw(
+        HttpStatusCode.BAD_REQUEST,
+        paramMeta.name + 'is required' + (paramMeta.source ? ' in ' + paramMeta.source : '')
+      )
     }
 
     if (!value) {
@@ -201,4 +204,6 @@ export const loadControllers = (router: Router, controllers: List<object>) => {
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router
+}
+{
 }
