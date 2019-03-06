@@ -1,8 +1,9 @@
+import Ajv from 'ajv'
 import Boom from 'boom'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
-import { get } from 'lodash'
 import { isEmpty } from 'lodash'
+import { get } from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
@@ -13,6 +14,7 @@ import { ResultMetadata } from '../decorators/Result'
 import { RouteMetadata } from '../decorators/Route'
 import { HttpStatus } from './HttpStatus'
 import { transform } from './utils'
+const ajv = new Ajv()
 
 const applyCtrlMiddlewares = (router: Router, middlewares: any[]) => {
   middlewares.forEach((middleware) => {
@@ -112,7 +114,11 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
         Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
       const resultMetadata = resultMetadataMap.get(HttpStatusCode.OK)
       if (resultMetadata && resultMetadata.strict) {
-        ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+        if (ajv.validate(resultMetadata.schema, response)) {
+          ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+        } else {
+          throw Boom.internal('Invalid response data')
+        }
       } else {
         ctx.body = response
       }
@@ -127,7 +133,11 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
         Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
       const resultMetadata = resultMetadataMap.get(err.output.statusCode)
       if (resultMetadata && resultMetadata.strict) {
-        ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+        if (ajv.validate(resultMetadata.schema, response)) {
+          ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+        } else {
+          ctx.body = response
+        }
       } else {
         ctx.body = response
       }
