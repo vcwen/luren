@@ -205,3 +205,16 @@ export const importModule = async (path: string, base?: string) => {
     }
   }
 }
+
+export const importFiles = async (path: string, pattern: RegExp) => {
+  const files = await fs.readdir(path)
+  for (const file of files) {
+    if (pattern.test(file)) {
+      const stat = await fs.lstat(Path.resolve(path, file))
+      const excludePattern = /(^\.)|(\.d\.ts$)/
+      if (stat.isFile() && !excludePattern.test(file)) {
+        await import(Path.resolve(path, file))
+      }
+    }
+  }
+}

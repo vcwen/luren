@@ -8,7 +8,7 @@
   "author": "vincent.wen <wenwei1202@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "ajv": "^6.9.1",
+    "ajv": "^6.10.0",
     "boom": "^7.2.0",
     "decamelize": "^2.0.0",
     "immutable": "^4.0.0-rc.12",

@@ -6,8 +6,10 @@ import helmet from 'koa-helmet'
 import Router, { IMiddleware } from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
+import Path from 'path'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { loadControllers } from './lib/Helper'
+import { importFiles } from './lib/utils'
 
 enum MiddlewareName {
   ALL = 'ALL',
@@ -25,12 +27,21 @@ export class Luren {
   private _koa: Koa
   private _router: Router
   private _container?: Container
+  private _boot?: { path: string; pattern: RegExp }
   private _controllers: List<object> = List()
   private _middlewares: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
-  constructor(container?: Container) {
+  constructor(options?: { container?: Container; boot: { path: string; base?: string; pattern?: RegExp } }) {
     this._koa = new Koa()
     this._router = new Router()
-    this._container = container
+    if (options) {
+      this._container = options.container
+      if (options.boot) {
+        const basePath = options.boot.base || process.cwd()
+        const bootPath = Path.resolve(basePath, options.boot.path)
+        const pattern = options.boot.pattern || /^(?!.).*\.[t|j]s$/
+        this._boot = { path: bootPath, pattern }
+      }
+    }
   }
 
   public async listen(port: number) {
@@ -71,6 +82,7 @@ export class Luren {
     const router = this._router
     loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
+    this._loadBootFiles()
     this._initialized = true
   }
   public registerControllers(...controllers: object[]) {
@@ -103,5 +115,10 @@ export class Luren {
     this._loadMiddleware(MiddlewareName.ALL, { pre: true })
     this._loadMiddleware(MiddlewareName.SECURITY)
     this._loadMiddleware(MiddlewareName.BODY_PARSER)
+  }
+  private _loadBootFiles() {
+    if (this._boot) {
+      importFiles(this._boot.path, this._boot.pattern)
+    }
   }
 }
