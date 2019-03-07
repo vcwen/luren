@@ -42,6 +42,7 @@ export class Luren {
   private _controllers: List<object> = List()
   private _middleware: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
   private _controllerConfig?: IFileLoaderConfig
+  private _hooks: Map<string, (luren: Luren) => any> = Map()
   constructor(options?: { container?: Container; boot: IFileLoaderOptions; controllerOptions?: IFileLoaderOptions }) {
     this._koa = new Koa()
     this._router = new Router()
@@ -57,7 +58,12 @@ export class Luren {
   }
 
   public async listen(port: number) {
-    await this.initialize()
+    await this._fireHook('pre_init')
+    await this._initialize()
+    await this._fireHook('post_init')
+    await this._fireHook('pre_boot')
+    await this._loadBootFiles()
+    await this._fireHook('post_boot')
     return new Promise<Server>((resolve) => {
       const server = this._koa.listen(port, () => {
         resolve(server)
@@ -79,7 +85,28 @@ export class Luren {
     }
     this._middleware = this._middleware.set(name, m)
   }
-  public async initialize() {
+  public registerControllers(...controllers: object[]) {
+    this._controllers = this._controllers.concat(controllers)
+  }
+  public setBootConfig(config: IFileLoaderOptions) {
+    this._bootConfig = getFileLoaderConfig(config)
+  }
+  public setControllerConfig(config: IFileLoaderOptions) {
+    this._bootConfig = getFileLoaderConfig(config)
+  }
+  public preInit(hook: (app: Luren) => any) {
+    this._hooks.set('pre_init', hook)
+  }
+  public postInit(hook: (app: Luren) => any) {
+    this._hooks.set('post_init', hook)
+  }
+  public preBoot(hook: (app: Luren) => any) {
+    this._hooks.set('pre_boot', hook)
+  }
+  public postBoot(hook: (app: Luren) => any) {
+    this._hooks.set('post_boot', hook)
+  }
+  private async _initialize() {
     if (this._initialized) {
       return
     }
@@ -95,11 +122,14 @@ export class Luren {
     await this._loadControllerFiles()
     loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
-    await this._loadBootFiles()
     this._initialized = true
   }
-  public registerControllers(...controllers: object[]) {
-    this._controllers = this._controllers.concat(controllers)
+
+  private async _fireHook(hook: string) {
+    const hookFunc = this._hooks.get(hook)
+    if (hookFunc) {
+      return hookFunc.call(this, this)
+    }
   }
 
   private _loadMiddleware(
