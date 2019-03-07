@@ -12,6 +12,7 @@ export interface IPropOptions {
   enum?: any[]
   const?: any
   strict?: boolean
+  private?: boolean
 }
 
 export class PropMetadata {
@@ -23,6 +24,7 @@ export class PropMetadata {
   public enum?: any[]
   public const?: any
   public desc?: string
+  public private: boolean = false
   constructor(name: string, required: boolean = false) {
     this.name = name
     this.required = required
@@ -40,6 +42,10 @@ const getPropMetadata = (options: IPropOptions, _1: object, propertyKey: string)
   metadata.format = options.format
   metadata.enum = options.enum
   metadata.const = options.const
+  metadata.private = options.private || false
+  if (metadata.private) {
+    metadata.schema.private = true
+  }
   return metadata
 }
 

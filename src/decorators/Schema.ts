@@ -37,7 +37,7 @@ export function Schema(options: ISchemaOptions = {}) {
     for (const prop of props) {
       const propMetadata: PropMetadata = Reflect.getMetadata(MetadataKey.PROP, constructor, prop)
       if (propMetadata) {
-        jsonSchema.properties[prop] = propMetadata
+        jsonSchema.properties[prop] = propMetadata.schema
         if (propMetadata.required) {
           jsonSchema.required.push(prop)
         }

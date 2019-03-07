@@ -156,6 +156,10 @@ export const transform = (value: any, schema: any, rootSchema: any) => {
       const result = {} as any
       const props = Object.getOwnPropertyNames(schema.properties)
       for (const prop of props) {
+        if (schema.properties[prop].private) {
+          // skip private properties
+          break
+        }
         result[prop] = transform(value[prop], schema.properties[prop], rootSchema)
       }
       if (schema.additionalProperties) {
