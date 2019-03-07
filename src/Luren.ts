@@ -6,15 +6,16 @@ import helmet from 'koa-helmet'
 import Router, { IMiddleware } from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
-import Path from 'path'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { loadControllers } from './lib/Helper'
-import { importFiles } from './lib/utils'
+import { getFileLoaderConfig, importFiles } from './lib/utils'
 
 enum MiddlewareName {
   ALL = 'ALL',
   SECURITY = 'SECURITY',
-  BODY_PARSER = 'BODY_PARSER'
+  SESSION = 'SESSION',
+  BODY_PARSER = 'BODY_PARSER',
+  AUTH = 'AUTH'
 }
 
 enum Phase {
@@ -22,24 +23,35 @@ enum Phase {
   POST = 'POST'
 }
 
+export interface IFileLoaderConfig {
+  path: string
+  pattern: { include?: RegExp; exclude?: RegExp }
+}
+export interface IFileLoaderOptions {
+  path: string
+  base?: string
+  pattern?: RegExp | { include?: RegExp; exclude?: RegExp }
+}
+
 export class Luren {
   private _initialized: boolean = false
   private _koa: Koa
   private _router: Router
   private _container?: Container
-  private _boot?: { path: string; pattern: RegExp }
+  private _bootConfig?: IFileLoaderConfig
   private _controllers: List<object> = List()
-  private _middlewares: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
-  constructor(options?: { container?: Container; boot: { path: string; base?: string; pattern?: RegExp } }) {
+  private _middleware: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
+  private _controllerConfig?: IFileLoaderConfig
+  constructor(options?: { container?: Container; boot: IFileLoaderOptions; controllerOptions?: IFileLoaderOptions }) {
     this._koa = new Koa()
     this._router = new Router()
     if (options) {
       this._container = options.container
       if (options.boot) {
-        const basePath = options.boot.base || process.cwd()
-        const bootPath = Path.resolve(basePath, options.boot.path)
-        const pattern = options.boot.pattern || /^(?!.).*\.[t|j]s$/
-        this._boot = { path: bootPath, pattern }
+        this._bootConfig = getFileLoaderConfig(options.boot)
+      }
+      if (options.controllerOptions) {
+        this._controllerConfig = getFileLoaderConfig(options.controllerOptions)
       }
     }
   }
@@ -59,13 +71,13 @@ export class Luren {
     if (name === MiddlewareName.ALL && !phase) {
       phase = Phase.POST
     }
-    const m: any = this._middlewares.get(name) || { pre: [], post: [], middleware: undefined }
+    const m: any = this._middleware.get(name) || { pre: [], post: [], middleware: undefined }
     if (phase) {
       m[phase].push(middleware)
     } else {
       m.middleware = middleware
     }
-    this._middlewares = this._middlewares.set(name, m)
+    this._middleware = this._middleware.set(name, m)
   }
   public async initialize() {
     if (this._initialized) {
@@ -74,15 +86,16 @@ export class Luren {
 
     this.use(helmet(), MiddlewareName.SECURITY)
     this.use(bodyParser(), MiddlewareName.BODY_PARSER)
-    this._loadMiddlewares()
+    this._loadAllMiddleware()
     if (this._container) {
       const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
       this._controllers = this._controllers.concat(ctrls)
     }
     const router = this._router
+    await this._loadControllerFiles()
     loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
-    this._loadBootFiles()
+    await this._loadBootFiles()
     this._initialized = true
   }
   public registerControllers(...controllers: object[]) {
@@ -91,9 +104,9 @@ export class Luren {
 
   private _loadMiddleware(
     name: string,
-    options: { pre: boolean; middleware?: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
+    options: { pre?: boolean; middleware?: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
   ) {
-    const item = this._middlewares.get(name)
+    const item = this._middleware.get(name)
     if (!item) {
       return
     }
@@ -111,14 +124,22 @@ export class Luren {
       }
     }
   }
-  private _loadMiddlewares() {
+  private _loadAllMiddleware() {
     this._loadMiddleware(MiddlewareName.ALL, { pre: true })
     this._loadMiddleware(MiddlewareName.SECURITY)
+    this._loadMiddleware(MiddlewareName.AUTH)
+    this._loadMiddleware(MiddlewareName.SESSION)
     this._loadMiddleware(MiddlewareName.BODY_PARSER)
+    this._loadMiddleware(MiddlewareName.ALL, { post: true })
   }
-  private _loadBootFiles() {
-    if (this._boot) {
-      importFiles(this._boot.path, this._boot.pattern)
+  private async _loadBootFiles() {
+    if (this._bootConfig) {
+      return importFiles(this._bootConfig)
+    }
+  }
+  private async _loadControllerFiles() {
+    if (this._controllerConfig) {
+      importFiles(this._controllerConfig)
     }
   }
 }

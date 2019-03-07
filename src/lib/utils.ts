@@ -6,6 +6,7 @@ import 'reflect-metadata'
 import { struct } from 'superstruct'
 import { MetadataKey } from '../constants/MetadataKey'
 import { SchemaMetadata } from '../decorators/Schema'
+import { IFileLoaderConfig, IFileLoaderOptions } from '../Luren'
 
 export interface IJsonSchema {
   title?: string
@@ -206,15 +207,44 @@ export const importModule = async (path: string, base?: string) => {
   }
 }
 
-export const importFiles = async (path: string, pattern: RegExp) => {
-  const files = await fs.readdir(path)
+export const importFiles = async (config: IFileLoaderConfig) => {
+  const files = await fs.readdir(config.path)
+  const pattern = config.pattern
+  const defaultExcludePattern = /(^\.)|(\.d\.ts$)/
+  const defaultIncludePattern = /\.[t|j]s$/
   for (const file of files) {
-    if (pattern.test(file)) {
-      const stat = await fs.lstat(Path.resolve(path, file))
-      const excludePattern = /(^\.)|(\.d\.ts$)/
-      if (stat.isFile() && !excludePattern.test(file)) {
-        await import(Path.resolve(path, file))
+    const stat = await fs.lstat(Path.resolve(config.path, file))
+    if (stat.isDirectory()) {
+      await importFiles({ path: Path.resolve(config.path, file), pattern })
+    } else {
+      if ((pattern.exclude && pattern.exclude.test(file)) || defaultExcludePattern.test(file)) {
+        break
+      }
+      if (defaultIncludePattern.test(file) && (pattern.include && pattern.include.test(file))) {
+        await import(Path.resolve(config.path, file))
       }
     }
   }
+}
+
+export const getFileLoaderConfig = (options: IFileLoaderOptions) => {
+  const basePath = options.base || process.cwd()
+  const path = Path.resolve(basePath, options.path)
+  const conf: IFileLoaderConfig = {
+    path,
+    pattern: {}
+  }
+  if (options.pattern) {
+    if (options.pattern instanceof RegExp) {
+      conf.pattern.include = options.pattern
+    } else {
+      if (options.pattern.include) {
+        conf.pattern.include = options.pattern.include
+      }
+      if (options.pattern.exclude) {
+        conf.pattern.include = options.pattern.include
+      }
+    }
+  }
+  return conf
 }

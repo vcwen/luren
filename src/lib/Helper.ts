@@ -62,7 +62,6 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         } else {
           value = request.body && request.body[paramMeta.name]
         }
-
         break
       case 'header':
         value = ctx.header[paramMeta.name]
@@ -204,6 +203,4 @@ export const loadControllers = (router: Router, controllers: List<object>) => {
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router
-}
-{
 }
