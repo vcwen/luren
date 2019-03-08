@@ -1,7 +1,7 @@
 import { List } from 'immutable'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
-import { IJsonSchema, jsonSchemaToStructSchema, normalizeSimpleSchema } from '../lib/utils'
+import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export interface IParamOptions {
   name?: string
@@ -17,14 +17,13 @@ export interface IParamOptions {
 
 export class ParamMetadata {
   public name: string
-  public source: 'query' | 'path' | 'header' | 'body' | 'file' | 'context'
+  public source: 'query' | 'path' | 'header' | 'body' | 'context'
   public schema!: IJsonSchema
   public required: boolean = false
   public root: boolean = false
   public format?: string
   public strict: boolean = true
   public desc?: string
-  public struct: any
   constructor(name: string, source: 'query' | 'path' | 'header' | 'body' | 'context', required: boolean = false) {
     this.name = name
     this.source = source
@@ -46,7 +45,6 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
     metadata.strict = true
   }
   metadata.format = options.format
-  metadata.struct = jsonSchemaToStructSchema(metadata.schema, options.required, options.strict)
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAM, target, propertyKey) || List()
   if (paramsMetadata.has(index)) {
     const existingMetadata = paramsMetadata.get(index) || {}

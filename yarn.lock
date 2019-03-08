@@ -329,11 +329,6 @@
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
 
-"@types/superstruct@^0.5.0":
-  version "0.5.0"
-  resolved "http://registry.npm.taobao.org/@types/superstruct/download/@types/superstruct-0.5.0.tgz#2a71e613929f8049cb8504bc7d90dbf0e31da034"
-  integrity sha1-KnHmE5KfgEnLhQS8fZDb8OMdoDQ=
-
 abab@^2.0.0:
   version "2.0.0"
   resolved "http://registry.npm.taobao.org/abab/download/abab-2.0.0.tgz#aba0ab4c5eee2d4c79d3487d85450fb2376ebb0f"

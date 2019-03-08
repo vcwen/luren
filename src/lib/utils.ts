@@ -5,7 +5,6 @@ import { IRouterContext } from 'koa-router'
 import _ from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
-import { struct } from 'superstruct'
 import { MetadataKey } from '../constants/MetadataKey'
 import { SchemaMetadata } from '../decorators/Schema'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
@@ -101,47 +100,6 @@ export const normalizeSimpleSchema = (schema: any): IJsonSchema => {
   return jsonSchema
 }
 
-const isPrimitiveType = (type: string) => {
-  return !(type === 'object' || type === 'array')
-}
-
-export const jsonSchemaToStructSchema = (schema: IJsonSchema, required: boolean = false, strict: boolean = false) => {
-  let structSchema: any = {}
-  if (Array.isArray(schema.type)) {
-    struct.union(schema.type)
-  } else {
-    if (isPrimitiveType(schema.type)) {
-      structSchema = schema.type
-    } else if (schema.type === 'array') {
-      if (schema.items && !_.isEmpty(schema.items)) {
-        structSchema = struct.list([jsonSchemaToStructSchema(schema.items)])
-      } else {
-        structSchema = 'array'
-      }
-    } else {
-      if (schema.properties) {
-        const schemaDetail = schema.properties
-        const requiredProps = schema.required || ([] as string[])
-        for (const prop in schemaDetail) {
-          if (schemaDetail.hasOwnProperty(prop)) {
-            structSchema[prop] = jsonSchemaToStructSchema(schemaDetail[prop], requiredProps.includes(prop), strict)
-          }
-        }
-        if (!strict) {
-          structSchema = struct.partial(structSchema)
-        }
-      } else {
-        structSchema = 'object'
-      }
-    }
-  }
-
-  if (required) {
-    return struct(structSchema)
-  } else {
-    return struct.optional(structSchema)
-  }
-}
 const ajv = new Ajv()
 export const transform = (value: any, schema: any, rootSchema: any) => {
   if (schema.allOf) {

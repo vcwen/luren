@@ -61,25 +61,26 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         break
       case 'body': {
         const request: any = ctx.request
-        if (paramMeta.root) {
-          value = request.body
+        if (paramMeta.schema.type === 'file') {
+          if (paramMeta.root) {
+            value = request.files
+          } else {
+            value = request.files && request.files[paramMeta.name]
+          }
         } else {
-          value = request.body && request.body[paramMeta.name]
+          if (paramMeta.root) {
+            value = request.body
+          } else {
+            value = request.body && request.body[paramMeta.name]
+          }
         }
         break
       }
-
       case 'header':
         value = ctx.header[paramMeta.name]
         break
-      case 'file': {
-        const request: any = ctx.request
-        value = request.body.files[paramMeta.name]
-        break
-      }
       case 'context':
         return ctx
-
       default:
         throw new TypeError('Invalid source:' + paramMeta.source)
     }
@@ -90,7 +91,6 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         paramMeta.name + 'is required' + (paramMeta.source ? ' in ' + paramMeta.source : '')
       )
     }
-
     if (!value) {
       return
     }
@@ -101,11 +101,10 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         ctx.throw(HttpStatusCode.BAD_REQUEST, `invalid value for argument "${paramMeta.name}"`)
       }
     }
-    const struct = paramMeta.struct
-    try {
-      value = struct(value)
-    } catch (err) {
-      ctx.throw(HttpStatusCode.BAD_REQUEST, err.message)
+    const schema = paramMeta.schema
+    const valid = ajv.validate(schema, value)
+    if (!valid) {
+      throw Boom.badRequest(ajv.errorsText())
     }
     return value
   })
@@ -170,9 +169,9 @@ export function createAction(controller: object, propKey: string) {
     try {
       if (!ctx.disableFormParser && ctx.is('multipart/form-data')) {
         const { fields, files } = await parseFormData(ctx)
-        const body: any = Object.assign({}, fields)
-        body.files = files
-        ;(ctx.request as any).body = body
+        const request: any = ctx.request
+        request.body = fields
+        request.files = files
       }
       const args = getParams(ctx, paramsMetadata)
       await processRoute(ctx, controller, propKey, args.toArray())
