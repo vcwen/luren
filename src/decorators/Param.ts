@@ -17,7 +17,7 @@ export interface IParamOptions {
 
 export class ParamMetadata {
   public name: string
-  public source: 'query' | 'path' | 'header' | 'body' | 'context'
+  public source: 'query' | 'path' | 'header' | 'body' | 'file' | 'context'
   public schema!: IJsonSchema
   public required: boolean = false
   public root: boolean = false

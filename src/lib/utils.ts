@@ -1,9 +1,12 @@
 import Ajv from 'ajv'
+import { Fields, Files, IncomingForm } from 'formidable'
 import { promises as fs } from 'fs'
+import { IRouterContext } from 'koa-router'
 import _ from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
 import { struct } from 'superstruct'
+import { promisify } from 'util'
 import { MetadataKey } from '../constants/MetadataKey'
 import { SchemaMetadata } from '../decorators/Schema'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
@@ -262,4 +265,16 @@ export const getFileLoaderConfig = (options: IModuleLoaderOptions) => {
     conf.filter = options.filter
   }
   return conf
+}
+
+export const parseFormData = async (ctx: IRouterContext) => {
+  const form = new IncomingForm()
+  return new Promise<{ fields: Fields; files: Files }>((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        return reject(err)
+      }
+      resolve({ fields, files })
+    })
+  })
 }
