@@ -12,8 +12,9 @@ import { CtrlMetadata } from '../decorators/Controller'
 import { ParamMetadata } from '../decorators/Param'
 import { ResultMetadata } from '../decorators/Result'
 import { RouteMetadata } from '../decorators/Route'
+import { Luren } from '../Luren'
 import { HttpStatus } from './HttpStatus'
-import { transform } from './utils'
+import { parseFormData, transform } from './utils'
 const ajv = new Ajv()
 
 const applyCtrlMiddleware = (router: Router, middleware: any[]) => {
@@ -27,12 +28,12 @@ const applyRouteMiddleware = (router: Router, middleware: any[], method: string,
   })
 }
 
-export function createController(ctrl: object) {
+export function createController(luren: Luren, ctrl: object) {
   const router = new Router()
   const ctrlMiddleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl)
   const beforeCtrlMiddleware = ctrlMiddleware.get(Phase.PRE) || []
   applyCtrlMiddleware(router, beforeCtrlMiddleware)
-  const routes = createRoutes(ctrl)
+  const routes = createRoutes(luren, ctrl)
   routes.forEach((route) => {
     if (!route) {
       return
@@ -58,7 +59,7 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
       case 'path':
         value = ctx.params[paramMeta.name]
         break
-      case 'body':
+      case 'body': {
         const request: any = ctx.request
         if (paramMeta.root) {
           value = request.body
@@ -66,11 +67,19 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
           value = request.body && request.body[paramMeta.name]
         }
         break
+      }
+
       case 'header':
         value = ctx.header[paramMeta.name]
         break
+      case 'file': {
+        const request: any = ctx.request
+        value = request.body.files[paramMeta.name]
+        break
+      }
       case 'context':
         return ctx
+
       default:
         throw new TypeError('Invalid source:' + paramMeta.source)
     }
@@ -159,6 +168,12 @@ export function createAction(controller: object, propKey: string) {
 
   const action = async (ctx: IRouterContext, next?: any) => {
     try {
+      if (!ctx.disableFormParser && ctx.is('multipart/form-data')) {
+        const { fields, files } = await parseFormData(ctx)
+        const body: any = Object.assign({}, fields)
+        body.files = files
+        ;(ctx.request as any).body = body
+      }
       const args = getParams(ctx, paramsMetadata)
       await processRoute(ctx, controller, propKey, args.toArray())
       if (next) {
@@ -171,7 +186,7 @@ export function createAction(controller: object, propKey: string) {
   return action
 }
 
-export function createRoute(controller: object, propKey: string, ctrlMetadata: CtrlMetadata) {
+export function createRoute(luren: Luren, controller: object, propKey: string, ctrlMetadata: CtrlMetadata) {
   const routeMetadata: RouteMetadata = Reflect.getOwnMetadata(
     MetadataKey.ROUTE,
     Reflect.getPrototypeOf(controller),
@@ -185,25 +200,25 @@ export function createRoute(controller: object, propKey: string, ctrlMetadata: C
   const middleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey)
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: Path.join('/api', version, ctrlMetadata.path, routeMetadata.path),
+    path: Path.join(luren.routerPrefix, version, ctrlMetadata.path, routeMetadata.path),
     action,
     middleware
   }
 }
 
-export function createRoutes(controller: object) {
+export function createRoutes(luren: Luren, controller: object) {
   const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
   const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
   return List(
     props.map((prop) => {
-      return createRoute(controller, prop, ctrlMetadata)
+      return createRoute(luren, controller, prop, ctrlMetadata)
     })
   )
 }
 
-export const loadControllers = (router: Router, controllers: List<object>) => {
+export const loadControllers = (luren: Luren, router: Router, controllers: List<object>) => {
   controllers.forEach((item) => {
-    const ctrl = createController(item)
+    const ctrl = createController(luren, item)
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router

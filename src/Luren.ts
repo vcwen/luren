@@ -1,4 +1,4 @@
-import { List, Map } from 'immutable'
+import { List } from 'immutable'
 import { Container } from 'inversify'
 import Koa from 'koa'
 import Router from 'koa-router'
@@ -21,6 +21,7 @@ export interface IModuleLoaderOptions {
 }
 
 export class Luren {
+  public routerPrefix: string = '/api'
   private _workDir: string = process.cwd()
   private _koa: Koa
   private _router: Router
@@ -85,7 +86,7 @@ export class Luren {
     }
     const router = this._router
     await this._loadControllerModules()
-    loadControllers(router, this._controllers)
+    loadControllers(this, router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
   }
 
