@@ -3,9 +3,9 @@ import Boom from 'boom'
 import { List, Map } from 'immutable'
 import Router, { IRouterContext } from 'koa-router'
 import { isEmpty } from 'lodash'
-import { get } from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
+import { Phase } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
 import { CtrlMetadata } from '../decorators/Controller'
@@ -16,32 +16,35 @@ import { HttpStatus } from './HttpStatus'
 import { transform } from './utils'
 const ajv = new Ajv()
 
-const applyCtrlMiddlewares = (router: Router, middlewares: any[]) => {
-  middlewares.forEach((middleware) => {
-    router.use(middleware)
+const applyCtrlMiddleware = (router: Router, middleware: any[]) => {
+  middleware.forEach((mw) => {
+    router.use(mw)
   })
 }
-const applyRouteMiddlewares = (router: Router, middlewares: any[], method: string, path: string) => {
-  middlewares.forEach((middleware) => {
-    ;(router as any)[method](path, middleware)
+const applyRouteMiddleware = (router: Router, middleware: any[], method: string, path: string) => {
+  middleware.forEach((mv) => {
+    ;(router as any)[method](path, mv)
   })
 }
 
 export function createController(ctrl: object) {
   const router = new Router()
-  const ctrlMiddlewares: Map<string, any[]> = Map()
-  const beforeCtrlMiddlewares = ctrlMiddlewares.get('before') || []
-  applyCtrlMiddlewares(router, beforeCtrlMiddlewares)
+  const ctrlMiddleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl)
+  const beforeCtrlMiddleware = ctrlMiddleware.get(Phase.PRE) || []
+  applyCtrlMiddleware(router, beforeCtrlMiddleware)
   const routes = createRoutes(ctrl)
   routes.forEach((route) => {
-    const beforeRouteMiddlewares = get(route, 'middlewares.before', [])
-    applyRouteMiddlewares(router, beforeRouteMiddlewares, route.method, route.path)
+    if (!route) {
+      return
+    }
+    const beforeRouteMiddleware = route.middleware.get(Phase.PRE) || []
+    applyRouteMiddleware(router, beforeRouteMiddleware, route.method, route.path)
     router[route.method](route.path, route.action)
-    const afterRouteMiddlewares = get(route, 'middlewares.after', [])
-    applyRouteMiddlewares(router, afterRouteMiddlewares, route.method, route.path)
+    const afterRouteMiddleware = route.middleware.get(Phase.POST) || []
+    applyRouteMiddleware(router, afterRouteMiddleware, route.method, route.path)
   })
-  const afterCtrlMiddlewares = ctrlMiddlewares.get('after') || []
-  applyCtrlMiddlewares(router, afterCtrlMiddlewares)
+  const afterCtrlMiddleware = ctrlMiddleware.get(Phase.POST) || []
+  applyCtrlMiddleware(router, afterCtrlMiddleware)
   return router
 }
 
@@ -179,15 +182,16 @@ export function createRoute(controller: object, propKey: string, ctrlMetadata: C
   }
   const action = createAction(controller, propKey)
   const version = routeMetadata.version || ctrlMetadata.version || ''
+  const middleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey)
   return {
     method: routeMetadata.method.toLowerCase(),
     path: Path.join('/api', version, ctrlMetadata.path, routeMetadata.path),
     action,
-    middleware: { before: [], after: [] }
+    middleware
   }
 }
 
-export function createRoutes(controller: object): List<any> {
+export function createRoutes(controller: object) {
   const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
   const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
   return List(

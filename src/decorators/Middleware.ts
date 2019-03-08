@@ -4,30 +4,30 @@ import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { Phase } from '../constants/Middleware'
 
-export function PreController(...middlewares: IMiddleware[]) {
+export function PreController(...middleware: IMiddleware[]) {
   return (constructor: any) => {
-    const mws: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARES, constructor) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARES, mws.set(Phase.PRE, middlewares), constructor)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.PRE, middleware), constructor)
   }
 }
 
-export function PostController(...middlewares: IMiddleware[]) {
+export function PostController(...middleware: IMiddleware[]) {
   return (constructor: any) => {
-    const mws: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARES, constructor) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARES, mws.set(Phase.POST, middlewares), constructor)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.POST, middleware), constructor)
   }
 }
 
-export function PreRoute(...middlewares: IMiddleware[]) {
+export function PreRoute(...middleware: IMiddleware[]) {
   return (target: object, propertyKey: string) => {
-    const mws: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARES, target, propertyKey) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARES, mws.set(Phase.PRE, middlewares), target, propertyKey)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, target, propertyKey) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.PRE, middleware), target, propertyKey)
   }
 }
 
-export function PostRoute(...middlewares: IMiddleware[]) {
+export function PostRoute(...middleware: IMiddleware[]) {
   return (target: object, propertyKey: string) => {
-    const mws: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARES, target, propertyKey) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARES, mws.set(Phase.POST, middlewares), target, propertyKey)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, target, propertyKey) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.POST, middleware), target, propertyKey)
   }
 }
