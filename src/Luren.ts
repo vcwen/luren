@@ -1,49 +1,39 @@
 import { List, Map } from 'immutable'
 import { Container } from 'inversify'
 import Koa from 'koa'
-import bodyParser from 'koa-bodyparser'
-import helmet from 'koa-helmet'
-import Router, { IMiddleware } from 'koa-router'
+import Router from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { loadControllers } from './lib/Helper'
-import { getFileLoaderConfig, importFiles } from './lib/utils'
+import { getFileLoaderConfig, importModules } from './lib/utils'
 
-enum MiddlewareName {
-  ALL = 'ALL',
-  SECURITY = 'SECURITY',
-  SESSION = 'SESSION',
-  BODY_PARSER = 'BODY_PARSER',
-  AUTH = 'AUTH'
-}
-
-enum Phase {
-  PRE = 'PRE',
-  POST = 'POST'
-}
-
-export interface IFileLoaderConfig {
+export interface IModuleLoaderConfig {
   path: string
-  pattern: { include?: RegExp; exclude?: RegExp }
+  pattern?: { include?: RegExp; exclude?: RegExp }
+  filter?: (dir: string, filename: string) => boolean
 }
-export interface IFileLoaderOptions {
+export interface IModuleLoaderOptions {
   path: string
   base?: string
   pattern?: RegExp | { include?: RegExp; exclude?: RegExp }
+  filter?: (dir: string, filename: string) => boolean
 }
 
 export class Luren {
-  private _initialized: boolean = false
+  private _workDir: string = process.cwd()
   private _koa: Koa
   private _router: Router
   private _container?: Container
-  private _bootConfig?: IFileLoaderConfig
+  private _bootConfig?: IModuleLoaderConfig
   private _controllers: List<object> = List()
-  private _middleware: Map<string, { pre: IMiddleware[]; middleware: IMiddleware; post: IMiddleware[] }> = Map()
-  private _controllerConfig?: IFileLoaderConfig
-  private _hooks: Map<string, (luren: Luren) => any> = Map()
-  constructor(options?: { container?: Container; boot: IFileLoaderOptions; controllerOptions?: IFileLoaderOptions }) {
+  private _middlewareConfig?: IModuleLoaderConfig
+  private _controllerConfig?: IModuleLoaderConfig
+  constructor(options?: {
+    container?: Container
+    boot: IModuleLoaderOptions
+    controllerOptions?: IModuleLoaderOptions
+  }) {
     this._koa = new Koa()
     this._router = new Router()
     if (options) {
@@ -57,119 +47,125 @@ export class Luren {
     }
   }
 
+  public setWorkDirectory(dir: string) {
+    this._workDir = dir
+  }
+
   public async listen(port: number) {
-    await this._fireHook('pre_init')
-    await this._initialize()
-    await this._fireHook('post_init')
-    await this._fireHook('pre_boot')
-    await this._loadBootFiles()
-    await this._fireHook('post_boot')
-    return new Promise<Server>((resolve) => {
-      const server = this._koa.listen(port, () => {
-        resolve(server)
+    try {
+      await this._initialize()
+      await this._loadBootModules()
+      return await new Promise<Server>((resolve) => {
+        const server = this._koa.listen(port, () => {
+          resolve(server)
+        })
       })
-    })
+    } catch (err) {
+      throw err
+    }
   }
   public getRouter() {
     return this._router
   }
-  public use(middleware: IMiddleware, name: string = MiddlewareName.ALL, phase?: Phase) {
-    if (name === MiddlewareName.ALL && !phase) {
-      phase = Phase.POST
-    }
-    const m: any = this._middleware.get(name) || { pre: [], post: [], middleware: undefined }
-    if (phase) {
-      m[phase].push(middleware)
-    } else {
-      m.middleware = middleware
-    }
-    this._middleware = this._middleware.set(name, m)
-  }
+
   public registerControllers(...controllers: object[]) {
     this._controllers = this._controllers.concat(controllers)
   }
-  public setBootConfig(config: IFileLoaderOptions) {
+  public setBootConfig(config: IModuleLoaderOptions) {
     this._bootConfig = getFileLoaderConfig(config)
   }
-  public setControllerConfig(config: IFileLoaderOptions) {
+  public setControllerConfig(config: IModuleLoaderOptions) {
     this._bootConfig = getFileLoaderConfig(config)
-  }
-  public preInit(hook: (app: Luren) => any) {
-    this._hooks.set('pre_init', hook)
-  }
-  public postInit(hook: (app: Luren) => any) {
-    this._hooks.set('post_init', hook)
-  }
-  public preBoot(hook: (app: Luren) => any) {
-    this._hooks.set('pre_boot', hook)
-  }
-  public postBoot(hook: (app: Luren) => any) {
-    this._hooks.set('post_boot', hook)
   }
   private async _initialize() {
-    if (this._initialized) {
-      return
-    }
-
-    this.use(helmet(), MiddlewareName.SECURITY)
-    this.use(bodyParser(), MiddlewareName.BODY_PARSER)
-    this._loadAllMiddleware()
+    await this._loadMiddleware()
     if (this._container) {
       const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
       this._controllers = this._controllers.concat(ctrls)
     }
     const router = this._router
-    await this._loadControllerFiles()
+    await this._loadControllerModules()
     loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
-    this._initialized = true
   }
 
-  private async _fireHook(hook: string) {
-    const hookFunc = this._hooks.get(hook)
-    if (hookFunc) {
-      return hookFunc.call(this, this)
+  private async _loadMiddleware() {
+    let config: IModuleLoaderConfig
+    let useDefault: boolean
+    if (this._middlewareConfig) {
+      config = this._middlewareConfig
+      useDefault = false
+    } else {
+      config = { path: 'middleware' }
+      useDefault = true
+    }
+    try {
+      await importModules(this._workDir, config, async (module: any) => {
+        const middleware = module.default
+        if (Array.isArray(middleware)) {
+          for (const m of middleware) {
+            this._koa.use(m)
+          }
+        } else {
+          this._koa.use(middleware)
+        }
+      })
+    } catch (err) {
+      if (useDefault) {
+        // tslint:disable-next-line:no-console
+        console.warn('Failed to load default middleware')
+        // tslint:disable-next-line:no-console
+        console.warn(err)
+      } else {
+        throw err
+      }
     }
   }
 
-  private _loadMiddleware(
-    name: string,
-    options: { pre?: boolean; middleware?: boolean; post?: boolean } = { pre: true, middleware: true, post: true }
-  ) {
-    const item = this._middleware.get(name)
-    if (!item) {
-      return
-    }
-    if (options.pre && !_.isEmpty(item.pre)) {
-      for (const m of item.pre) {
-        this._router.use(m)
-      }
-    }
-    if (options.middleware && item.middleware) {
-      this._router.use(item.middleware)
-    }
-    if (options.post && !_.isEmpty(item.post)) {
-      for (const m of item.post) {
-        this._router.use(m)
-      }
-    }
-  }
-  private _loadAllMiddleware() {
-    this._loadMiddleware(MiddlewareName.ALL, { pre: true })
-    this._loadMiddleware(MiddlewareName.SECURITY)
-    this._loadMiddleware(MiddlewareName.AUTH)
-    this._loadMiddleware(MiddlewareName.SESSION)
-    this._loadMiddleware(MiddlewareName.BODY_PARSER)
-    this._loadMiddleware(MiddlewareName.ALL, { post: true })
-  }
-  private async _loadBootFiles() {
+  private async _loadBootModules() {
+    let config: IModuleLoaderConfig
+    let useDefault: boolean
     if (this._bootConfig) {
-      return importFiles(this._bootConfig)
+      config = this._bootConfig
+      useDefault = false
+    } else {
+      config = { path: 'boot' }
+      useDefault = true
+    }
+    try {
+      await importModules(this._workDir, config)
+    } catch (err) {
+      if (useDefault) {
+        // tslint:disable-next-line:no-console
+        console.warn('Failed to load default boot modules')
+        // tslint:disable-next-line:no-console
+        console.warn(err)
+      } else {
+        throw err
+      }
     }
   }
-  private async _loadControllerFiles() {
+  private async _loadControllerModules() {
+    let config: IModuleLoaderConfig
+    let useDefault: boolean
     if (this._controllerConfig) {
-      importFiles(this._controllerConfig)
+      config = this._controllerConfig
+      useDefault = false
+    } else {
+      config = { path: 'controllers' }
+      useDefault = true
+    }
+    try {
+      await importModules(this._workDir, config)
+    } catch (err) {
+      if (useDefault) {
+        // tslint:disable-next-line:no-console
+        console.warn('Failed to load default controller modules')
+        // tslint:disable-next-line:no-console
+        console.warn(err)
+      } else {
+        throw err
+      }
     }
   }
 }

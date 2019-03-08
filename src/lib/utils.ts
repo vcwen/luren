@@ -6,7 +6,7 @@ import 'reflect-metadata'
 import { struct } from 'superstruct'
 import { MetadataKey } from '../constants/MetadataKey'
 import { SchemaMetadata } from '../decorators/Schema'
-import { IFileLoaderConfig, IFileLoaderOptions } from '../Luren'
+import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
 
 export interface IJsonSchema {
   title?: string
@@ -211,34 +211,42 @@ export const importModule = async (path: string, base?: string) => {
   }
 }
 
-export const importFiles = async (config: IFileLoaderConfig) => {
-  const files = await fs.readdir(config.path)
+export const importModules = async (workDir: string, config: IModuleLoaderConfig, handler?: (module: any) => any) => {
+  const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
+  const files = await fs.readdir(dir)
   const pattern = config.pattern
+  const filter = config.filter
   const defaultExcludePattern = /(^\.)|(\.d\.ts$)/
   const defaultIncludePattern = /\.[t|j]s$/
   for (const file of files) {
-    const stat = await fs.lstat(Path.resolve(config.path, file))
+    const stat = await fs.lstat(Path.resolve(dir, file))
     if (stat.isDirectory()) {
-      await importFiles({ path: Path.resolve(config.path, file), pattern })
+      await importModules(workDir, { path: Path.resolve(dir, file), pattern })
     } else {
-      if ((pattern.exclude && pattern.exclude.test(file)) || defaultExcludePattern.test(file)) {
+      if ((pattern && pattern.exclude && pattern.exclude.test(file)) || defaultExcludePattern.test(file)) {
         break
       }
-      if (defaultIncludePattern.test(file) && (pattern.include && pattern.include.test(file))) {
-        await import(Path.resolve(config.path, file))
+      if (
+        defaultIncludePattern.test(file) &&
+        (!pattern || !pattern.include || pattern.include.test(file)) &&
+        (!filter || filter(dir, file))
+      ) {
+        const module = await import(Path.resolve(dir, file))
+        if (handler) {
+          await handler.call(null, module)
+        }
       }
     }
   }
 }
 
-export const getFileLoaderConfig = (options: IFileLoaderOptions) => {
-  const basePath = options.base || process.cwd()
-  const path = Path.resolve(basePath, options.path)
-  const conf: IFileLoaderConfig = {
-    path,
-    pattern: {}
+export const getFileLoaderConfig = (options: IModuleLoaderOptions) => {
+  const path = options.path
+  const conf: IModuleLoaderConfig = {
+    path
   }
   if (options.pattern) {
+    conf.pattern = {}
     if (options.pattern instanceof RegExp) {
       conf.pattern.include = options.pattern
     } else {
@@ -249,6 +257,9 @@ export const getFileLoaderConfig = (options: IFileLoaderOptions) => {
         conf.pattern.include = options.pattern.include
       }
     }
+  }
+  if (options.filter) {
+    conf.filter = options.filter
   }
   return conf
 }
