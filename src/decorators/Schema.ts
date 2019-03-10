@@ -1,4 +1,3 @@
-import { Container } from 'inversify'
 import _ from 'lodash'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
@@ -22,8 +21,6 @@ export class SchemaMetadata {
     this.desc = desc
   }
 }
-const container = new Container()
-container.getAllTagged('tet', '2', '23')
 
 export function Schema(options: ISchemaOptions = {}) {
   return (constructor: Constructor) => {

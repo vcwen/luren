@@ -15,7 +15,7 @@ describe('Middleware decorator', () => {
       @Controller()
       @PreController(middleware1)
       class TestController {}
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController)
       expect(middlewares.get(Phase.PRE)).toHaveLength(1)
       expect(middlewares.get(Phase.PRE)).toContain(middleware1)
     })
@@ -30,7 +30,7 @@ describe('Middleware decorator', () => {
       @Controller()
       @PreController(middleware1, middleware2)
       class TestController {}
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController)
       // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.PRE)).toHaveLength(2)
       expect(middlewares.get(Phase.PRE)).toEqual([middleware1, middleware2])
@@ -46,7 +46,7 @@ describe('Middleware decorator', () => {
       @Controller()
       @PostController(middleware1)
       class TestController {}
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController)
       expect(middlewares.get(Phase.POST)).toHaveLength(1)
       expect(middlewares.get(Phase.POST)).toContain(middleware1)
     })
@@ -61,7 +61,7 @@ describe('Middleware decorator', () => {
       @Controller()
       @PostController(middleware1, middleware2)
       class TestController {}
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, TestController)
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController)
       // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.POST)).toHaveLength(2)
       expect(middlewares.get(Phase.POST)).toEqual([middleware1, middleware2])
@@ -83,7 +83,7 @@ describe('Middleware decorator', () => {
         }
       }
       const ctrl = new TestController()
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
       expect(middlewares.get(Phase.PRE)).toHaveLength(1)
       expect(middlewares.get(Phase.PRE)).toContain(middleware1)
     })
@@ -105,7 +105,7 @@ describe('Middleware decorator', () => {
         }
       }
       const ctrl = new TestController()
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
       // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.PRE)).toHaveLength(2)
       expect(middlewares.get(Phase.PRE)).toEqual([middleware1, middleware2])
@@ -126,7 +126,7 @@ describe('Middleware decorator', () => {
         }
       }
       const ctrl = new TestController()
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
       expect(middlewares.get(Phase.POST)).toHaveLength(1)
       expect(middlewares.get(Phase.POST)).toContain(middleware1)
     })
@@ -148,7 +148,7 @@ describe('Middleware decorator', () => {
         }
       }
       const ctrl = new TestController()
-      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARES, ctrl, 'test')
+      const middlewares: Map<Phase, IMiddleware[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
       // tslint:disable-next-line:no-magic-numbers
       expect(middlewares.get(Phase.POST)).toHaveLength(2)
       expect(middlewares.get(Phase.POST)).toEqual([middleware1, middleware2])

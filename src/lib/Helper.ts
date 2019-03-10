@@ -30,7 +30,7 @@ const applyRouteMiddleware = (router: Router, middleware: any[], method: string,
 
 export function createController(luren: Luren, ctrl: object) {
   const router = new Router()
-  const ctrlMiddleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl)
+  const ctrlMiddleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || Map()
   const beforeCtrlMiddleware = ctrlMiddleware.get(Phase.PRE) || []
   applyCtrlMiddleware(router, beforeCtrlMiddleware)
   const routes = createRoutes(luren, ctrl)
@@ -88,7 +88,7 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
     if (paramMeta.required && !value) {
       ctx.throw(
         HttpStatusCode.BAD_REQUEST,
-        paramMeta.name + 'is required' + (paramMeta.source ? ' in ' + paramMeta.source : '')
+        paramMeta.name + ' is required' + (paramMeta.source ? ' in ' + paramMeta.source : '')
       )
     }
     if (!value) {
@@ -196,7 +196,7 @@ export function createRoute(luren: Luren, controller: object, propKey: string, c
   }
   const action = createAction(controller, propKey)
   const version = routeMetadata.version || ctrlMetadata.version || ''
-  const middleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey)
+  const middleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || Map()
   return {
     method: routeMetadata.method.toLowerCase(),
     path: Path.join(luren.routerPrefix, version, ctrlMetadata.path, routeMetadata.path),

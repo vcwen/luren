@@ -278,14 +278,19 @@ describe('Helper', () => {
   })
   describe('createRoute', () => {
     it('should create the specific route', async () => {
-      const route: any = createRoute(controller, 'sayHello', Reflect.getMetadata(MetadataKey.CONTROLLER, controller))
+      const route: any = createRoute(
+        {} as any,
+        controller,
+        'sayHello',
+        Reflect.getMetadata(MetadataKey.CONTROLLER, controller)
+      )
       expect(route.method).toEqual('put')
       expect(route.path).toEqual('/hello')
     })
   })
   describe('createRoutes', () => {
     it('should create all routes of controller', () => {
-      const routes = createRoutes(controller)
+      const routes = createRoutes({} as any, controller)
       // tslint:disable-next-line:no-magic-numbers
       expect(routes.toArray()).toHaveLength(16)
     })
@@ -293,7 +298,7 @@ describe('Helper', () => {
 
   describe('setupController', () => {
     it('should load the controller', () => {
-      const router: any = createController(controller.constructor as any)
+      const router: any = createController({} as any, controller.constructor as any)
       expect(router.routes['get:/tests'].method).toEqual('get')
       expect(router.routes['delete:/tests'].method).toEqual('delete')
       expect(router.routes['post:/tests/doSomething'].method).toEqual('post')

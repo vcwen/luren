@@ -4,6 +4,7 @@ import Koa from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
+import Path from 'path'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { loadControllers } from './lib/Helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
@@ -32,7 +33,7 @@ export class Luren {
   private _controllerConfig?: IModuleLoaderConfig
   constructor(options?: {
     container?: Container
-    boot: IModuleLoaderOptions
+    boot?: IModuleLoaderOptions
     controllerOptions?: IModuleLoaderOptions
   }) {
     this._koa = new Koa()
@@ -80,10 +81,7 @@ export class Luren {
   }
   private async _initialize() {
     await this._loadMiddleware()
-    if (this._container) {
-      const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
-      this._controllers = this._controllers.concat(ctrls)
-    }
+
     const router = this._router
     await this._loadControllerModules()
     loadControllers(this, router, this._controllers)
@@ -91,15 +89,7 @@ export class Luren {
   }
 
   private async _loadMiddleware() {
-    let config: IModuleLoaderConfig
-    let useDefault: boolean
-    if (this._middlewareConfig) {
-      config = this._middlewareConfig
-      useDefault = false
-    } else {
-      config = { path: 'middleware' }
-      useDefault = true
-    }
+    const config: IModuleLoaderConfig = this._middlewareConfig || { path: 'middleware' }
     try {
       await importModules(this._workDir, config, async (module: any) => {
         const middleware = module.default
@@ -112,11 +102,9 @@ export class Luren {
         }
       })
     } catch (err) {
-      if (useDefault) {
+      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
         // tslint:disable-next-line:no-console
-        console.warn('Failed to load default middleware')
-        // tslint:disable-next-line:no-console
-        console.warn(err)
+        console.warn('No default middleware directory, skip loading middleware')
       } else {
         throw err
       }
@@ -124,49 +112,33 @@ export class Luren {
   }
 
   private async _loadBootModules() {
-    let config: IModuleLoaderConfig
-    let useDefault: boolean
-    if (this._bootConfig) {
-      config = this._bootConfig
-      useDefault = false
-    } else {
-      config = { path: 'boot' }
-      useDefault = true
-    }
+    const config: IModuleLoaderConfig = this._bootConfig || { path: 'boot' }
     try {
       await importModules(this._workDir, config)
     } catch (err) {
-      if (useDefault) {
+      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
         // tslint:disable-next-line:no-console
-        console.warn('Failed to load default boot modules')
-        // tslint:disable-next-line:no-console
-        console.warn(err)
+        console.warn('No boot directory, skip loading boot modules')
       } else {
         throw err
       }
     }
   }
   private async _loadControllerModules() {
-    let config: IModuleLoaderConfig
-    let useDefault: boolean
-    if (this._controllerConfig) {
-      config = this._controllerConfig
-      useDefault = false
-    } else {
-      config = { path: 'controllers' }
-      useDefault = true
-    }
+    const config: IModuleLoaderConfig = this._controllerConfig || { path: 'controllers' }
     try {
       await importModules(this._workDir, config)
     } catch (err) {
-      if (useDefault) {
+      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
         // tslint:disable-next-line:no-console
-        console.warn('Failed to load default controller modules')
-        // tslint:disable-next-line:no-console
-        console.warn(err)
+        console.warn('No controllers directory, skip loading controller modules')
       } else {
         throw err
       }
+    }
+    if (this._container) {
+      const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
+      this._controllers = this._controllers.concat(ctrls)
     }
   }
 }
