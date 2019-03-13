@@ -23,7 +23,7 @@ export class SchemaMetadata {
 }
 
 export function Schema(options: ISchemaOptions = {}) {
-  return (constructor: Constructor) => {
+  return (constructor: Constructor<any>) => {
     const jsonSchema = {
       type: 'object',
       required: [] as any[],

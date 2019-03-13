@@ -32,7 +32,7 @@ export class CtrlMetadata {
   }
 }
 
-export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor) => {
+export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor<any>) => {
   const name = options.name || constructor.name.split(/controller$/i)[0]
   const prefix = options.prefix || ''
   const plural = options.plural || pluralize.plural(decamelize(name, '-'))
@@ -42,7 +42,7 @@ export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor)
 }
 
 export function Controller(options: ICtrlOptions = {}) {
-  return (constructor: Constructor) => {
+  return <T>(constructor: Constructor<T>) => {
     const metadata = getCtrlMetadata(options, constructor)
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor)
   }
@@ -50,7 +50,7 @@ export function Controller(options: ICtrlOptions = {}) {
 
 export function InjectableController(container: Container) {
   return (options: ICtrlOptions = {}) => {
-    return (constructor: Constructor) => {
+    return <T>(constructor: Constructor<T>) => {
       injectable()(constructor)
       container.bind(ServiceIdentifier.CONTROLLER).to(constructor)
       const metadata = getCtrlMetadata(options, constructor)
