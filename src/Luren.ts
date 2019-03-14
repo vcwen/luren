@@ -70,6 +70,14 @@ export class Luren {
     return this._router
   }
 
+  public getKoa() {
+    return this._koa
+  }
+
+  public getController() {
+    return this._controllers
+  }
+
   public registerControllers(...controllers: object[]) {
     this._controllers = this._controllers.concat(controllers)
   }
