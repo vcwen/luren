@@ -11,7 +11,7 @@ export interface IParamOptions {
   required?: boolean
   desc?: string
   root?: boolean
-  format?: 'string'
+  format?: string
   strict?: boolean
 }
 
