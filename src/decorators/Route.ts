@@ -8,6 +8,7 @@ export interface IRouteOptions {
   path?: string
   method?: HttpMethod
   version?: string
+  deprecated?: boolean
   desc?: string
 }
 
@@ -15,6 +16,7 @@ export class RouteMetadata {
   public name: string
   public path: string
   public method: HttpMethod
+  public deprecated: boolean = false
   public version?: string
   public desc?: string
   constructor(name: string, method: HttpMethod, path: string, version?: string, desc?: string) {
