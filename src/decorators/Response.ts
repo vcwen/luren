@@ -4,7 +4,7 @@ import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
 import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 import { PropertyDecorator } from '../types/PropertyDecorator'
-export interface IResultOptions {
+export interface IResponseOptions {
   status?: number
   type?: any
   schema?: any
@@ -12,7 +12,7 @@ export interface IResultOptions {
   strict?: boolean
 }
 
-export class ResultMetadata {
+export class ResponseMetadata {
   public status: number = HttpStatusCode.OK
   public schema: IJsonSchema
   public strict: boolean = false
@@ -25,15 +25,15 @@ export class ResultMetadata {
   }
 }
 
-export function Result(options: IResultOptions): PropertyDecorator {
+export function Response(options: IResponseOptions): PropertyDecorator {
   return (target: any, propertyKey: string) => {
-    let resultMetadata: Map<number, ResultMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.RESULT, target, propertyKey) || Map()
+    let resMetadata: Map<number, ResponseMetadata> =
+      Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
     const status = options.status || HttpStatusCode.OK
     const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')
-    const metadata = new ResultMetadata(status, schema, options.strict, options.desc)
-    resultMetadata = resultMetadata.set(metadata.status, metadata)
-    Reflect.defineMetadata(MetadataKey.RESULT, resultMetadata, target, propertyKey)
+    const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
+    resMetadata = resMetadata.set(metadata.status, metadata)
+    Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
 }
 
@@ -47,12 +47,12 @@ export interface IErrorOptions {
 
 export function ErrorResponse(options: IErrorOptions): PropertyDecorator {
   return (target: any, propertyKey: string) => {
-    let resultMetadata: Map<number, ResultMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.RESULT, target, propertyKey) || Map()
+    let resMetadata: Map<number, ResponseMetadata> =
+      Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
     const status = options.status || HttpStatusCode.OK
     const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')
-    const metadata = new ResultMetadata(status, schema, options.strict, options.desc)
-    resultMetadata = resultMetadata.set(metadata.status, metadata)
-    Reflect.defineMetadata(MetadataKey.RESULT, resultMetadata, target, propertyKey)
+    const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
+    resMetadata = resMetadata.set(metadata.status, metadata)
+    Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
 }

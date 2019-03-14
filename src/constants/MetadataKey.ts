@@ -4,7 +4,7 @@ export enum MetadataKey {
   MIDDLEWARE = 'MIDDLEWARE',
   ROUTE = 'ROUTE',
   PARAM = 'PARAM',
-  RESULT = 'RESULT',
+  RESPONSE = 'RESPONSE',
   ERROR = 'ERROR',
   PROP = 'PROP',
   COLLECTION = 'COLLECTION',

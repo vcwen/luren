@@ -10,7 +10,7 @@ import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
 import { CtrlMetadata } from '../decorators/Controller'
 import { ParamMetadata } from '../decorators/Param'
-import { ResultMetadata } from '../decorators/Result'
+import { ResponseMetadata } from '../decorators/Response'
 import { RouteMetadata } from '../decorators/Route'
 import { Luren } from '../Luren'
 import { HttpStatus } from './HttpStatus'
@@ -123,12 +123,12 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
           ctx.body = response.body
       }
     } else {
-      const resultMetadataMap: Map<number, ResultMetadata> =
-        Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
-      const resultMetadata = resultMetadataMap.get(HttpStatusCode.OK)
-      if (resultMetadata && resultMetadata.strict) {
-        if (ajv.validate(resultMetadata.schema, response)) {
-          ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+      const resultMetadataMap: Map<number, ResponseMetadata> =
+        Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
+      const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
+      if (resMetadata && resMetadata.strict) {
+        if (ajv.validate(resMetadata.schema, response)) {
+          ctx.body = transform(response, resMetadata.schema, resMetadata.schema)
         } else {
           throw Boom.internal('Invalid response data')
         }
@@ -142,12 +142,12 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
       const response = !isEmpty(err.output.payload.attributes)
         ? err.output.payload.attributes
         : err.output.payload.message
-      const resultMetadataMap: Map<number, ResultMetadata> =
-        Reflect.getMetadata(MetadataKey.RESULT, controller, propKey) || Map()
-      const resultMetadata = resultMetadataMap.get(err.output.statusCode)
-      if (resultMetadata && resultMetadata.strict) {
-        if (ajv.validate(resultMetadata.schema, response)) {
-          ctx.body = transform(response, resultMetadata.schema, resultMetadata.schema)
+      const resultMetadataMap: Map<number, ResponseMetadata> =
+        Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
+      const resMetadata = resultMetadataMap.get(err.output.statusCode)
+      if (resMetadata && resMetadata.strict) {
+        if (ajv.validate(resMetadata.schema, response)) {
+          ctx.body = transform(response, resMetadata.schema, resMetadata.schema)
         } else {
           ctx.body = response
         }
