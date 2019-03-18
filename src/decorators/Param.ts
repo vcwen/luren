@@ -39,6 +39,9 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
     metadata.schema = normalizeSimpleSchema(options.type || 'string')
   }
   if (options.root) {
+    if (metadata.schema.type !== 'object') {
+      throw new Error('parameter must be an object if it is root')
+    }
     metadata.root = true
   }
   if (options.strict) {
