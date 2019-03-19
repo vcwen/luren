@@ -5,10 +5,8 @@ import Router from 'koa-router'
 import _ from 'lodash'
 import { Server } from 'net'
 import Path from 'path'
-import { MetadataKey } from './constants'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { Datasource } from './datasource/Datasource'
-import { SchemaMetadata } from './decorators'
 import { loadControllers } from './lib/Helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
 
@@ -37,7 +35,7 @@ export class Luren {
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
-  private _datasources: Map<string, Datasource> = Map()
+  private _datasource: Map<string, Datasource> = Map()
   constructor(options?: {
     container?: Container
     bootOptions?: IModuleLoaderOptions
@@ -87,11 +85,11 @@ export class Luren {
   }
 
   public addDatasource(name: string, datasource: Datasource) {
-    this._datasources = this._datasources.set(name, datasource)
+    this._datasource = this._datasource.set(name, datasource)
   }
 
   public setDefaultDatasource(datasource: Datasource) {
-    this._datasources = this._datasources.set('default', datasource)
+    this._datasource = this._datasource.set('default', datasource)
   }
 
   public registerControllers(...controllers: object[]) {
@@ -176,7 +174,7 @@ export class Luren {
       const modules = await importModules(this._workDir, config)
       for (const module of modules) {
         const model = module.default
-        for (const ds of this._datasources.values()) {
+        for (const ds of this._datasource.values()) {
           ds.loadSchema(model)
         }
       }
