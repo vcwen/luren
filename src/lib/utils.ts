@@ -171,13 +171,14 @@ export const importModule = async (path: string, base?: string) => {
   }
 }
 
-export const importModules = async (workDir: string, config: IModuleLoaderConfig, handler?: (module: any) => any) => {
+export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
   const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
   const files = await fs.readdir(dir)
   const pattern = config.pattern
   const filter = config.filter
   const defaultExcludePattern = /(^\.)|(\.d\.ts$)/
   const defaultIncludePattern = /\.[t|j]s$/
+  const modules = [] as any[]
   for (const file of files) {
     const stat = await fs.lstat(Path.resolve(dir, file))
     if (stat.isDirectory()) {
@@ -192,12 +193,11 @@ export const importModules = async (workDir: string, config: IModuleLoaderConfig
         (!filter || filter(dir, file))
       ) {
         const module = await import(Path.resolve(dir, file))
-        if (handler) {
-          await handler.call(null, module)
-        }
+        modules.push(module)
       }
     }
   }
+  return modules
 }
 
 export const getFileLoaderConfig = (options: IModuleLoaderOptions) => {

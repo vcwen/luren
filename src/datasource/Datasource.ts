@@ -5,14 +5,15 @@ export interface IDatasourceOptions {
   url?: string
   host?: string
   port?: number
-  database?: string
+  [prop: string]: any
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export abstract class Datasource {
   protected _connectUrl: string
   constructor(options: IDatasourceOptions) {
-    this._connectUrl = options.url || ''
+    this._connectUrl = this.getConnectUrl(options)
   }
   public abstract getQueryExecutor<T>(model: Constructor<T>): Promise<QueryExecutor<T>>
+  public abstract loadSchema<T>(model: Constructor<T>): Promise<boolean>
+  protected abstract getConnectUrl(options: IDatasourceOptions): string
 }
