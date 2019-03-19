@@ -4,7 +4,7 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export interface IParamOptions {
-  name?: string
+  name: string
   source?: 'query' | 'path' | 'header' | 'body' | 'context'
   type?: string | { [prop: string]: any }
   schema?: IJsonSchema
@@ -13,6 +13,7 @@ export interface IParamOptions {
   root?: boolean
   format?: string
   strict?: boolean
+  mime?: string
 }
 
 export class ParamMetadata {
@@ -23,6 +24,7 @@ export class ParamMetadata {
   public root: boolean = false
   public format?: string
   public strict: boolean = true
+  public mime?: string
   public desc?: string
   constructor(name: string, source: 'query' | 'path' | 'header' | 'body' | 'context', required: boolean = false) {
     this.name = name
@@ -48,6 +50,7 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
     metadata.strict = true
   }
   metadata.format = options.format
+  metadata.mime = options.mime
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAM, target, propertyKey) || List()
   if (paramsMetadata.has(index)) {
     const existingMetadata = paramsMetadata.get(index) || {}
@@ -63,13 +66,13 @@ const defineParamMetadata = (options: IParamOptions, index: number, target: obje
   Reflect.defineMetadata(MetadataKey.PARAM, paramsMetadata.set(index, paramMetadata), target, propertyKey)
 }
 
-export function Param(options: IParamOptions = {}) {
+export function Param(options: IParamOptions) {
   return (target: object, propertyKey: string, index: number) => {
     defineParamMetadata(options, index, target, propertyKey)
   }
 }
 
-export function Required(options: IParamOptions = {}) {
+export function Required(options: IParamOptions) {
   return (target: object, propertyKey: string, index: number) => {
     defineParamMetadata(Object.assign({}, options, { required: true }), index, target, propertyKey)
   }

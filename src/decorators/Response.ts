@@ -10,12 +10,14 @@ export interface IResponseOptions {
   schema?: any
   desc?: string
   strict?: boolean
+  mime?: string
 }
 
 export class ResponseMetadata {
   public status: number = HttpStatusCode.OK
   public schema: IJsonSchema
   public strict: boolean = false
+  public mime?: string
   public desc?: string
   constructor(status: number, schema: IJsonSchema, strict: boolean = false, desc?: string) {
     this.status = status
@@ -32,6 +34,7 @@ export function Response(options: IResponseOptions): PropertyDecorator {
     const status = options.status || HttpStatusCode.OK
     const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')
     const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
+    metadata.mime = options.mime
     resMetadata = resMetadata.set(metadata.status, metadata)
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
