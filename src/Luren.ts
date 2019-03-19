@@ -21,6 +21,8 @@ export interface IModuleLoaderOptions {
   filter?: (dir: string, filename: string) => boolean
 }
 
+export type IPlugin = (luren: Luren) => void
+
 export class Luren {
   public routerPrefix: string = '/api'
   private _workDir: string = process.cwd()
@@ -74,7 +76,7 @@ export class Luren {
     return this._koa
   }
 
-  public getController() {
+  public getControllers() {
     return this._controllers
   }
 
@@ -87,15 +89,18 @@ export class Luren {
   public setControllerConfig(config: IModuleLoaderOptions) {
     this._bootConfig = getFileLoaderConfig(config)
   }
+  public plugin(...plugins: IPlugin[]) {
+    for (const plugin of plugins) {
+      plugin(this)
+    }
+  }
   private async _initialize() {
     await this._loadMiddleware()
-
     const router = this._router
     await this._loadControllerModules()
     loadControllers(this, router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
   }
-
   private async _loadMiddleware() {
     const config: IModuleLoaderConfig = this._middlewareConfig || { path: 'middleware' }
     try {
