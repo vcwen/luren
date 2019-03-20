@@ -55,7 +55,12 @@ const normalizeProp = (decoratedProp: string): [string, boolean] => {
 const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
   if (typeof schema === 'string') {
     const [type, required] = normalizeType(schema)
-    return [{ type }, required]
+    const jsonSchema: any = { type }
+    if (type === 'file') {
+      jsonSchema.type = 'string'
+      jsonSchema.format = 'binary'
+    }
+    return [jsonSchema, required]
   } else if (Array.isArray(schema)) {
     const propSchema: any = { type: 'array' }
     if (schema[0]) {

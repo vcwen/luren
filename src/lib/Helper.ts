@@ -61,7 +61,7 @@ const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = Li
         break
       case 'body': {
         const request: any = ctx.request
-        if (paramMeta.schema.type === 'file') {
+        if (paramMeta.schema.type === 'string' && paramMeta.schema.format === 'binary') {
           if (paramMeta.root) {
             value = request.files
           } else {
