@@ -1,3 +1,4 @@
+import { Map } from 'immutable'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
@@ -51,7 +52,10 @@ const getPropMetadata = (options: IPropOptions, _1: object, propertyKey: string)
 
 export function Prop(options: IPropOptions = {}) {
   return (target: object, propertyKey: string) => {
+    let metadataMap: Map<string, PropMetadata> = Reflect.getMetadata(MetadataKey.PROPS, target) || Map()
     const metadata = getPropMetadata(options, target, propertyKey)
     Reflect.defineMetadata(MetadataKey.PROP, metadata, target, propertyKey)
+    metadataMap = metadataMap.set(propertyKey, metadata)
+    Reflect.defineMetadata(MetadataKey.PROPS, metadataMap, target, propertyKey)
   }
 }

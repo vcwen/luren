@@ -1,3 +1,4 @@
+import { Map } from 'immutable'
 import _ from 'lodash'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
@@ -26,18 +27,16 @@ export function Schema(options: ISchemaOptions = {}) {
   return (constructor: Constructor<any>) => {
     const jsonSchema = {
       type: 'object',
-      required: [] as any[],
+      required: [] as string[],
       properties: {} as any,
       additionalProperties: options.strict ? true : false
     }
-    const props = Object.keys(constructor)
-    for (const prop of props) {
-      const propMetadata: PropMetadata = Reflect.getMetadata(MetadataKey.PROP, constructor, prop)
-      if (propMetadata) {
-        jsonSchema.properties[prop] = propMetadata.schema
-        if (propMetadata.required) {
-          jsonSchema.required.push(prop)
-        }
+    const propMetadataMap: Map<string, PropMetadata> =
+      Reflect.getMetadata(MetadataKey.PROPS, constructor.prototype) || Map()
+    for (const [prop, propMetadata] of propMetadataMap) {
+      jsonSchema.properties[prop] = propMetadata.schema
+      if (propMetadata.required) {
+        jsonSchema.required.push(prop)
       }
     }
     const metadata = new SchemaMetadata(options.id || constructor.name, jsonSchema, options.desc)
