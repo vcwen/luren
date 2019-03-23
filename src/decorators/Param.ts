@@ -51,7 +51,7 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
   }
   metadata.format = options.format
   metadata.mime = options.mime
-  const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAM, target, propertyKey) || List()
+  const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
   if (paramsMetadata.has(index)) {
     const existingMetadata = paramsMetadata.get(index) || {}
     return Object.assign({}, existingMetadata, metadata)
@@ -62,8 +62,8 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
 
 const defineParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
   const paramMetadata = getParamMetadata(options, index, target, propertyKey)
-  const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAM, target, propertyKey) || List()
-  Reflect.defineMetadata(MetadataKey.PARAM, paramsMetadata.set(index, paramMetadata), target, propertyKey)
+  const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
+  Reflect.defineMetadata(MetadataKey.PARAMS, paramsMetadata.set(index, paramMetadata), target, propertyKey)
 }
 
 export function Param(options: IParamOptions) {

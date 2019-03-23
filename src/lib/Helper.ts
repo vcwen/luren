@@ -163,7 +163,7 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
 
 export function createAction(controller: object, propKey: string) {
   const paramsMetadata: List<ParamMetadata> =
-    Reflect.getOwnMetadata(MetadataKey.PARAM, Reflect.getPrototypeOf(controller), propKey) || List()
+    Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
 
   const action = async (ctx: IRouterContext, next?: any) => {
     try {

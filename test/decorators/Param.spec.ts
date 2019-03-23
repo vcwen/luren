@@ -16,7 +16,7 @@ describe('Param', () => {
       }
     }
     const ctrl = new TestController()
-    const params: List<any> = Reflect.getMetadata(MetadataKey.PARAM, ctrl, 'test')
+    const params: List<any> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
     expect(params.toArray()).toEqual([
       { name: 'name', required: false, source: 'path', type: 'string' },
       { name: 'age', required: false, source: 'query', type: 'string' }
@@ -33,7 +33,7 @@ describe('Param', () => {
       }
     }
     const ctrl = new TestController()
-    const params: List<any> = Reflect.getMetadata(MetadataKey.PARAM, ctrl, 'test')
+    const params: List<any> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
     expect(params.toArray()).toEqual([{ name: 'name', required: false, source: 'any', type: 'string' }])
   })
 })
