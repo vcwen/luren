@@ -155,7 +155,7 @@ const processRoute = async (ctx: IRouterContext, controller: any, propKey: strin
         ctx.body = response
       }
     } else {
-      ctx.status = HttpStatusCode.INTERNAL_SERVER_EROR
+      ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
       ctx.body = err.message || err
     }
   }
