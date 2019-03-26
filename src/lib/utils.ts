@@ -98,6 +98,14 @@ const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
 }
 
 export const normalizeSimpleSchema = (schema: any): IJsonSchema => {
+  if (typeof schema === 'function') {
+    const schemaMetadata: SchemaMetadata | undefined = Reflect.getMetadata(MetadataKey.SCHEMA, schema.prototype)
+    if (schemaMetadata) {
+      return schemaMetadata.schema
+    } else {
+      throw new Error('Invalid schema.')
+    }
+  }
   if (_.isEmpty(schema)) {
     throw new Error('Invalid schema.')
   }
