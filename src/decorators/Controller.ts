@@ -44,7 +44,7 @@ export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor<
 export function Controller(options: ICtrlOptions = {}) {
   return <T>(constructor: Constructor<T>) => {
     const metadata = getCtrlMetadata(options, constructor)
-    Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor)
+    Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor.prototype)
   }
 }
 
@@ -54,7 +54,7 @@ export function InjectableController(container: Container) {
       injectable()(constructor)
       container.bind(ServiceIdentifier.CONTROLLER).to(constructor)
       const metadata = getCtrlMetadata(options, constructor)
-      Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor)
+      Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor.prototype)
     }
   }
 }

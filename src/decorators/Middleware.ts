@@ -6,15 +6,15 @@ import { Phase } from '../constants/Middleware'
 
 export function PreController(...middleware: IMiddleware[]) {
   return (constructor: any) => {
-    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.PRE, middleware), constructor)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.PRE, middleware), constructor.prototype)
   }
 }
 
 export function PostController(...middleware: IMiddleware[]) {
   return (constructor: any) => {
-    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor) || Map()
-    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.POST, middleware), constructor)
+    const mw: Map<string, any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || Map()
+    Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.set(Phase.POST, middleware), constructor.prototype)
   }
 }
 

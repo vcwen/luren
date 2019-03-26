@@ -40,6 +40,6 @@ export function Schema(options: ISchemaOptions = {}) {
       }
     }
     const metadata = new SchemaMetadata(options.id || constructor.name, jsonSchema, options.desc)
-    Reflect.defineMetadata(MetadataKey.SCHEMA, metadata, constructor)
+    Reflect.defineMetadata(MetadataKey.SCHEMA, metadata, constructor.prototype)
   }
 }

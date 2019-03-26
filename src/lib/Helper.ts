@@ -186,11 +186,7 @@ export function createAction(controller: object, propKey: string) {
 }
 
 export function createRoute(luren: Luren, controller: object, propKey: string, ctrlMetadata: CtrlMetadata) {
-  const routeMetadata: RouteMetadata = Reflect.getOwnMetadata(
-    MetadataKey.ROUTE,
-    Reflect.getPrototypeOf(controller),
-    propKey
-  )
+  const routeMetadata: RouteMetadata = Reflect.getOwnMetadata(MetadataKey.ROUTE, controller, propKey)
   if (!routeMetadata) {
     return
   }
