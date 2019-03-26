@@ -5,5 +5,5 @@ export abstract class LurenQueryExecutor<T> {
   constructor(model: Constructor<T>) {
     this._schema = this.getSchema(model)
   }
-  protected abstract getSchema(model: Constructor<T>): string
+  protected abstract getSchema(model: Constructor<T>): any
 }
