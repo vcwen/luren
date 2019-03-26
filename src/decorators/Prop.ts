@@ -14,6 +14,7 @@ export interface IPropOptions {
   const?: any
   strict?: boolean
   private?: boolean
+  default?: any
 }
 
 export class PropMetadata {
@@ -21,6 +22,7 @@ export class PropMetadata {
   public schema!: IJsonSchema
   public required: boolean = false
   public format?: string
+  public default?: any
   public strict: boolean = true
   public enum?: any[]
   public const?: any
@@ -56,6 +58,6 @@ export function Prop(options: IPropOptions = {}) {
     const metadata = getPropMetadata(options, target, propertyKey)
     Reflect.defineMetadata(MetadataKey.PROP, metadata, target, propertyKey)
     metadataMap = metadataMap.set(propertyKey, metadata)
-    Reflect.defineMetadata(MetadataKey.PROPS, metadataMap, target, propertyKey)
+    Reflect.defineMetadata(MetadataKey.PROPS, metadataMap, target)
   }
 }
