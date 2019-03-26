@@ -185,30 +185,24 @@ export function createAction(controller: object, propKey: string) {
   return action
 }
 
-export function createRoute(luren: Luren, controller: object, propKey: string, ctrlMetadata: CtrlMetadata) {
-  const routeMetadata: RouteMetadata = Reflect.getOwnMetadata(MetadataKey.ROUTE, controller, propKey)
-  if (!routeMetadata) {
-    return
-  }
+export function createRoute(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
   const action = createAction(controller, propKey)
-  const version = routeMetadata.version || ctrlMetadata.version || ''
   const middleware: Map<string, any[]> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || Map()
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: Path.join(luren.routerPrefix, version, ctrlMetadata.path, routeMetadata.path),
+    path: Path.join(luren.apiPrefix, routeMetadata.path),
     action,
     middleware
   }
 }
 
 export function createRoutes(luren: Luren, controller: object) {
-  const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, controller.constructor)
-  const props = Object.getOwnPropertyNames(Reflect.getPrototypeOf(controller)).filter((prop) => prop !== 'constructor')
-  return List(
-    props.map((prop) => {
-      return createRoute(luren, controller, prop, ctrlMetadata)
+  const routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, controller)
+  return routeMetadataMap
+    .map((routeMetadata, prop) => {
+      return createRoute(luren, controller, prop, routeMetadata)
     })
-  )
+    .toList()
 }
 
 export const loadControllers = (luren: Luren, router: Router, controllers: List<object>) => {

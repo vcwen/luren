@@ -2,6 +2,7 @@ export enum MetadataKey {
   CONTROLLER = 'CONTROLLER',
   MIDDLEWARE = 'MIDDLEWARE',
   ROUTE = 'ROUTE',
+  ROUTES = 'ROUTES',
   PARAMS = 'PARAMS',
   RESPONSE = 'RESPONSE',
   PROP = 'PROP',

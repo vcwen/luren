@@ -1,3 +1,4 @@
+import { Map } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../constants/HttpMethod'
 import { MetadataKey } from '../constants/MetadataKey'
@@ -39,7 +40,9 @@ const getRouteMetadata = (options: IRouteOptions, _: object, propertyKey: string
 export function Route(options: IRouteOptions = {}): PropertyDecorator {
   return (target: object, propertyKey: string) => {
     const metadata = getRouteMetadata(options, target, propertyKey)
-    Reflect.defineMetadata(MetadataKey.ROUTE, metadata, target, propertyKey)
+    let routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, target) || Map()
+    routeMetadataMap = routeMetadataMap.set(propertyKey, metadata)
+    Reflect.defineMetadata(MetadataKey.ROUTES, metadata, target)
   }
 }
 
@@ -48,7 +51,9 @@ function methodifyRouteDecorator(method: HttpMethod) {
     return (target: object, propertyKey: string) => {
       options.method = method
       const metadata = getRouteMetadata(options, target, propertyKey)
-      Reflect.defineMetadata(MetadataKey.ROUTE, metadata, target, propertyKey)
+      let routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, target) || Map()
+      routeMetadataMap = routeMetadataMap.set(propertyKey, metadata)
+      Reflect.defineMetadata(MetadataKey.ROUTES, metadata, target)
     }
   }
 }
