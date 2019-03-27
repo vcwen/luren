@@ -3,14 +3,12 @@ import Boom from 'boom'
 import { List, Map } from 'immutable'
 import Router, { IMiddleware, IRouterContext } from 'koa-router'
 import { isEmpty } from 'lodash'
-import Path from 'path'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamMetadata } from '../decorators/Param'
 import { ResponseMetadata } from '../decorators/Response'
 import { RouteMetadata } from '../decorators/Route'
-import { Luren } from '../Luren'
 import { HttpStatus } from './HttpStatus'
 import { parseFormData, transform } from './utils'
 const ajv = new Ajv()
@@ -24,11 +22,11 @@ const applyRouteMiddleware = (router: Router, middleware: List<IMiddleware>, met
   middleware.forEach((mv) => router[method](path, mv))
 }
 
-export function createController(luren: Luren, ctrl: object) {
+export function createController(ctrl: object) {
   const router = new Router()
   const ctrlMiddleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
   applyCtrlMiddleware(router, ctrlMiddleware)
-  const routes = createRoutes(luren, ctrl)
+  const routes = createRoutes(ctrl)
   routes.forEach((route) => {
     if (!route) {
       return
@@ -175,29 +173,29 @@ export function createAction(controller: object, propKey: string) {
   return action
 }
 
-export function createRoute(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
+export function createRoute(controller: object, propKey: string, routeMetadata: RouteMetadata) {
   const action = createAction(controller, propKey)
   const middleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   return {
     method: routeMetadata.method.toLowerCase(),
-    path: Path.join(luren.apiPrefix, routeMetadata.path),
+    path: routeMetadata.path,
     action,
     middleware
   }
 }
 
-export function createRoutes(luren: Luren, controller: object) {
+export function createRoutes(controller: object) {
   const routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, controller)
   return routeMetadataMap
     .map((routeMetadata, prop) => {
-      return createRoute(luren, controller, prop, routeMetadata)
+      return createRoute(controller, prop, routeMetadata)
     })
     .toList()
 }
 
-export const loadControllers = (luren: Luren, router: Router, controllers: List<object>) => {
+export const loadControllers = (router: Router, controllers: List<object>) => {
   controllers.forEach((item) => {
-    const ctrl = createController(luren, item)
+    const ctrl = createController(item)
     router.use(ctrl.routes(), ctrl.allowedMethods())
   })
   return router

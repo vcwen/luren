@@ -25,7 +25,7 @@ export interface IModuleLoaderOptions {
 export type IPlugin = (luren: Luren) => void
 
 export class Luren {
-  public apiPrefix: string = '/api'
+  public _prefix: string = '/api'
   private _workDir: string = process.cwd()
   private _koa: Koa
   private _router: Router
@@ -43,7 +43,7 @@ export class Luren {
     modelOptions?: IModuleLoaderOptions
   }) {
     this._koa = new Koa()
-    this._router = new Router()
+    this._router = new Router({ prefix: this._prefix })
     if (options) {
       this._container = options.container
       if (options.bootOptions) {
@@ -53,6 +53,10 @@ export class Luren {
         this._controllerConfig = getFileLoaderConfig(options.controllerOptions)
       }
     }
+  }
+  public setPrefix(value: string) {
+    this._prefix = value
+    this._router.prefix(this._prefix)
   }
 
   public setWorkDirectory(dir: string) {
@@ -111,7 +115,7 @@ export class Luren {
     await this._loadMiddleware()
     const router = this._router
     await this._loadControllerModules()
-    loadControllers(this, router, this._controllers)
+    loadControllers(router, this._controllers)
     this._koa.use(router.routes()).use(router.allowedMethods())
   }
   private async _loadMiddleware() {
