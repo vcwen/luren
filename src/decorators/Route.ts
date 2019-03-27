@@ -42,7 +42,7 @@ export function Route(options: IRouteOptions = {}): PropertyDecorator {
     const metadata = getRouteMetadata(options, target, propertyKey)
     let routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, target) || Map()
     routeMetadataMap = routeMetadataMap.set(propertyKey, metadata)
-    Reflect.defineMetadata(MetadataKey.ROUTES, metadata, target)
+    Reflect.defineMetadata(MetadataKey.ROUTES, routeMetadataMap, target)
   }
 }
 
@@ -53,7 +53,7 @@ function methodifyRouteDecorator(method: HttpMethod) {
       const metadata = getRouteMetadata(options, target, propertyKey)
       let routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, target) || Map()
       routeMetadataMap = routeMetadataMap.set(propertyKey, metadata)
-      Reflect.defineMetadata(MetadataKey.ROUTES, metadata, target)
+      Reflect.defineMetadata(MetadataKey.ROUTES, routeMetadataMap, target)
     }
   }
 }
