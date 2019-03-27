@@ -25,7 +25,7 @@ export interface IModuleLoaderOptions {
 export type IPlugin = (luren: Luren) => void
 
 export class Luren {
-  public _prefix: string = '/api'
+  private _prefix: string = '/api'
   private _workDir: string = process.cwd()
   private _koa: Koa
   private _router: Router
@@ -57,6 +57,9 @@ export class Luren {
   public setPrefix(value: string) {
     this._prefix = value
     this._router.prefix(this._prefix)
+  }
+  public getPrefix() {
+    return this._prefix
   }
 
   public setWorkDirectory(dir: string) {
