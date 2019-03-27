@@ -6,7 +6,7 @@ import _ from 'lodash'
 import { Server } from 'net'
 import Path from 'path'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
-import { LurenDatasource } from './datasource/LurenDatasource'
+import { IDatasource } from './datasource/LurenDatasource'
 import { loadControllers } from './lib/Helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
 
@@ -35,7 +35,7 @@ export class Luren {
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
-  private _datasource: Map<string, LurenDatasource> = Map()
+  private _datasource: Map<string, IDatasource> = Map()
   constructor(options?: {
     container?: Container
     bootOptions?: IModuleLoaderOptions
@@ -84,11 +84,11 @@ export class Luren {
     return this._controllers
   }
 
-  public addDatasource(name: string, datasource: LurenDatasource) {
+  public addDatasource(name: string, datasource: IDatasource) {
     this._datasource = this._datasource.set(name, datasource)
   }
 
-  public setDefaultDatasource(datasource: LurenDatasource) {
+  public setDefaultDatasource(datasource: IDatasource) {
     this._datasource = this._datasource.set('default', datasource)
   }
 
