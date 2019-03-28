@@ -127,24 +127,32 @@ export const transform = (value: any, schema: any, rootSchema: any): any => {
   if (schema.type) {
     if (schema.type === 'object') {
       const result = {} as any
-      const props = Object.getOwnPropertyNames(schema.properties)
-      for (const prop of props) {
-        if (schema.properties[prop].private) {
-          // skip private properties
-          break
+      if (!_.isEmpty(schema.properties)) {
+        const props = Object.getOwnPropertyNames(schema.properties)
+        for (const prop of props) {
+          if (schema.properties[prop].private) {
+            // skip private properties
+            break
+          }
+          result[schema.properties[prop].name || prop] = transform(value[prop], schema.properties[prop], rootSchema)
         }
-        result[schema.properties[prop].name || prop] = transform(value[prop], schema.properties[prop], rootSchema)
-      }
-      if (schema.additionalProperties) {
-        const otherProps = _.difference(Object.getOwnPropertyNames(value), props)
-        for (const p of otherProps) {
-          result[p] = value[p]
+        if (schema.additionalProperties) {
+          const otherProps = _.difference(Object.getOwnPropertyNames(value), props)
+          for (const p of otherProps) {
+            result[p] = value[p]
+          }
         }
+        return result
+      } else {
+        return value
       }
-      return result
     } else if (schema.type === 'array') {
-      const items: any[] = value
-      return items.map((item) => transform(item, schema.items, rootSchema))
+      if (!_.isEmpty(schema.items)) {
+        const items: any[] = value
+        return items.map((item) => transform(item, schema.items, rootSchema))
+      } else {
+        return value
+      }
     } else {
       return value
     }
