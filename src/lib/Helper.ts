@@ -1,5 +1,6 @@
 import Ajv from 'ajv'
 import Boom from 'boom'
+import Debug from 'debug'
 import { List, Map } from 'immutable'
 import Router, { IMiddleware, IRouterContext } from 'koa-router'
 import { isEmpty } from 'lodash'
@@ -11,6 +12,7 @@ import { ResponseMetadata } from '../decorators/Response'
 import { RouteMetadata } from '../decorators/Route'
 import { HttpStatus } from './HttpStatus'
 import { parseFormData, transform } from './utils'
+const debug = Debug('luren')
 const ajv = new Ajv()
 
 const applyCtrlMiddleware = (router: Router, middleware: List<IMiddleware>) => {
@@ -18,12 +20,9 @@ const applyCtrlMiddleware = (router: Router, middleware: List<IMiddleware>) => {
     router.use(mw)
   })
 }
-const applyRouteMiddleware = (router: Router, middleware: List<IMiddleware>, method: string, path: string) => {
-  middleware.forEach((mv) => (router as any)[method](path, mv))
-}
 
 export function createController(ctrl: object) {
-  const router = new Router()
+  const router: any = new Router()
   const ctrlMiddleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
   applyCtrlMiddleware(router, ctrlMiddleware)
   const routes = createRoutes(ctrl)
@@ -31,8 +30,11 @@ export function createController(ctrl: object) {
     if (!route) {
       return
     }
-    applyRouteMiddleware(router, route.middleware, route.method, route.path)
-    ;(router as any)[route.method](route.path, route.action)
+    if (!route.middleware.isEmpty()) {
+      router[route.method](route.path, ...route.middleware, route.action)
+    } else {
+      router[route.method](route.path, route.action)
+    }
   })
   return router
 }
@@ -167,6 +169,7 @@ export function createAction(controller: object, propKey: string) {
         await next()
       }
     } catch (err) {
+      debug(err)
       ctx.throw(err)
     }
   }
