@@ -182,6 +182,11 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
+"@types/debug@^4.1.3":
+  version "4.1.3"
+  resolved "http://registry.npm.taobao.org/@types/debug/download/@types/debug-4.1.3.tgz#4965a87531d7c6863f5b097b2c518b825e926cc7"
+  integrity sha1-SWWodTHXxoY/Wwl7LFGLgl6SbMc=
+
 "@types/decamelize@^1.2.0":
   version "1.2.0"
   resolved "http://registry.npm.taobao.org/@types/decamelize/download/@types/decamelize-1.2.0.tgz#aabc2306e6c229356636cab7fcb823cfe170f056"
