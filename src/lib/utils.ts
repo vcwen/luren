@@ -114,7 +114,7 @@ export const normalizeSimpleSchema = (schema: any): IJsonSchema => {
 }
 
 const ajv = new Ajv()
-export const transform = (value: any, schema: any, rootSchema: any) => {
+export const transform = (value: any, schema: any, rootSchema: any): any => {
   if (schema.allOf) {
     schema = _.merge({}, ...(schema.allOf as any[]))
   }
@@ -133,7 +133,7 @@ export const transform = (value: any, schema: any, rootSchema: any) => {
           // skip private properties
           break
         }
-        result[prop] = transform(value[prop], schema.properties[prop], rootSchema)
+        result[schema.properties[prop].name || prop] = transform(value[prop], schema.properties[prop], rootSchema)
       }
       if (schema.additionalProperties) {
         const otherProps = _.difference(Object.getOwnPropertyNames(value), props)

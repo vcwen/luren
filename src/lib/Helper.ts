@@ -19,7 +19,7 @@ const applyCtrlMiddleware = (router: Router, middleware: List<IMiddleware>) => {
   })
 }
 const applyRouteMiddleware = (router: Router, middleware: List<IMiddleware>, method: string, path: string) => {
-  middleware.forEach((mv) => router[method](path, mv))
+  middleware.forEach((mv) => (router as any)[method](path, mv))
 }
 
 export function createController(ctrl: object) {
@@ -32,7 +32,7 @@ export function createController(ctrl: object) {
       return
     }
     applyRouteMiddleware(router, route.middleware, route.method, route.path)
-    router[route.method](route.path, route.action)
+    ;(router as any)[route.method](route.path, route.action)
   })
   return router
 }
