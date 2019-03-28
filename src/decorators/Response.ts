@@ -19,7 +19,7 @@ export class ResponseMetadata {
   public strict: boolean = false
   public mime?: string
   public desc?: string
-  constructor(status: number, schema: IJsonSchema, strict: boolean = false, desc?: string) {
+  constructor(status: number, schema: IJsonSchema, strict: boolean = true, desc?: string) {
     this.status = status
     this.schema = schema
     this.strict = strict
