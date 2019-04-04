@@ -1,26 +1,18 @@
-.PHONY: build compile test copy-files clean install
+.PHONY: build compile test clean install node_modules
 default: build
 
 SHELL:=/bin/bash
 UNAME_S := $(shell uname -s)
-TSC=./node_modules/typescript/bin/tsc
-JEST=./node_modules/jest/bin/jest.js
-TS_NODE=./node_modules/ts-node/dist/bin.js
 
-install:
+node_modules: package.json yarn.lock
+install: node_modules
 	yarn install
 run: install
-	$(TS_NODE) ./src/server.ts
-copy-files:
-		@if [ $(UNAME_S) = "Darwin" ]; then\
-        rsync -mr src/ dist --exclude=*.ts;\
-		else\
-			find src -type f -not -name '*.ts' | xargs -I {} cp --parents {} dist/;\
-    fi
+	NODE_ENV=development npx ts-node ./src/server.ts
 compile: install clean
-	$(TSC)  -p tsconfig.build.json
-build: compile copy-files
+	npx tsc  -p tsconfig.build.json
+build: compile
 test: install
-	$(JEST)
+	NODE_ENV=testing npx jest --runInBand --forceExit $(file)
 clean:
 	rm -rf ./dist
