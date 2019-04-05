@@ -80,9 +80,9 @@ export function Param(options: IParamOptions) {
     defineParamMetadata(options, index, target, propertyKey)
   }
 }
-export function Required(name: string)
+export function Required(name: string): (target: object, propertyKey: string, index: number) => void
 // tslint:disable-next-line: unified-signatures
-export function Required(options: IParamOptions)
+export function Required(options: IParamOptions): (target: object, propertyKey: string, index: number) => void
 export function Required(options: any) {
   if (typeof options === 'string') {
     options = { name: options }
