@@ -1,19 +1,19 @@
-import nodepath from 'path'
+import Path from 'path'
 export default function(options: any) {
-  const prefix = options.prefix || ''
+  const prefix = (options && options.prefix) || ''
   const router = {
     routes: {},
     get(path: string, action: any) {
-      this.routes['get:' + nodepath.join('/', prefix, path)] = { method: 'get', action }
+      this.routes['get:' + Path.join('/', prefix, path)] = { method: 'get', action }
     },
     put(path: string, action: any) {
-      this.routes['put:' + nodepath.join('/', prefix, path)] = { method: 'put', action }
+      this.routes['put:' + Path.join('/', prefix, path)] = { method: 'put', action }
     },
     post(path: string, action: any) {
-      this.routes['post:' + nodepath.join('/', prefix, path)] = { method: 'post', action }
+      this.routes['post:' + Path.join('/', prefix, path)] = { method: 'post', action }
     },
     delete(path: string, action: any) {
-      this.routes['delete:' + nodepath.join('/', prefix, path)] = { method: 'delete', action }
+      this.routes['delete:' + Path.join('/', prefix, path)] = { method: 'delete', action }
     }
   } as any
   return router

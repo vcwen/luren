@@ -6,7 +6,7 @@ export interface IQueryExecutor {}
 export abstract class LurenQueryExecutor<T> implements IQueryExecutor {
   protected _schema: any
   constructor(model: Constructor<T>) {
-    this._schema = this.getSchema(model)
+    this._schema = this.loadSchema(model)
   }
-  protected abstract getSchema(model: Constructor<T>): any
+  protected abstract loadSchema(model: Constructor<T>): any
 }

@@ -1,1 +1,1 @@
-export { ok, redirect } from './HttpStatus'
+export { ok, redirect } from './HttpResponse'

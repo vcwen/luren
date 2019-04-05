@@ -10,7 +10,7 @@ import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
-import { HttpStatus } from './HttpStatus'
+import { HttpResponse } from './HttpResponse'
 import { parseFormData, transform } from './utils'
 
 const debug = Debug('luren')
@@ -29,7 +29,7 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
         break
       case 'body': {
         const request: any = ctx.request
-        if (paramMeta.schema.type === 'string' && paramMeta.schema.format === 'binary') {
+        if (paramMeta.isFile) {
           if (paramMeta.root) {
             value = request.files
           } else {
@@ -63,7 +63,7 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       try {
         value = JSON.parse(value)
       } catch (err) {
-        ctx.throw(HttpStatusCode.BAD_REQUEST, `invalid value for argument "${paramMeta.name}"`)
+        throw Boom.badRequest(`invalid value for argument '${paramMeta.name}'`)
       }
     }
     const schema = paramMeta.schema
@@ -83,9 +83,12 @@ export function applyCtrlMiddleware(router: Router, middleware: List<IMiddleware
 
 export async function processRoute(ctx: IRouterContext, controller: any, propKey: string, args: any[]) {
   const response = await controller[propKey].apply(controller, args)
-  if (response instanceof HttpStatus) {
-    ctx.status = response.statusCode
-    switch (response.statusCode) {
+  if (response instanceof HttpResponse) {
+    ctx.status = response.status
+    if (response.headers) {
+      ctx.set(response.headers)
+    }
+    switch (response.status) {
       case HttpStatusCode.MOVED_PERMANENTLY:
       case HttpStatusCode.FOUND:
         return ctx.redirect(response.body)
@@ -199,5 +202,5 @@ export function createController(ctrl: object, onError?: (err: any, ctx: IRouter
       router[route.method](route.path, action)
     }
   })
-  return router
+  return router as Router
 }

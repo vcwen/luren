@@ -6,6 +6,8 @@ import { ParamSource } from '../constants/ParamSource'
 import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export type Source = 'query' | 'path' | 'header' | 'body' | 'context'
+
+type ParamDecorator = (target: object, propertyKey: string, index: number) => void
 export interface IParamOptions {
   name: string
   in?: Source
@@ -29,6 +31,7 @@ export class ParamMetadata {
   public strict: boolean = true
   public mime?: string
   public desc?: string
+  public isFile: boolean = false
   constructor(name: string, source: Source, required: boolean = false) {
     this.name = name
     this.source = source
@@ -37,11 +40,14 @@ export class ParamMetadata {
 }
 
 const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
-  const metadata = new ParamMetadata(options.name || propertyKey, options.in || ParamSource.QUERY, options.required)
+  const metadata = new ParamMetadata(options.name || '', options.in || ParamSource.QUERY, options.required)
   if (options.schema) {
     metadata.schema = options.schema
   } else {
     metadata.schema = normalizeSimpleSchema(options.type || 'string')
+    if (options.type === 'file') {
+      metadata.isFile = true
+    }
   }
   if (options.root) {
     if (metadata.schema.type !== 'object') {
@@ -74,32 +80,37 @@ export function Param(options: IParamOptions) {
     defineParamMetadata(options, index, target, propertyKey)
   }
 }
-
-export function Required(options: IParamOptions) {
+export function Required(name: string)
+// tslint:disable-next-line: unified-signatures
+export function Required(options: IParamOptions)
+export function Required(options: any) {
+  if (typeof options === 'string') {
+    options = { name: options }
+  }
   return (target: object, propertyKey: string, index: number) => {
     defineParamMetadata(Object.assign({}, options, { required: true }), index, target, propertyKey)
   }
 }
 
-export function InQuery(name: string, type: string, required?: boolean)
-export function InQuery(name: string, required?: boolean)
+export function InQuery(name: string, type: string, required?: boolean): ParamDecorator
+export function InQuery(name: string, required?: boolean): ParamDecorator
 export function InQuery() {
   return inSource(ParamSource.QUERY).apply(null, [...arguments])
 }
-export function InPath(name: string, type: string, required?: boolean)
-export function InPath(name: string, required?: boolean)
+export function InPath(name: string, type: string, required?: boolean): ParamDecorator
+export function InPath(name: string, required?: boolean): ParamDecorator
 export function InPath() {
   return inSource(ParamSource.PATH).apply(null, [...arguments])
 }
 
-export function InHeader(name: string, type: string, required?: boolean)
-export function InHeader(name: string, required?: boolean)
+export function InHeader(name: string, type: string, required?: boolean): ParamDecorator
+export function InHeader(name: string, required?: boolean): ParamDecorator
 export function InHeader() {
   return inSource(ParamSource.HEADER).apply(null, [...arguments])
 }
 
-export function InBody(name: string, type: string, required?: boolean)
-export function InBody(name: string, required?: boolean)
+export function InBody(name: string, type: string, required?: boolean): ParamDecorator
+export function InBody(name: string, required?: boolean): ParamDecorator
 export function InBody() {
   return inSource(ParamSource.BODY).apply(null, [...arguments])
 }

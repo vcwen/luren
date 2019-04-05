@@ -1,5 +1,4 @@
 export * from './Luren'
-export { importModule } from './lib/utils'
 export * from './constants'
 export * from './decorators'
 export * from './lib'

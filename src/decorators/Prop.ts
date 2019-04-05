@@ -9,7 +9,7 @@ export interface IPropOptions {
   schema?: IJsonSchema
   required?: boolean
   desc?: string
-  format?: 'string'
+  format?: string
   enum?: any[]
   const?: any
   strict?: boolean
@@ -56,7 +56,6 @@ export function Prop(options: IPropOptions = {}) {
   return (target: object, propertyKey: string) => {
     let metadataMap: Map<string, PropMetadata> = Reflect.getMetadata(MetadataKey.PROPS, target) || Map()
     const metadata = getPropMetadata(options, target, propertyKey)
-    Reflect.defineMetadata(MetadataKey.PROP, metadata, target, propertyKey)
     metadataMap = metadataMap.set(propertyKey, metadata)
     Reflect.defineMetadata(MetadataKey.PROPS, metadataMap, target)
   }

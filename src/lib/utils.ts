@@ -56,20 +56,17 @@ const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
   if (typeof schema === 'string') {
     const [type, required] = normalizeType(schema)
     const jsonSchema: any = { type }
-    if (type === 'file') {
-      jsonSchema.type = 'string'
-      jsonSchema.format = 'binary'
+    if (type === 'file' || type === 'stream') {
+      jsonSchema.type = 'object'
     }
     return [jsonSchema, required]
   } else if (Array.isArray(schema)) {
     const propSchema: any = { type: 'array' }
     if (schema[0]) {
-      const itemSchema = convertSimpleSchemaToJsonSchema(schema[0])
+      const [itemSchema] = convertSimpleSchemaToJsonSchema(schema[0])
       propSchema.items = itemSchema
-    } else {
-      throw new TypeError('Array items is required.')
     }
-    return propSchema
+    return [propSchema, true]
   } else if (typeof schema === 'object') {
     const jsonSchema: IJsonSchema = { type: 'object', properties: {} }
     const requiredProps = [] as string[]
@@ -176,18 +173,6 @@ export const transform = (value: any, schema: any, rootSchema: any): any => {
     } else {
       // when no above keys, it might be 'const' or 'enum' without type
       return value
-    }
-  }
-}
-
-export const importModule = async (path: string, base?: string) => {
-  if (base) {
-    path = Path.resolve(base, path)
-  }
-  const files = await fs.readdir(path)
-  for (const file of files) {
-    if ((file.endsWith('.js') || file.endsWith('.ts')) && !file.endsWith('.d.ts')) {
-      await import(Path.resolve(path, file))
     }
   }
 }

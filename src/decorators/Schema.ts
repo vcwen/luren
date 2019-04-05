@@ -14,7 +14,7 @@ export interface ISchemaOptions {
 export class SchemaMetadata {
   public id: string
   public schema: any
-  public strict: boolean = false
+  public strict: boolean = true
   public desc?: string
   constructor(id: string, schema: any, desc?: string) {
     this.id = id

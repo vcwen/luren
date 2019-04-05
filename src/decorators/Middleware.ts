@@ -5,7 +5,7 @@ import { MetadataKey } from '../constants/MetadataKey'
 
 export function Middleware(...middleware: IMiddleware[]) {
   return (...args: any[]) => {
-    if (arguments.length === 1) {
+    if (args.length === 1) {
       const [constructor] = args
       const mw: List<IMiddleware> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || List()
       Reflect.defineMetadata(MetadataKey.MIDDLEWARE, mw.concat(middleware), constructor.prototype)

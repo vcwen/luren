@@ -19,6 +19,7 @@ export class ResponseMetadata {
   public strict: boolean = false
   public mime?: string
   public desc?: string
+  public isStream: boolean = false
   constructor(status: number, schema: IJsonSchema, strict: boolean = true, desc?: string) {
     this.status = status
     this.schema = schema
@@ -34,6 +35,9 @@ export function Response(options: IResponseOptions): PropertyDecorator {
     const status = options.status || HttpStatusCode.OK
     const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')
     const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
+    if (options.type === 'stream') {
+      metadata.isStream = true
+    }
     metadata.mime = options.mime
     resMetadata = resMetadata.set(metadata.status, metadata)
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
