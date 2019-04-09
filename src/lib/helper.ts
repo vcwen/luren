@@ -101,7 +101,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
     const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
     if (resMetadata && resMetadata.strict) {
       if (ajv.validate(resMetadata.schema, response)) {
-        ctx.body = transform(response, resMetadata.schema, resMetadata.schema)
+        ctx.body = transform(response, resMetadata.schema)
       } else {
         throw new Error(ajv.errorsText())
       }
@@ -141,7 +141,7 @@ export function createAction(controller: object, propKey: string) {
           const resMetadata = resultMetadataMap.get(err.output.statusCode)
           if (resMetadata && resMetadata.strict) {
             if (ajv.validate(resMetadata.schema, response)) {
-              ctx.body = transform(response, resMetadata.schema, resMetadata.schema)
+              ctx.body = transform(response, resMetadata.schema)
             } else {
               ctx.body = response
             }

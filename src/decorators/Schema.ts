@@ -27,9 +27,9 @@ export function Schema(options: ISchemaOptions = {}) {
   return (constructor: Constructor<any>) => {
     const jsonSchema = {
       type: 'object',
+      constructor,
       required: [] as string[],
-      properties: {} as any,
-      additionalProperties: options.strict ? true : false
+      properties: {} as any
     }
     const propMetadataMap: Map<string, PropMetadata> =
       Reflect.getMetadata(MetadataKey.PROPS, constructor.prototype) || Map()

@@ -1,4 +1,3 @@
-import Ajv from 'ajv'
 import { Fields, Files, IncomingForm } from 'formidable'
 import { promises as fs } from 'fs'
 import { IRouterContext } from 'koa-router'
@@ -110,70 +109,34 @@ export const normalizeSimpleSchema = (schema: any): IJsonSchema => {
   return jsonSchema
 }
 
-const ajv = new Ajv()
-export const transform = (value: any, schema: any, rootSchema: any): any => {
-  if (schema.allOf) {
-    schema = _.merge({}, ...(schema.allOf as any[]))
+export const transform = (value: any, schema: any): any => {
+  if (_.isEmpty(value) || _.isEmpty(schema)) {
+    return value
   }
-  if (schema.$ref) {
-    // reference, only support embedded definitions
-    const path = _.tail(schema.$ref.split('/')).join('.')
-    const ref = _.get(rootSchema, path)
-    schema = _.merge(_.omit(schema, '$ref'), ref)
-  }
-  if (schema.type) {
-    if (schema.type === 'object') {
-      const result = {} as any
-      if (!_.isEmpty(schema.properties)) {
-        const props = Object.getOwnPropertyNames(schema.properties)
-        for (const prop of props) {
-          if (schema.properties[prop].private) {
-            // skip private properties
-            break
-          }
-          result[schema.properties[prop].name || prop] = transform(value[prop], schema.properties[prop], rootSchema)
+  if (schema.type === 'object') {
+    const result = {} as any
+    if (!_.isEmpty(schema.properties)) {
+      const props = Object.getOwnPropertyNames(schema.properties)
+      for (const prop of props) {
+        if (schema.properties[prop].private) {
+          // skip private properties
+          continue
         }
-        if (schema.additionalProperties) {
-          const otherProps = _.difference(Object.getOwnPropertyNames(value), props)
-          for (const p of otherProps) {
-            result[p] = value[p]
-          }
-        }
-        return result
-      } else {
-        return value
+        result[schema.properties[prop].name || prop] = transform(value[prop], schema.properties[prop])
       }
-    } else if (schema.type === 'array') {
-      if (!_.isEmpty(schema.items)) {
-        const items: any[] = value
-        return items.map((item) => transform(item, schema.items, rootSchema))
-      } else {
-        return value
-      }
+      return result
+    } else {
+      return value
+    }
+  } else if (schema.type === 'array') {
+    if (!_.isEmpty(schema.items)) {
+      const items: any[] = value
+      return items.map((item) => transform(item, schema.items))
     } else {
       return value
     }
   } else {
-    if (schema.anyOf) {
-      // find the first valid one and use it
-      const schemas = schema.anyOf as any[]
-      for (const s of schemas) {
-        if (ajv.validate(s, value)) {
-          return transform(value, s, rootSchema)
-        }
-      }
-    } else if (schema.oneOf) {
-      // find the first valid one and use it
-      const schemas = schema.anyOf as any[]
-      for (const s of schemas) {
-        if (ajv.validate(s, value)) {
-          return transform(value, s, rootSchema)
-        }
-      }
-    } else {
-      // when no above keys, it might be 'const' or 'enum' without type
-      return value
-    }
+    return value
   }
 }
 
