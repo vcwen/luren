@@ -83,6 +83,9 @@ export function applyCtrlMiddleware(router: Router, middleware: List<IMiddleware
 
 export async function processRoute(ctx: IRouterContext, controller: any, propKey: string, args: any[]) {
   const response = await controller[propKey].apply(controller, args)
+  if (response === undefined || response === null) {
+    return
+  }
   if (response instanceof HttpResponse) {
     ctx.status = response.status
     if (response.headers) {
@@ -99,7 +102,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
     const resultMetadataMap: Map<number, ResponseMetadata> =
       Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
     const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
-    if (resMetadata && resMetadata.strict) {
+    if (resMetadata) {
       if (ajv.validate(resMetadata.schema, response)) {
         ctx.body = transform(response, resMetadata.schema)
       } else {
