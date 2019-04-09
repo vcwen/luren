@@ -51,7 +51,7 @@ const normalizeProp = (decoratedProp: string): [string, boolean] => {
   }
 }
 
-const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
+export const convertSimpleSchemaToJsonSchema = (schema: any): [any, boolean] => {
   if (typeof schema === 'string') {
     const [type, required] = normalizeType(schema)
     const jsonSchema: any = { type }

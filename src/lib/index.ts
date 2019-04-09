@@ -1,2 +1,2 @@
 export { ok, redirect } from './HttpResponse'
-export { normalizeSimpleSchema } from './utils'
+export { convertSimpleSchemaToJsonSchema } from './utils'
