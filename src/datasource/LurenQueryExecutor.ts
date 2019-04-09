@@ -3,7 +3,7 @@ import { Constructor } from '../types/Constructor'
 // tslint:disable-next-line:no-empty-interface
 export interface IQueryExecutor {}
 
-export abstract class LurenQueryExecutor<T> implements IQueryExecutor {
+export abstract class LurenQueryExecutor<T extends object> implements IQueryExecutor {
   protected _schema: any
   protected _modelConstructor: Constructor<T>
   constructor(model: Constructor<T>) {

@@ -9,8 +9,8 @@ export interface IDatasourceOptions {
 }
 
 export interface IDatasource {
-  getQueryExecutor<T>(model: Constructor<T>): Promise<IQueryExecutor>
-  loadSchema<T>(model: Constructor<T>): Promise<boolean>
+  getQueryExecutor<T extends object>(model: Constructor<T>): Promise<IQueryExecutor>
+  loadSchema<T extends object>(model: Constructor<T>): Promise<boolean>
 }
 
 export abstract class LurenDatasource implements IDatasource {
@@ -18,7 +18,7 @@ export abstract class LurenDatasource implements IDatasource {
   constructor(options: IDatasourceOptions) {
     this._connectUrl = this.getConnectUrl(options)
   }
-  public abstract getQueryExecutor<T>(model: Constructor<T>): Promise<IQueryExecutor>
-  public abstract loadSchema<T>(model: Constructor<T>): Promise<boolean>
+  public abstract getQueryExecutor<T extends object>(model: Constructor<T>): Promise<IQueryExecutor>
+  public abstract loadSchema<T extends object>(model: Constructor<T>): Promise<boolean>
   protected abstract getConnectUrl(options: IDatasourceOptions): string
 }
