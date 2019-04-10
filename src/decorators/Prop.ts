@@ -15,6 +15,7 @@ export interface IPropOptions {
   strict?: boolean
   private?: boolean
   default?: any
+  jsonType?: string
 }
 
 export class PropMetadata {
@@ -28,6 +29,7 @@ export class PropMetadata {
   public const?: any
   public desc?: string
   public private: boolean = false
+  public jsonType?: string
   constructor(name: string, required: boolean = false) {
     this.name = name
     this.required = required
@@ -48,6 +50,10 @@ const getPropMetadata = (options: IPropOptions, _1: object, propertyKey: string)
   metadata.private = options.private || false
   if (metadata.private) {
     metadata.schema.private = true
+  }
+  metadata.jsonType = options.jsonType
+  if (metadata.jsonType) {
+    metadata.schema.jsonType = metadata.jsonType
   }
   return metadata
 }
