@@ -5,11 +5,11 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
 import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 
-export type Source = 'query' | 'path' | 'header' | 'body' | 'context'
+export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context'
 
 type ParamDecorator = (target: object, propertyKey: string, index: number) => void
 export interface IParamOptions {
-  name: string
+  name?: string
   in?: Source
   type?: string | { [prop: string]: any }
   schema?: IJsonSchema
@@ -32,7 +32,7 @@ export class ParamMetadata {
   public mime?: string
   public desc?: string
   public isFile: boolean = false
-  constructor(name: string, source: Source, required: boolean = false) {
+  constructor(name: string = '', source: Source, required: boolean = false) {
     this.name = name
     this.source = source
     this.required = required
@@ -40,7 +40,7 @@ export class ParamMetadata {
 }
 
 const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
-  const metadata = new ParamMetadata(options.name || '', options.in || ParamSource.QUERY, options.required)
+  const metadata = new ParamMetadata(options.name, options.in || ParamSource.QUERY, options.required)
   if (options.schema) {
     metadata.schema = options.schema
   } else {
@@ -49,12 +49,7 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
       metadata.isFile = true
     }
   }
-  if (options.root) {
-    if (metadata.schema.type !== 'object') {
-      throw new Error('parameter must be an object if it is root')
-    }
-    metadata.root = true
-  }
+  metadata.root = options.root || false
   if (options.strict) {
     metadata.strict = true
   }
@@ -114,13 +109,40 @@ export function InBody(name: string, required?: boolean): ParamDecorator
 export function InBody() {
   return inSource(ParamSource.BODY).apply(null, [...arguments])
 }
+export function InRequest(name: string, type: string, required?: boolean): ParamDecorator
+export function InRequest(name: string, required?: boolean): ParamDecorator
+export function InRequest() {
+  return inSource(ParamSource.REQUEST).apply(null, [...arguments])
+}
+export function InSession(name: string, type: string, required?: boolean): ParamDecorator
+export function InSession(name: string, required?: boolean): ParamDecorator
+export function InSession() {
+  return inSource(ParamSource.SESSION).apply(null, [...arguments])
+}
+export function InContext(name: string, type: string, required?: boolean): ParamDecorator
+export function InContext(name: string, required?: boolean): ParamDecorator
+export function InContext() {
+  return inSource(ParamSource.CONTEXT).apply(null, [...arguments])
+}
+
+export function Query() {
+  return Param({ in: ParamSource.QUERY, root: true, type: 'object' })
+}
 export function Context() {
-  return Param({ name: '', in: ParamSource.CONTEXT })
+  return Param({ in: ParamSource.CONTEXT, root: true, type: 'object' })
+}
+export function Request() {
+  return Param({ in: ParamSource.REQUEST, root: true, type: 'object' })
+}
+export function Session() {
+  return Param({ in: ParamSource.SESSION, root: true, type: 'object' })
+}
+export function Body() {
+  return Param({ in: ParamSource.BODY, root: true, type: 'object' })
 }
 
 function inSource(source: ParamSource) {
-  // tslint:disable-next-line: only-arrow-functions
-  return function(...args: any[]) {
+  return (...args: any[]) => {
     let name: string
     let type: string = 'string'
     let required: boolean = false

@@ -217,7 +217,7 @@ describe('Context', () => {
         name: '',
         required: false,
         source: 'context',
-        root: false,
+        root: true,
         strict: true
       })
     ])

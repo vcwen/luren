@@ -42,7 +42,7 @@ class TestController {
     return name
   }
   @Get()
-  public async contextParam(@Param({ name: 'ctx', in: 'context' }) ctx: any) {
+  public async contextParam(@Param({ name: 'ctx', in: 'context', type: 'object', root: true }) ctx: any) {
     return ctx.name
   }
   @Get()

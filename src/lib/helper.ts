@@ -17,56 +17,66 @@ const debug = Debug('luren')
 
 const ajv = new Ajv()
 
+const getParam = (source: any, metadata: ParamMetadata) => {
+  if (metadata.root) {
+    return source
+  } else {
+    return _.get(source, metadata.name)
+  }
+}
+
 export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = List()) => {
-  return paramsMetadata.map((paramMeta) => {
+  return paramsMetadata.map((metadata) => {
     let value: any
-    switch (paramMeta.source) {
+    switch (metadata.source) {
       case 'query':
-        value = ctx.query[paramMeta.name]
+        value = getParam(ctx.query, metadata)
         break
       case 'path':
-        value = ctx.params[paramMeta.name]
+        value = getParam(ctx.params, metadata)
         break
       case 'body': {
-        const request: any = ctx.request
-        if (paramMeta.isFile) {
-          if (paramMeta.root) {
-            value = request.files
+        if (metadata.isFile) {
+          if (metadata.root) {
+            value = _.get(ctx.request, 'files')
           } else {
-            value = request.files && request.files[paramMeta.name]
+            value = _.get(ctx.request, ['files', metadata.name])
           }
         } else {
-          if (paramMeta.root) {
-            value = request.body
-          } else {
-            value = request.body && request.body[paramMeta.name]
-          }
+          value = getParam(_.get(ctx.request, 'body'), metadata)
         }
         break
       }
       case 'header':
-        value = ctx.header[paramMeta.name]
+        value = getParam(ctx.header, metadata)
         break
       case 'context':
-        return ctx
+        value = getParam(ctx, metadata)
+        break
+      case 'session':
+        value = getParam(_.get(ctx, 'session'), metadata)
+        break
+      case 'request':
+        value = getParam(ctx.request, metadata)
+        break
       default:
-        throw new TypeError('Invalid source:' + paramMeta.source)
+        throw new TypeError('Invalid source:' + metadata.source)
     }
 
-    if (paramMeta.required && !value) {
-      throw Boom.badRequest(paramMeta.name + ' is required' + (paramMeta.source ? ' in ' + paramMeta.source : ''))
+    if (metadata.required && !value) {
+      throw Boom.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
     }
     if (!value) {
       return
     }
-    if (paramMeta.schema.type !== 'string' && typeof value === 'string') {
+    if (metadata.schema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
-        throw Boom.badRequest(`invalid value for argument '${paramMeta.name}'`)
+        throw Boom.badRequest(`invalid value for argument '${metadata.name}'`)
       }
     }
-    const schema = paramMeta.schema
+    const schema = metadata.schema
     const valid = ajv.validate(schema, value)
     if (!valid) {
       throw Boom.badRequest(ajv.errorsText())
