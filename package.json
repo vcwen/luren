@@ -1,6 +1,6 @@
 {
   "name": "luren",
-  "version": "0.0.8-1",
+  "version": "0.0.8-11",
   "description": "Luren is a simple framework based on Koa2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,6 +24,7 @@
     "koa-helmet": "^4.0.0",
     "koa-router": "^7.4.0",
     "lodash": "^4.17.10",
+    "luren-schema": "^0.0.3",
     "pluralize": "^7.0.0",
     "reflect-metadata": "^0.1.13"
   },

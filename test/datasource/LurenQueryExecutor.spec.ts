@@ -3,7 +3,7 @@ import { Constructor } from '../../src/types/Constructor'
 
 describe('LurenQueryExecutor', () => {
   it('should define base protocol', () => {
-    class QueryExecutor<T> extends LurenQueryExecutor<T> {
+    class QueryExecutor<T> extends LurenQueryExecutor<any> {
       public getSchema() {
         return this._schema
       }

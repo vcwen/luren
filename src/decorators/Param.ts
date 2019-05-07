@@ -92,10 +92,9 @@ export function InQuery(name: string, required?: boolean): ParamDecorator
 export function InQuery() {
   return inSource(ParamSource.QUERY).apply(null, [...arguments])
 }
-export function InPath(name: string, type: string, required?: boolean): ParamDecorator
-export function InPath(name: string, required?: boolean): ParamDecorator
-export function InPath() {
-  return inSource(ParamSource.PATH).apply(null, [...arguments])
+
+export function InPath(name: string, type?: string) {
+  return inSource(ParamSource.PATH).apply(null, [name, type, true])
 }
 
 export function InHeader(name: string, type: string, required?: boolean): ParamDecorator

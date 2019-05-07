@@ -1,10 +1,11 @@
 import fs from 'fs'
 import bodyParser = require('koa-bodyparser')
+import { Prop, Schema } from 'luren-schema'
 import Path from 'path'
 import request from 'supertest'
 import { HttpMethod, HttpStatusCode, redirect } from '../src'
 import { ParamSource } from '../src/constants/ParamSource'
-import { Controller, Middleware, Param, Prop, Response, Route, Schema } from '../src/decorators'
+import { Controller, Middleware, Param, Response, Route } from '../src/decorators'
 import { IncomingFile } from '../src/lib/IncomingFile'
 import StreamResponse from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'

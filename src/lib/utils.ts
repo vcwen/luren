@@ -2,10 +2,10 @@ import { Fields, Files, IncomingForm } from 'formidable'
 import { promises as fs } from 'fs'
 import { IRouterContext } from 'koa-router'
 import _ from 'lodash'
+import { SchemaMetadata } from 'luren-schema'
 import Path from 'path'
 import 'reflect-metadata'
-import { MetadataKey } from '../constants/MetadataKey'
-import { SchemaMetadata } from '../decorators/Schema'
+import { MetadataKey } from '../constants'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
 
 export interface IJsonSchema {

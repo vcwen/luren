@@ -308,6 +308,14 @@
     "@types/bson" "*"
     "@types/node" "*"
 
+"@types/mongodb@^3.1.25":
+  version "3.1.26"
+  resolved "https://registry.npm.taobao.org/@types/mongodb/download/@types/mongodb-3.1.26.tgz#6877554353fd9e9d03f28c62de09bad616ed7142"
+  integrity sha1-aHdVQ1P9np0D8oxi3gm61hbtcUI=
+  dependencies:
+    "@types/bson" "*"
+    "@types/node" "*"
+
 "@types/mongoose@^5.2.6":
   version "5.3.20"
   resolved "http://registry.npm.taobao.org/@types/mongoose/download/@types/mongoose-5.3.20.tgz#3daf682cc326b685d1df3eca6d40181962a6aeca"
@@ -2638,6 +2646,16 @@ loose-envify@^1.0.0:
   integrity sha1-ce5R+nvkyuwaY4OffmgtgTLTDK8=
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
+
+luren-schema@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.3.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.0.3.tgz#eb8a3a6deaf7f8472ac11c79c9ff5942018d837d"
+  integrity sha1-64o6ber3+EcqwRx5yf9ZQgGNg30=
+  dependencies:
+    "@types/mongodb" "^3.1.25"
+    immutable "^4.0.0-rc.12"
+    lodash "^4.17.11"
+    reflect-metadata "^0.1.13"
 
 make-dir@^1.3.0:
   version "1.3.0"

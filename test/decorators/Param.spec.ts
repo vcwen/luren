@@ -126,9 +126,9 @@ describe('InPath', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
       public test(
-        @InPath('name', true) name: string,
+        @InPath('name') name: string,
         @InPath('age', 'number') age: number,
-        @InPath('id', 'number', true) id: number
+        @InPath('id', 'number') id: number
       ) {
         return id + name + age
       }
@@ -140,22 +140,22 @@ describe('InPath', () => {
         name: 'name',
         required: true,
         source: 'path',
-        schema: { type: 'string' },
+        schema: expect.objectContaining({ type: 'string' }),
         root: false,
         strict: true
       }),
       expect.objectContaining({
         name: 'age',
-        required: false,
+        required: true,
         source: 'path',
-        schema: { type: 'number' },
+        schema: expect.objectContaining({ type: 'number' }),
         strict: true
       }),
       expect.objectContaining({
         name: 'id',
         required: true,
         source: 'path',
-        schema: { type: 'number' },
+        schema: expect.objectContaining({ type: 'number' }),
         strict: true
       })
     ])

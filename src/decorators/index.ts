@@ -1,7 +1,5 @@
 export * from './Controller'
 export * from './Middleware'
-export * from './Schema'
-export * from './Prop'
 export * from './Param'
 export * from './Response'
 export * from './Route'
