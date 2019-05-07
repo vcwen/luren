@@ -13,6 +13,8 @@ export {
   IJsSchema,
   IncomingFile,
   normalizeSimpleSchema,
-  dataToJson,
-  jsonToData
+  validate,
+  serialize,
+  deserialize,
+  jsSchemaToJsonSchema
 } from 'luren-schema'
