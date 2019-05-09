@@ -308,14 +308,6 @@
     "@types/bson" "*"
     "@types/node" "*"
 
-"@types/mongodb@^3.1.25":
-  version "3.1.26"
-  resolved "https://registry.npm.taobao.org/@types/mongodb/download/@types/mongodb-3.1.26.tgz#6877554353fd9e9d03f28c62de09bad616ed7142"
-  integrity sha1-aHdVQ1P9np0D8oxi3gm61hbtcUI=
-  dependencies:
-    "@types/bson" "*"
-    "@types/node" "*"
-
 "@types/mongoose@^5.2.6":
   version "5.3.20"
   resolved "http://registry.npm.taobao.org/@types/mongoose/download/@types/mongoose-5.3.20.tgz#3daf682cc326b685d1df3eca6d40181962a6aeca"
@@ -403,7 +395,7 @@ acorn@^6.0.1:
   resolved "http://registry.npm.taobao.org/acorn/download/acorn-6.1.1.tgz#7d25ae05bb8ad1f9b699108e1094ecd7884adc1f"
   integrity sha1-fSWuBbuK0fm2mRCOEJTs14hK3B8=
 
-ajv@^6.10.0, ajv@^6.5.5:
+ajv@^6.5.5:
   version "6.10.0"
   resolved "http://registry.npm.taobao.org/ajv/download/ajv-6.10.0.tgz#90d0d54439da587cd7e843bfb7045f50bd22bdf1"
   integrity sha1-kNDVRDnaWHzX6EO/twRfUL0ivfE=
@@ -2647,12 +2639,11 @@ loose-envify@^1.0.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
-luren-schema@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.4.tgz#18d5a52b7f4130497e9772e2420d6014fb5b2c5e"
-  integrity sha1-GNWlK39BMEl+l3LiQg1gFPtbLF4=
+luren-schema@^0.0.7-2:
+  version "0.0.7-2"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.7-2.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.0.7-2.tgz#1204eda2aa6cbb98d4c3e0ee34bd72e286fb3862"
+  integrity sha1-EgTtoqpsu5jUw+DuNL1y4ob7OGI=
   dependencies:
-    "@types/mongodb" "^3.1.25"
     immutable "^4.0.0-rc.12"
     lodash "^4.17.11"
     reflect-metadata "^0.1.13"
