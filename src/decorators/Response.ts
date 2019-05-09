@@ -1,8 +1,8 @@
 import { Map } from 'immutable'
+import { IJsSchema, normalizeSimpleSchema } from 'luren-schema'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
-import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 import { PropertyDecorator } from '../types/PropertyDecorator'
 export interface IResponseOptions {
   status?: number
@@ -15,12 +15,12 @@ export interface IResponseOptions {
 
 export class ResponseMetadata {
   public status: number = HttpStatusCode.OK
-  public schema: IJsonSchema
+  public schema: IJsSchema
   public strict: boolean = false
   public mime?: string
   public desc?: string
   public isStream: boolean = false
-  constructor(status: number, schema: IJsonSchema, strict: boolean = true, desc?: string) {
+  constructor(status: number, schema: IJsSchema, strict: boolean = true, desc?: string) {
     this.status = status
     this.schema = schema
     this.strict = strict
@@ -47,7 +47,7 @@ export function Response(options: IResponseOptions): PropertyDecorator {
 export interface IErrorOptions {
   status: number
   type?: any
-  schema?: IJsonSchema
+  schema?: IJsSchema
   strict?: boolean
   desc?: string
 }

@@ -13,6 +13,6 @@ compile: install clean
 	npx tsc  -p tsconfig.build.json
 build: compile
 test: install
-	NODE_ENV=testing npx jest --runInBand --forceExit $(file)
+	NODE_ENV=testing npx jest --runInBand
 clean:
 	rm -rf ./dist

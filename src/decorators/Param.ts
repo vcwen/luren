@@ -1,9 +1,9 @@
 import { List } from 'immutable'
 import _ from 'lodash'
+import { IJsSchema, normalizeSimpleSchema } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
-import { IJsonSchema, normalizeSimpleSchema } from '../lib/utils'
 
 export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context'
 
@@ -12,7 +12,7 @@ export interface IParamOptions {
   name?: string
   in?: Source
   type?: string | { [prop: string]: any }
-  schema?: IJsonSchema
+  schema?: IJsSchema
   required?: boolean
   desc?: string
   root?: boolean
@@ -24,7 +24,7 @@ export interface IParamOptions {
 export class ParamMetadata {
   public name: string
   public source: Source
-  public schema!: IJsonSchema
+  public schema!: IJsSchema
   public required: boolean = false
   public root: boolean = false
   public format?: string
@@ -45,9 +45,6 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
     metadata.schema = options.schema
   } else {
     metadata.schema = normalizeSimpleSchema(options.type || 'string')
-    if (options.type === 'file') {
-      metadata.isFile = true
-    }
   }
   metadata.root = options.root || false
   if (options.strict) {

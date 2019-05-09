@@ -1,21 +1,19 @@
-import Ajv from 'ajv'
 import Boom from 'boom'
 import Debug from 'debug'
 import { List, Map } from 'immutable'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import Router from 'koa-router'
 import _ from 'lodash'
+import { IncomingFile, serialize, validate } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { HttpResponse } from './HttpResponse'
-import { parseFormData, transform } from './utils'
+import { parseFormData } from './utils'
 
 const debug = Debug('luren')
-
-const ajv = new Ajv()
 
 const getParam = (source: any, metadata: ParamMetadata) => {
   if (metadata.root) {
@@ -36,11 +34,20 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
         value = getParam(ctx.params, metadata)
         break
       case 'body': {
-        if (metadata.isFile) {
+        if (metadata.schema.type === 'file') {
           if (metadata.root) {
-            value = _.get(ctx.request, 'files')
+            const ifs: IncomingFile[] = []
+            const files = _.get(ctx.request, 'files')
+            const props = Object.getOwnPropertyNames(files)
+            for (const p of props) {
+              const file = files[p]
+              const f = new IncomingFile(file.name, file.path, file.type, file.size)
+              ifs.push(f)
+            }
+            value = ifs
           } else {
-            value = _.get(ctx.request, ['files', metadata.name])
+            const file = _.get(ctx.request, ['files', metadata.name])
+            value = new IncomingFile(file.name, file.path, file.type, file.size)
           }
         } else {
           value = getParam(_.get(ctx.request, 'body'), metadata)
@@ -62,7 +69,6 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       default:
         throw new TypeError('Invalid source:' + metadata.source)
     }
-
     if (metadata.required && !value) {
       throw Boom.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
     }
@@ -77,9 +83,9 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       }
     }
     const schema = metadata.schema
-    const valid = ajv.validate(schema, value)
+    const [valid, msg] = validate(schema, value)
     if (!valid) {
-      throw Boom.badRequest(ajv.errorsText())
+      throw Boom.badRequest(msg)
     }
     return value
   })
@@ -113,10 +119,11 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
       Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
     const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
     if (resMetadata) {
-      if (ajv.validate(resMetadata.schema, response)) {
-        ctx.body = transform(response, resMetadata.schema)
+      const [valid, msg] = validate(resMetadata.schema, response)
+      if (valid) {
+        ctx.body = serialize(resMetadata.schema, response)
       } else {
-        throw new Error(ajv.errorsText())
+        throw new Error(msg)
       }
     } else {
       ctx.body = response
@@ -153,8 +160,9 @@ export function createAction(controller: object, propKey: string) {
             Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
           const resMetadata = resultMetadataMap.get(err.output.statusCode)
           if (resMetadata && resMetadata.strict) {
-            if (ajv.validate(resMetadata.schema, response)) {
-              ctx.body = transform(response, resMetadata.schema)
+            const [valid] = validate(resMetadata.schema, response)
+            if (valid) {
+              ctx.body = serialize(resMetadata.schema, response)
             } else {
               ctx.body = response
             }
