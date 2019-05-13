@@ -7,7 +7,11 @@ export * from './lib'
 export * from './datasource'
 export {
   Schema,
+  SchemaMetadata,
+  ISchemaOptions,
   Prop,
+  PropMetadata,
+  IPropOptions,
   addType,
   defineSchema,
   IJsonOptions,

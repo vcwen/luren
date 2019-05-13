@@ -4,7 +4,7 @@ import { List, Map } from 'immutable'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { IncomingFile, serialize, validate } from 'luren-schema'
+import { deserialize, IncomingFile, serialize, validate } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
@@ -83,9 +83,10 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       }
     }
     const schema = metadata.schema
-    const [valid, msg] = validate(schema, value)
-    if (!valid) {
-      throw Boom.badRequest(msg)
+    try {
+      value = deserialize(schema, value)
+    } catch (err) {
+      throw Boom.badRequest(err)
     }
     return value
   })
@@ -119,11 +120,10 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
       Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
     const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
     if (resMetadata) {
-      const [valid, msg] = validate(resMetadata.schema, response)
-      if (valid) {
+      try {
         ctx.body = serialize(resMetadata.schema, response)
-      } else {
-        throw new Error(msg)
+      } catch (err) {
+        throw Boom.internal(err)
       }
     } else {
       ctx.body = response
