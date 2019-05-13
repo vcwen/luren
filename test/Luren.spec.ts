@@ -1,11 +1,12 @@
 import fs from 'fs'
 import bodyParser = require('koa-bodyparser')
-import { IncomingFile, Prop, Schema } from 'luren-schema'
+import { Prop, Schema } from 'luren-schema'
 import Path from 'path'
 import request from 'supertest'
 import { HttpMethod, HttpStatusCode, redirect } from '../src'
 import { ParamSource } from '../src/constants/ParamSource'
 import { Controller, Middleware, Param, Response, Route } from '../src/decorators'
+import IncomingFile from '../src/lib/IncomingFile'
 import StreamResponse from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'
 
@@ -77,11 +78,14 @@ describe('Luren', () => {
     const ctrl = new PersonController()
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    const res = await request(server)
-      .get('/api/people/hello?name=vincent')
-      .expect(200)
-    expect(res.body).toEqual({ name: 'vincent', age: 15 })
-    server.close()
+    try {
+      const res = await request(server)
+        .get('/api/people/hello?name=vincent')
+        .expect(200)
+      expect(res.body).toEqual({ name: 'vincent', age: 15 })
+    } finally {
+      server.close()
+    }
   })
   it('should able handle array', async () => {
     const luren = new Luren()
@@ -89,12 +93,15 @@ describe('Luren', () => {
     const ctrl = new PersonController()
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    const res = await request(server)
-      .post('/api/people/something')
-      .send({ name: 'Red' })
-      .expect(200)
-    expect(res.body).toEqual(['ok', 'Red'])
-    server.close()
+    try {
+      const res = await request(server)
+        .post('/api/people/something')
+        .send({ name: 'Red' })
+        .expect(200)
+      expect(res.body).toEqual(['ok', 'Red'])
+    } finally {
+      server.close()
+    }
   })
   it('should redirect', async () => {
     const luren = new Luren()
@@ -102,10 +109,13 @@ describe('Luren', () => {
 
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    await request(server)
-      .get('/api/people/redirect')
-      .expect(HttpStatusCode.MOVED_PERMANENTLY)
-    server.close()
+    try {
+      await request(server)
+        .get('/api/people/redirect')
+        .expect(HttpStatusCode.MOVED_PERMANENTLY)
+    } finally {
+      server.close()
+    }
   })
   it("should transform the response if it's strict", async () => {
     const luren = new Luren()
@@ -113,12 +123,15 @@ describe('Luren', () => {
 
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    const res = await request(server)
-      .put('/api/people/hog')
-      .send({ criteria: { name: 'vc' }, skip: 0, limit: 10 })
-      .expect(HttpStatusCode.OK)
-    expect(res.body).toEqual({ criteria: { name: 'vc' }, skip: 0 })
-    server.close()
+    try {
+      const res = await request(server)
+        .put('/api/people/hog')
+        .send({ criteria: { name: 'vc' }, skip: 0, limit: 10 })
+        .expect(HttpStatusCode.OK)
+      expect(res.body).toEqual({ criteria: { name: 'vc' }, skip: 0 })
+    } finally {
+      server.close()
+    }
   })
   it("should transform the response if it's strict", async () => {
     const luren = new Luren()
@@ -133,10 +146,13 @@ describe('Luren', () => {
 
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    await request(server)
-      .get('/api/people/wrong')
-      .expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
-    server.close()
+    try {
+      await request(server)
+        .get('/api/people/wrong')
+        .expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
+    } finally {
+      server.close()
+    }
     return p
   })
   it('should parse the file param', async () => {
@@ -144,24 +160,30 @@ describe('Luren', () => {
     const ctrl = new PersonController()
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    await request(server)
-      .post('/api/people/upload')
-      .field('name', 'my awesome avatar')
-      .attach('avatar', Path.resolve(__dirname, 'files/avatar.jpg'))
-      .expect(HttpStatusCode.OK)
-    server.close()
+    try {
+      await request(server)
+        .post('/api/people/upload')
+        .field('name', 'my awesome avatar')
+        .attach('avatar', Path.resolve(__dirname, 'files/avatar.jpg'))
+        .expect(HttpStatusCode.OK)
+    } finally {
+      server.close()
+    }
   })
   it('should download the file ', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
-    const res = await request(server)
-      .get('/api/people/download')
-      .expect('content-disposition', 'attachment; filename="image.jpg"')
-      .expect(HttpStatusCode.OK)
-    // tslint:disable-next-line: no-magic-numbers
-    expect(res.body.length).toBe(61626)
-    server.close()
+    try {
+      const res = await request(server)
+        .get('/api/people/download')
+        .expect('content-disposition', 'attachment; filename="image.jpg"')
+        .expect(HttpStatusCode.OK)
+      // tslint:disable-next-line: no-magic-numbers
+      expect(res.body.length).toBe(61626)
+    } finally {
+      server.close()
+    }
   })
 })

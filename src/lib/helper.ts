@@ -4,13 +4,14 @@ import { List, Map } from 'immutable'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { deserialize, IncomingFile, serialize, validate } from 'luren-schema'
+import { deserialize, serialize, validate } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { HttpResponse } from './HttpResponse'
+import IncomingFile from './IncomingFile'
 import { parseFormData } from './utils'
 
 const debug = Debug('luren')
@@ -47,7 +48,9 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
             value = ifs
           } else {
             const file = _.get(ctx.request, ['files', metadata.name])
-            value = new IncomingFile(file.name, file.path, file.type, file.size)
+            if (file) {
+              value = new IncomingFile(file.name, file.path, file.type, file.size)
+            }
           }
         } else {
           value = getParam(_.get(ctx.request, 'body'), metadata)
@@ -69,11 +72,12 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       default:
         throw new TypeError('Invalid source:' + metadata.source)
     }
-    if (metadata.required && !value) {
-      throw Boom.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
-    }
-    if (!value) {
-      return
+    if (value === undefined) {
+      if (metadata.required) {
+        throw Boom.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
+      } else {
+        return
+      }
     }
     if (metadata.schema.type !== 'string' && typeof value === 'string') {
       try {
@@ -123,6 +127,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
       try {
         ctx.body = serialize(resMetadata.schema, response)
       } catch (err) {
+        debug(err)
         throw Boom.internal(err)
       }
     } else {

@@ -1,4 +1,4 @@
-import { jsonDataType } from 'luren-schema'
+import { DataType } from 'luren-schema'
 
 export * from './Luren'
 export * from './constants'
@@ -12,25 +12,26 @@ export {
   Prop,
   PropMetadata,
   IPropOptions,
-  addType,
   defineSchema,
   IJsonOptions,
   IJsSchema,
-  IncomingFile,
   normalizeSimpleSchema,
   validate,
-  validateJson,
   serialize,
   deserialize,
   jsSchemaToJsonSchema,
-  jsonDataType,
-  dataType
+  DataType
 } from 'luren-schema'
 
-jsonDataType.add('file', { type: 'string', additionalProps: { format: 'binary' } })
-jsonDataType.add('stream', {
-  type: 'string',
-  additionalProps: {
-    format: 'binary'
+DataType.add('file', {
+  json: {
+    additionalProps: { format: 'binary' }
+  }
+})
+DataType.add('stream', {
+  json: {
+    additionalProps: {
+      format: 'binary'
+    }
   }
 })
