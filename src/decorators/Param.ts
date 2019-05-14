@@ -31,7 +31,6 @@ export class ParamMetadata {
   public strict: boolean = true
   public mime?: string
   public desc?: string
-  public isFile: boolean = false
   constructor(name: string = '', source: Source, required: boolean = false) {
     this.name = name
     this.source = source
