@@ -1,18 +1,23 @@
-.PHONY: build compile test clean install node_modules
+.PHONY: build compile test clean
 default: build
+.ONESHELL:
 
 SHELL:=/bin/bash
 UNAME_S := $(shell uname -s)
 
-node_modules: package.json yarn.lock
-install: node_modules
-	yarn install
-run: install
-	NODE_ENV=development npx ts-node ./src/server.ts
-compile: install clean
+node_modules: yarn.lock
+	@if [ $${NODE_ENV} == "production" ]; \
+	then \
+		yarn install --production;\
+	else \
+		yarn install; \
+	fi
+compile: node_modules clean
 	npx tsc  -p tsconfig.build.json
+build: export NODE_ENV = production
 build: compile
-test: install
+test: export NODE_ENV = testing
+test: node_modules
 	NODE_ENV=testing npx jest --runInBand
 clean:
 	rm -rf ./dist
