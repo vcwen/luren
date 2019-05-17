@@ -1,10 +1,11 @@
+import Ajv from 'ajv'
 import Boom from 'boom'
 import Debug from 'debug'
 import { List, Map } from 'immutable'
-import { IMiddleware, IRouterContext } from 'koa-router'
 import Router from 'koa-router'
+import { IMiddleware, IRouterContext } from 'koa-router'
 import _ from 'lodash'
-import { deserialize, serialize, validate } from 'luren-schema'
+import { deserialize, jsSchemaToJsonSchema, serialize, validate } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
@@ -13,6 +14,7 @@ import { ParamMetadata } from '../decorators/Param'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
 import { parseFormData } from './utils'
+const ajv = new Ajv()
 
 const debug = Debug('luren')
 
@@ -87,9 +89,15 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       }
     }
     const schema = metadata.schema
+    const jsonSchema = jsSchemaToJsonSchema(schema)
+    const valid = ajv.validate(jsonSchema, value)
+    if (!valid) {
+      throw Boom.badRequest(ajv.errorsText())
+    }
     try {
       value = deserialize(schema, value)
     } catch (err) {
+      debug(err)
       throw Boom.badRequest(err)
     }
     return value
