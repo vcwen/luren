@@ -59,6 +59,7 @@ export function Controller(options: ICtrlOptions = {}) {
         map.set(prop, routeMetadata)
       }
     })
+    Reflect.defineMetadata(MetadataKey.ROUTES, routeMetadataMap, constructor.prototype)
   }
 }
 
