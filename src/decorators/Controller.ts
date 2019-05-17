@@ -68,8 +68,7 @@ export function InjectableController(container: Container) {
     return <T>(constructor: Constructor<T>) => {
       injectable()(constructor)
       container.bind(ServiceIdentifier.CONTROLLER).to(constructor)
-      const metadata = getCtrlMetadata(options, constructor)
-      Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor.prototype)
+      Controller(options)(constructor)
     }
   }
 }
