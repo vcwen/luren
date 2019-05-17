@@ -25,11 +25,13 @@ export {
 
 DataType.add('file', {
   json: {
+    type: 'string',
     additionalProps: { format: 'binary' }
   }
 })
 DataType.add('stream', {
   json: {
+    type: 'string',
     additionalProps: {
       format: 'binary'
     }
