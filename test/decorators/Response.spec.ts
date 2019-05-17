@@ -16,8 +16,7 @@ describe('Response', () => {
     expect(resMap.get(HttpStatusCode.OK)).toEqual({
       status: 200,
       schema: { type: 'string' },
-      strict: true,
-      isStream: false
+      strict: true
     })
     expect(resMap.get(HttpStatusCode.NOT_FOUND)).toEqual(
       expect.objectContaining({
