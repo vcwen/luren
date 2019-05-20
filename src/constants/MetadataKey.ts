@@ -7,6 +7,7 @@ export const MetadataKey = {
   RESPONSE: Symbol('RESPONSE'),
   INDEX: Symbol('INDEX'),
   MODEL: Symbol('MODEL'),
+  ACL: Symbol('ACL'),
   SCHEMA: SchemaMetadataKey.SCHEMA,
   PROPS: SchemaMetadataKey.PROPS
 }
