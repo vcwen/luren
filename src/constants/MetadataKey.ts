@@ -1,4 +1,3 @@
-import { MetadataKey as SchemaMetadataKey } from 'luren-schema'
 export const MetadataKey = {
   CONTROLLER: Symbol('CONTROLLER'),
   MIDDLEWARE: Symbol('MIDDLEWARE'),
@@ -6,9 +5,7 @@ export const MetadataKey = {
   PARAMS: Symbol('PARAMS'),
   RESPONSE: Symbol('RESPONSE'),
   INDEX: Symbol('INDEX'),
-  MODEL: Symbol('MODEL'),
-  SCHEMA: SchemaMetadataKey.SCHEMA,
-  PROPS: SchemaMetadataKey.PROPS
+  MODEL: Symbol('MODEL')
 }
 
 export default MetadataKey
