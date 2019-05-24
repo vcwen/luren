@@ -1,15 +1,16 @@
+interface IPermission {
+  recursive: boolean
+  mode: string
+  scope: {
+    [key: string]: IPermission
+  }
+}
 class UserRole {
-  public name: string = ''
-  public realm: string = 'default'
-  public role: string
+  public name: string
+  public permission: IPermission
   public description?: string
-  constructor(role: string, realm?: string, name?: string) {
-    this.role = role
-    if (realm) {
-      this.realm = realm
-    }
-    if (name) {
-      this.name = name
-    }
+  constructor(name: string, permission: IPermission) {
+    this.name = name
+    this.permission = permission
   }
 }

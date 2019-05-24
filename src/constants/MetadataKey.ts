@@ -6,7 +6,8 @@ export const MetadataKey = {
   RESPONSE: Symbol('RESPONSE'),
   INDEX: Symbol('INDEX'),
   MODEL: Symbol('MODEL'),
-  ACL: Symbol('ACL')
+  ACL: Symbol('ACL'),
+  RESOURCE: Symbol('RESOURCE')
 }
 
 export default MetadataKey
