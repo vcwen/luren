@@ -13,6 +13,7 @@ import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
+import { JsDataTypes } from './JsDataTypes'
 import { parseFormData } from './utils'
 const ajv = new Ajv()
 
@@ -89,13 +90,13 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
       }
     }
     const schema = metadata.schema
-    const jsonSchema = jsSchemaToJsonSchema(schema)
+    const jsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
     const valid = ajv.validate(jsonSchema, value)
     if (!valid) {
       throw Boom.badRequest(ajv.errorsText())
     }
     try {
-      value = deserialize(schema, value)
+      value = deserialize(schema, value, JsDataTypes)
     } catch (err) {
       debug(err)
       throw Boom.badRequest(err)
@@ -133,7 +134,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
     const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
     if (resMetadata) {
       try {
-        ctx.body = serialize(resMetadata.schema, response)
+        ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
       } catch (err) {
         debug(err)
         throw Boom.internal(err)
@@ -173,9 +174,9 @@ export function createAction(controller: object, propKey: string) {
             Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
           const resMetadata = resultMetadataMap.get(err.output.statusCode)
           if (resMetadata && resMetadata.strict) {
-            const [valid] = validate(resMetadata.schema, response)
+            const [valid] = validate(resMetadata.schema, response, JsDataTypes)
             if (valid) {
-              ctx.body = serialize(resMetadata.schema, response)
+              ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
             } else {
               ctx.body = response
             }

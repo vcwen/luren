@@ -24,7 +24,7 @@
     "koa-helmet": "^4.0.0",
     "koa-router": "^7.4.0",
     "lodash": "^4.17.10",
-    "luren-schema": "^0.0.7-7",
+    "luren-schema": "^0.0.8",
     "pluralize": "^7.0.0",
     "reflect-metadata": "^0.1.13"
   },
