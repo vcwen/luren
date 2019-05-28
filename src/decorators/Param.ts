@@ -24,33 +24,41 @@ export interface IParamOptions {
 export class ParamMetadata {
   public name: string
   public source: Source
-  public schema!: IJsSchema
+  public schema: IJsSchema
   public required: boolean = false
   public root: boolean = false
   public format?: string
   public strict: boolean = true
   public mime?: string
   public desc?: string
-  constructor(name: string = '', source: Source, required: boolean = false) {
+  constructor(name: string = '', source: Source, schema: IJsSchema, required: boolean = false) {
     this.name = name
     this.source = source
+    this.schema = schema
     this.required = required
   }
 }
 
 const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
-  const metadata = new ParamMetadata(options.name, options.in || ParamSource.QUERY, options.required)
+  let paramSchema: IJsSchema
+  let paramRequired = options.required || true
   if (options.schema) {
-    metadata.schema = options.schema
+    paramSchema = options.schema
   } else {
-    metadata.schema = normalizeSimpleSchema(options.type || 'string')
+    const [schema, required] = normalizeSimpleSchema(options.type || 'string')
+    paramSchema = schema
+    if (typeof options.required !== 'boolean') {
+      paramRequired = required
+    }
   }
+  const metadata = new ParamMetadata(options.name, options.in || ParamSource.QUERY, paramSchema, paramRequired)
   metadata.root = options.root || false
   if (options.strict) {
     metadata.strict = true
   }
   metadata.format = options.format
   metadata.mime = options.mime
+
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
   if (paramsMetadata.has(index)) {
     const existingMetadata = paramsMetadata.get(index) || {}
