@@ -1,3 +1,4 @@
+import Debug from 'debug'
 import { List, Map } from 'immutable'
 import { Container } from 'inversify'
 import Koa from 'koa'
@@ -9,6 +10,7 @@ import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDatasource } from './datasource/LurenDatasource'
 import { createController } from './lib/helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
+const debug = Debug('luren')
 
 export interface IModuleLoaderConfig {
   path: string
@@ -172,8 +174,14 @@ export class Luren {
       }
     }
     if (this._container) {
-      const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
-      this._controllers = this._controllers.concat(ctrls)
+      try {
+        const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
+        this._controllers = this._controllers.concat(ctrls)
+      } catch (err) {
+        debug(err)
+        // tslint:disable-next-line: no-console
+        console.warn('No matching bindings found for Controller')
+      }
     }
   }
   private async _loadModelModules() {
@@ -182,6 +190,9 @@ export class Luren {
       const modules = await importModules(this._workDir, config)
       for (const module of modules) {
         const model = module.default
+        if (!model) {
+          break
+        }
         for (const ds of this._datasource.values()) {
           ds.loadSchema(model)
         }
