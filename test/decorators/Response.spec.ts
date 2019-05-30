@@ -13,11 +13,13 @@ describe('Response', () => {
     }
     const ctrl = new TestController()
     const resMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'doSomething')
-    expect(resMap.get(HttpStatusCode.OK)).toEqual({
-      status: 200,
-      schema: { type: 'string' },
-      strict: true
-    })
+    expect(resMap.get(HttpStatusCode.OK)).toEqual(
+      expect.objectContaining({
+        status: 200,
+        schema: expect.objectContaining({ type: 'string' }),
+        strict: true
+      })
+    )
     expect(resMap.get(HttpStatusCode.NOT_FOUND)).toEqual(
       expect.objectContaining({
         status: 404,

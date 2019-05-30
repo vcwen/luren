@@ -6,7 +6,10 @@ import { Context, InBody, InHeader, InPath, InQuery, Param, ParamMetadata, Requi
 describe('Param', () => {
   it('should return decorator function when schema options is set', () => {
     class TestController {
-      public test(@Param({ name: 'name', in: 'path' }) name: string, @Param({ name: 'age', in: 'query' }) age: number) {
+      public test(
+        @Param({ name: 'name', in: 'path' }) name: string,
+        @Param({ name: 'age', in: 'query', required: false }) age: number
+      ) {
         return name + age
       }
     }
@@ -15,7 +18,6 @@ describe('Param', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: 'name',
-        required: false,
         source: 'path',
         schema: { type: 'string' },
         root: false,
@@ -35,7 +37,7 @@ describe('Param', () => {
     const ctrl = new TestController()
     const params: List<any> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
     expect(params.toArray()).toEqual([
-      expect.objectContaining({ name: 'name', required: false, source: 'query', schema: { type: 'string' } })
+      expect.objectContaining({ name: 'name', required: true, source: 'query', schema: { type: 'string' } })
     ])
   })
 })
@@ -45,9 +47,9 @@ describe('InQuery', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
       public test(
-        @InQuery('name', true) name: string,
-        @InQuery('age', 'number') age: number,
-        @InQuery('id', 'number', true) id: number
+        @InQuery('name') name: string,
+        @InQuery('age', 'number?') age: number,
+        @InQuery('id', 'number') id: number
       ) {
         return id + name + age
       }
@@ -86,9 +88,9 @@ describe('InHeader', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
       public test(
-        @InHeader('name', true) name: string,
-        @InHeader('age', 'number') age: number,
-        @InHeader('id', 'number', true) id: number
+        @InHeader('name') name: string,
+        @InHeader('age', 'number', false) age: number,
+        @InHeader('id', 'number') id: number
       ) {
         return id + name + age
       }
@@ -167,9 +169,9 @@ describe('InBody', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
       public test(
-        @InBody('name', true) name: string,
-        @InBody('age', 'number') age: number,
-        @InBody('id', 'number', true) id: number
+        @InBody('name') name: string,
+        @InBody('age', 'number?') age: number,
+        @InBody('id', 'number') id: number
       ) {
         return id + name + age
       }
@@ -215,7 +217,7 @@ describe('Context', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: false,
+        required: true,
         source: 'context',
         root: true,
         strict: true

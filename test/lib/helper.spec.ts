@@ -14,7 +14,7 @@ class TestController {
     return 'something'
   }
   @Put({ path: 'hello' })
-  public async sayHello(@Param({ name: 'to' }) to: string) {
+  public async sayHello(@Param({ name: 'to', required: false }) to: string) {
     return 'hello ' + to
   }
   @Get({ path: '' })

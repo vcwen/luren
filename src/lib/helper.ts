@@ -53,6 +53,7 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
             const file = _.get(ctx.request, ['files', metadata.name])
             if (file) {
               value = new IncomingFile(file.name, file.path, file.type, file.size)
+              return value
             }
           }
         } else {

@@ -41,13 +41,13 @@ export class ParamMetadata {
 
 const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
   let paramSchema: IJsSchema
-  let paramRequired = options.required || true
+  let paramRequired = options.required
   if (options.schema) {
     paramSchema = options.schema
   } else {
     const [schema, required] = normalizeSimpleSchema(options.type || 'string')
     paramSchema = schema
-    if (typeof options.required !== 'boolean') {
+    if (typeof paramRequired !== 'boolean') {
       paramRequired = required
     }
   }
@@ -148,7 +148,7 @@ function inSource(source: ParamSource) {
   return (...args: any[]) => {
     let name: string
     let type: string = 'string'
-    let required: boolean = false
+    let required: boolean | undefined
     if (args.length === 0) {
       throw new Error('name is required')
     }
@@ -157,7 +157,7 @@ function inSource(source: ParamSource) {
       required = _.get(args, 1)
     } else {
       type = _.get(args, 1, 'string')
-      required = _.get(args, 2, false)
+      required = _.get(args, 2)
     }
     return Param({ name, type, required, in: source })
   }

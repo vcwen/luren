@@ -7,7 +7,7 @@ import { PropertyDecorator } from '../types/PropertyDecorator'
 export interface IResponseOptions {
   status?: number
   type?: any
-  schema?: any
+  schema?: IJsSchema
   desc?: string
   strict?: boolean
   mime?: string
@@ -32,7 +32,7 @@ export function Response(options: IResponseOptions): PropertyDecorator {
     let resMetadata: Map<number, ResponseMetadata> =
       Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
     const status = options.status || HttpStatusCode.OK
-    const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')
+    const schema: IJsSchema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
     metadata.mime = options.mime
     resMetadata = resMetadata.set(metadata.status, metadata)
