@@ -175,7 +175,7 @@ export class Luren {
     }
     if (this._container) {
       try {
-        const ctrls = this._container.getAll(ServiceIdentifier.CONTROLLER)
+        const ctrls = this._container.getAll<object>(ServiceIdentifier.CONTROLLER)
         this._controllers = this._controllers.concat(ctrls)
       } catch (err) {
         debug(err)
