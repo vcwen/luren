@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.0.14"></a>
+## [0.0.14](https://github.com/vcwen/luren/compare/v0.0.13...v0.0.14) (2019-06-06)
+
+
+### Bug Fixes
+
+* **middleware:** only load function middleware ([87d4465](https://github.com/vcwen/luren/commit/87d4465))
+
+
+
 <a name="0.0.13"></a>
 ## [0.0.13](https://github.com/vcwen/luren/compare/v0.0.11...v0.0.13) (2019-05-31)
 
