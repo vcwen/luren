@@ -11,5 +11,5 @@ export class HttpResponse {
   }
 }
 
-export const ok = (body?: any) => new HttpResponse(HttpStatusCode.OK, body)
+export const OK = (body?: any) => new HttpResponse(HttpStatusCode.OK, body)
 export const redirect = (url: string, status: number = 302) => new HttpResponse(status, url)

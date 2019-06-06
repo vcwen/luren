@@ -28,7 +28,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
-    "luren-schema": "^0.0.11"
+    "luren-schema": "^0.0.12"
   },
   "devDependencies": {
     "@types/boom": "^7.2.1",

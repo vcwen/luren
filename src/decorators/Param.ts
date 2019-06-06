@@ -1,6 +1,6 @@
 import { List } from 'immutable'
 import _ from 'lodash'
-import { IJsSchema, normalizeSimpleSchema } from 'luren-schema'
+import { IJsSchema, normalizeSimpleSchema, SimpleType } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
@@ -11,7 +11,7 @@ type ParamDecorator = (target: object, propertyKey: string, index: number) => vo
 export interface IParamOptions {
   name?: string
   in?: Source
-  type?: string | { [prop: string]: any }
+  type?: SimpleType
   schema?: IJsSchema
   required?: boolean
   desc?: string
@@ -91,38 +91,38 @@ export function Required(options: any) {
   }
 }
 
-export function InQuery(name: string, type: string, required?: boolean): ParamDecorator
+export function InQuery(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InQuery(name: string, required?: boolean): ParamDecorator
 export function InQuery() {
   return inSource(ParamSource.QUERY).apply(null, [...arguments])
 }
 
-export function InPath(name: string, type?: string) {
+export function InPath(name: string, type?: SimpleType) {
   return inSource(ParamSource.PATH).apply(null, [name, type, true])
 }
 
-export function InHeader(name: string, type: string, required?: boolean): ParamDecorator
+export function InHeader(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InHeader(name: string, required?: boolean): ParamDecorator
 export function InHeader() {
   return inSource(ParamSource.HEADER).apply(null, [...arguments])
 }
 
-export function InBody(name: string, type: string, required?: boolean): ParamDecorator
+export function InBody(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InBody(name: string, required?: boolean): ParamDecorator
 export function InBody() {
   return inSource(ParamSource.BODY).apply(null, [...arguments])
 }
-export function InRequest(name: string, type: string, required?: boolean): ParamDecorator
+export function InRequest(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InRequest(name: string, required?: boolean): ParamDecorator
 export function InRequest() {
   return inSource(ParamSource.REQUEST).apply(null, [...arguments])
 }
-export function InSession(name: string, type: string, required?: boolean): ParamDecorator
+export function InSession(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InSession(name: string, required?: boolean): ParamDecorator
 export function InSession() {
   return inSource(ParamSource.SESSION).apply(null, [...arguments])
 }
-export function InContext(name: string, type: string, required?: boolean): ParamDecorator
+export function InContext(name: string, type: SimpleType, required?: boolean): ParamDecorator
 export function InContext(name: string, required?: boolean): ParamDecorator
 export function InContext() {
   return inSource(ParamSource.CONTEXT).apply(null, [...arguments])
@@ -147,7 +147,7 @@ export function Body() {
 function inSource(source: ParamSource) {
   return (...args: any[]) => {
     let name: string
-    let type: string = 'string'
+    let type: SimpleType = 'string'
     let required: boolean | undefined
     if (args.length === 0) {
       throw new Error('name is required')

@@ -1,2 +1,2 @@
-export { ok, redirect } from './HttpResponse'
+export { OK, redirect } from './HttpResponse'
 export * from './StreamResponse'

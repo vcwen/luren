@@ -1,12 +1,12 @@
 import { Map } from 'immutable'
-import { IJsSchema, normalizeSimpleSchema } from 'luren-schema'
+import { IJsSchema, normalizeSimpleSchema, SimpleType } from 'luren-schema'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
 import { PropertyDecorator } from '../types/PropertyDecorator'
 export interface IResponseOptions {
   status?: number
-  type?: any
+  type?: SimpleType
   schema?: IJsSchema
   desc?: string
   strict?: boolean

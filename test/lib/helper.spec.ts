@@ -5,7 +5,7 @@ import { Controller } from '../../src/decorators/Controller'
 import { Param } from '../../src/decorators/Param'
 import { Delete, Get, Post, Put } from '../../src/decorators/Route'
 import { createAction, createController, createRoute, createRoutes } from '../../src/lib/helper'
-import { ok, redirect } from '../../src/lib/HttpResponse'
+import { OK, redirect } from '../../src/lib/HttpResponse'
 jest.disableAutomock()
 @Controller()
 class TestController {
@@ -61,7 +61,7 @@ class TestController {
   }
   @Get()
   public async httpStatusResponse() {
-    return ok('hello')
+    return OK('hello')
   }
   @Get()
   public async redirectResponse() {
