@@ -130,12 +130,19 @@ export class Luren {
       const modules = await importModules(this._workDir, config)
       for (const module of modules) {
         const middleware = module.default
+        if(!middleware) {
+          continue
+        }
         if (Array.isArray(middleware)) {
           for (const m of middleware) {
-            this._koa.use(m)
+            if(typeof m === 'function') {
+              this._koa.use(m)
+            }
           }
         } else {
-          this._koa.use(middleware)
+          if(typeof middleware === 'function') {
+            this._koa.use(middleware)
+          }
         }
       }
     } catch (err) {
