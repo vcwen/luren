@@ -83,15 +83,15 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
         return
       }
     }
-    if (metadata.schema.type !== 'string' && typeof value === 'string') {
+    const schema = metadata.schema
+    const jsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
+    if (jsonSchema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
         throw Boom.badRequest(`invalid value for argument '${metadata.name}'`)
       }
     }
-    const schema = metadata.schema
-    const jsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
     const valid = ajv.validate(jsonSchema, value)
     if (!valid) {
       throw Boom.badRequest(ajv.errorsText())
