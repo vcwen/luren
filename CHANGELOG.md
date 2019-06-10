@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.0.16"></a>
+## [0.0.16](https://github.com/vcwen/luren/compare/v0.0.14...v0.0.16) (2019-06-10)
+
+
+### Bug Fixes
+
+* **helper.ts:** fix parsing request params ([24a7a6a](https://github.com/vcwen/luren/commit/24a7a6a))
+* **package.json:** fix peerDep ([aee31b8](https://github.com/vcwen/luren/commit/aee31b8))
+
+
+
 <a name="0.0.15"></a>
 ## [0.0.15](https://github.com/vcwen/luren/compare/v0.0.14...v0.0.15) (2019-06-06)
 
