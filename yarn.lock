@@ -2786,6 +2786,15 @@ loose-envify@^1.0.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
+luren-schema@^0.0.14:
+  version "0.0.14"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.14.tgz#336756ca029094301b00ee6af58ce824573980ad"
+  integrity sha1-M2dWygKQlDAbAO5q9YzoJFc5gK0=
+  dependencies:
+    immutable "^4.0.0-rc.12"
+    lodash "^4.17.11"
+    reflect-metadata "^0.1.13"
+
 make-dir@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npm.taobao.org/make-dir/download/make-dir-2.1.0.tgz#5f0310e18b8be898cc07009295a30ae41e91e6f5"
