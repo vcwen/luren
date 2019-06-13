@@ -59,18 +59,10 @@ export class Luren {
     this._router = new Router()
     if (options) {
       this._container = options.container
-      if (options.bootOptions) {
-        this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
-      }
-      if (options.middlewareOptions) {
-        this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
-      }
-      if (options.modelOptions) {
-        this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
-      }
-      if (options.controllerOptions) {
-        this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
-      }
+      this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
+      this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
+      this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
+      this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
     }
   }
   public setPrefix(value: string) {
