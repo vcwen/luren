@@ -3,6 +3,7 @@ import { List, Map } from 'immutable'
 import { Container } from 'inversify'
 import { METADATA_KEY } from 'inversify'
 import Koa from 'koa'
+import helmet from 'koa-helmet'
 import mount from 'koa-mount'
 import Router, { IRouterContext } from 'koa-router'
 import send, { SendOptions } from 'koa-send'
@@ -54,6 +55,7 @@ export class Luren {
     modelOptions?: IModuleLoaderOptions
   }) {
     this._koa = new Koa()
+    this._koa.use(helmet())
     this._router = new Router()
     if (options) {
       this._container = options.container
