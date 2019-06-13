@@ -35,8 +35,11 @@ export const importModules = async (workDir: string, config: IModuleLoaderConfig
   return modules
 }
 
-export const getFileLoaderConfig = (options: IModuleLoaderOptions) => {
-  const path = options.path
+export const getFileLoaderConfig = (options: IModuleLoaderOptions, defaultPath: string) => {
+  if (options.disabled) {
+    return
+  }
+  const path = options.path || defaultPath
   const conf: IModuleLoaderConfig = {
     path
   }
