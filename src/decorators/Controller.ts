@@ -1,12 +1,10 @@
 import decamelize from 'decamelize'
 import { Map } from 'immutable'
-import { Container, injectable } from 'inversify'
 import _ from 'lodash'
 import Path from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
-import { ServiceIdentifier } from '../constants/ServiceIdentifier'
 import { Constructor } from '../types/Constructor'
 import { RouteMetadata } from './Route'
 
@@ -60,15 +58,5 @@ export function Controller(options: ICtrlOptions = {}) {
       }
     })
     Reflect.defineMetadata(MetadataKey.ROUTES, routeMetadataMap, constructor.prototype)
-  }
-}
-
-export function InjectableController(container: Container) {
-  return (options: ICtrlOptions = {}) => {
-    return <T>(constructor: Constructor<T>) => {
-      injectable()(constructor)
-      container.bind(ServiceIdentifier.CONTROLLER).to(constructor)
-      Controller(options)(constructor)
-    }
   }
 }
