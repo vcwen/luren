@@ -35,6 +35,9 @@ export function Response(options: IResponseOptions): PropertyDecorator {
     const schema: IJsSchema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
     metadata.mime = options.mime
+    if (schema.type === 'file' || schema.type === 'stream') {
+      metadata.mime = metadata.mime || 'application/octet-stream'
+    }
     resMetadata = resMetadata.set(metadata.status, metadata)
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
