@@ -49,7 +49,7 @@ export class Luren {
   constructor(options?: {
     container?: Container
     bootOptions?: IModuleLoaderOptions
-    middlewareOptions: IModuleLoaderOptions
+    middlewareOptions?: IModuleLoaderOptions
     controllerOptions?: IModuleLoaderOptions
     modelOptions?: IModuleLoaderOptions
   }) {
@@ -151,9 +151,9 @@ export class Luren {
     }
   }
 
-  public serve(path: string, options: SendOptions)
-  public serve(options: SendOptions)
-  public serve(...args: any[]) {
+  public serve(path: string, options: SendOptions): void
+  public serve(options: SendOptions): void
+  public serve(...args: any[]): void {
     let path = '/'
     let options: SendOptions
     if (args.length === 2) {
