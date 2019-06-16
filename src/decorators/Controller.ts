@@ -36,7 +36,7 @@ export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor<
   const name = options.name || constructor.name.split(/controller$/i)[0]
   const prefix = options.prefix || ''
   const plural = options.plural || pluralize.plural(decamelize(name, '-'))
-  const path = options.path || Path.join('/', prefix, plural)
+  const path = options.path || Path.join('/', plural)
   const metadata = new CtrlMetadata(name, path, options.version, options.desc)
   metadata.plural = plural
   metadata.prefix = prefix
@@ -52,7 +52,7 @@ export function Controller(options: ICtrlOptions = {}) {
     routeMetadataMap = routeMetadataMap.withMutations((map) => {
       for (const [prop, routeMetadata] of map) {
         const version = routeMetadata.version || metadata.version || ''
-        const path = Path.join('/', version, metadata.path, routeMetadata.path)
+        const path = Path.join('/', metadata.prefix, version, metadata.path, routeMetadata.path)
         routeMetadata.path = path
         map.set(prop, routeMetadata)
       }
