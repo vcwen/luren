@@ -240,7 +240,7 @@ export class Luren {
           if (isInjectable && this._container) {
             this._container.bind(ServiceIdentifier.CONTROLLER).to(Ctrl)
           } else {
-            this._controllers.push(new Ctrl())
+            this._controllers = this._controllers.push(new Ctrl())
           }
         }
       }
