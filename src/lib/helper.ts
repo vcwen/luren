@@ -27,7 +27,7 @@ const getParam = (source: any, metadata: ParamMetadata) => {
   }
 }
 
-export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadata> = List()) => {
+export const getParams = (ctx: IRouterContext, next: () => any, paramsMetadata: List<ParamMetadata> = List()) => {
   return paramsMetadata.map((metadata) => {
     let value: any
     switch (metadata.source) {
@@ -72,6 +72,9 @@ export const getParams = (ctx: IRouterContext, paramsMetadata: List<ParamMetadat
         break
       case 'request':
         value = getParam(ctx.request, metadata)
+        break
+      case 'next':
+        value = next
         break
       default:
         throw new TypeError('Invalid source:' + metadata.source)
@@ -149,7 +152,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
 export function createAction(controller: object, propKey: string) {
   const paramsMetadata: List<ParamMetadata> =
     Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-  const action = async (ctx: IRouterContext, next?: any) => {
+  const action = async (ctx: IRouterContext, next: any) => {
     try {
       if (!ctx.disableFormParser && ctx.is('multipart/form-data')) {
         const { fields, files } = await parseFormData(ctx)
@@ -159,9 +162,7 @@ export function createAction(controller: object, propKey: string) {
       }
       const args = getParams(ctx, paramsMetadata)
       await processRoute(ctx, controller, propKey, args.toArray())
-      if (next) {
-        await next()
-      }
+      await next()
     } catch (err) {
       if (Boom.isBoom(err)) {
         if (err.isServer) {

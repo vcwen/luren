@@ -5,7 +5,7 @@ import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
 
-export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context'
+export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context' | 'next'
 
 type ParamDecorator = (target: object, propertyKey: string, index: number) => void
 export interface IParamOptions {
@@ -142,6 +142,10 @@ export function Session() {
 }
 export function Body() {
   return Param({ in: ParamSource.BODY, root: true, type: 'object' })
+}
+
+export function Next() {
+  return Param({ in: ParamSource.NEXT, type: 'function' })
 }
 
 function inSource(source: ParamSource) {

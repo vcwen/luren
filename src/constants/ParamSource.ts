@@ -5,5 +5,6 @@ export const enum ParamSource {
   BODY = 'body',
   REQUEST = 'request',
   SESSION = 'session',
-  CONTEXT = 'context'
+  CONTEXT = 'context',
+  NEXT = 'next'
 }
