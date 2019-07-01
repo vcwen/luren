@@ -1,8 +1,11 @@
 import Debug from 'debug'
+import { IncomingMessage, ServerResponse } from 'http'
+import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { List, Map } from 'immutable'
-import { Container } from 'inversify'
 import { METADATA_KEY } from 'inversify'
-import Koa from 'koa'
+import { Container } from 'inversify'
+import Keygrip from 'keygrip'
+import Koa, { BaseContext, Context } from 'koa'
 import helmet from 'koa-helmet'
 import mount from 'koa-mount'
 import Router, { IRouterContext } from 'koa-router'
@@ -17,6 +20,14 @@ import { createController } from './lib/helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
 
 const debug = Debug('luren')
+
+export interface IKoa {
+  proxy: boolean
+  keys: string[] | Keygrip
+  readonly context: BaseContext
+  listen(port: number, hostname?: string): Promise<Server>
+  callback(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => void
+}
 
 export interface IModuleLoaderConfig {
   path: string
@@ -33,7 +44,7 @@ export interface IModuleLoaderOptions {
 
 export type IPlugin = (luren: Luren) => void
 
-export class Luren {
+export class Luren implements IKoa {
   private _prefix: string = ''
   private _workDir: string = process.cwd()
   private _koa: Koa
@@ -65,6 +76,29 @@ export class Luren {
       this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
     }
   }
+
+  public get proxy() {
+    return this._koa.proxy
+  }
+  public set proxy(enabled: boolean) {
+    this._koa.proxy = enabled
+  }
+
+  public get keys() {
+    return this._koa.keys as string[]
+  }
+  public set keys(keys: string[] | Keygrip) {
+    this._koa.keys = keys
+  }
+
+  public get context() {
+    return this._koa.context
+  }
+
+  public callback() {
+    return this._koa.callback()
+  }
+
   public setPrefix(value: string) {
     this._prefix = value
     this._router.prefix(this._prefix)
@@ -72,19 +106,20 @@ export class Luren {
   public getPrefix() {
     return this._prefix
   }
-  public onError(onError: (err: any, ctx: IRouterContext) => void) {
+  public onError(onError: (err: any, ctx?: Context) => void) {
     this._onError = onError
+    this._koa.on('error', onError)
   }
   public setWorkDirectory(dir: string) {
     this._workDir = dir
   }
 
-  public async listen(port: number) {
+  public async listen(port: number, hostname?: string) {
     try {
       await this._initialize()
       await this._loadBootModules()
       return await new Promise<Server>((resolve) => {
-        const server = this._koa.listen(port, () => {
+        const server = this._koa.listen(port, hostname, () => {
           resolve(server)
         })
         this._httpServer = server
