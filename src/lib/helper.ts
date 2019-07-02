@@ -11,6 +11,9 @@ import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
+import { Luren } from '../Luren'
+import Action from './Action'
+import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
 import { JsDataTypes } from './JsDataTypes'
@@ -152,7 +155,7 @@ export async function processRoute(ctx: IRouterContext, controller: any, propKey
 export function createAction(controller: object, propKey: string) {
   const paramsMetadata: List<ParamMetadata> =
     Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-  const action = async (ctx: IRouterContext, next: any) => {
+  const process = async (ctx: IRouterContext, next: any) => {
     try {
       if (!ctx.disableFormParser && ctx.is('multipart/form-data')) {
         const { fields, files } = await parseFormData(ctx)
@@ -160,7 +163,7 @@ export function createAction(controller: object, propKey: string) {
         request.body = fields
         request.files = files
       }
-      const args = getParams(ctx, paramsMetadata)
+      const args = getParams(ctx, next, paramsMetadata)
       await processRoute(ctx, controller, propKey, args.toArray())
       await next()
     } catch (err) {
@@ -191,11 +194,13 @@ export function createAction(controller: object, propKey: string) {
       }
     }
   }
-  return action
+  return process
 }
 
-export function createRoute(controller: object, propKey: string, routeMetadata: RouteMetadata) {
-  const action = createAction(controller, propKey)
+export function createRoute(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
+  const process = createAction(controller, propKey) as any
+  const action = new Action(luren, routeMetadata.method, routeMetadata.path, process)
+
   const middleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   return {
     method: routeMetadata.method.toLowerCase(),
@@ -213,31 +218,9 @@ export function createRoutes(controller: object) {
     })
     .toList()
 }
-export function createController(ctrl: object, onError?: (err: any, ctx: IRouterContext) => void) {
-  const router: any = new Router()
-  const ctrlMiddleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
-  applyCtrlMiddleware(router, ctrlMiddleware)
+export function createController(luren: Luren, ctrl: object) {
+  const controller = new Controller(luren)
+  controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
   const routes = createRoutes(ctrl)
-  routes.forEach((route) => {
-    const action = async (ctx: Router.IRouterContext, next?: any) => {
-      try {
-        await route.action(ctx, next)
-      } catch (err) {
-        debug(err)
-        ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
-        if (onError) {
-          onError(err, ctx)
-        } else {
-          // tslint:disable-next-line:no-console
-          console.error(err)
-        }
-      }
-    }
-    if (!route.middleware.isEmpty()) {
-      router[route.method](route.path, ...route.middleware, action)
-    } else {
-      router[route.method](route.path, action)
-    }
-  })
-  return router as Router
+  return controller
 }

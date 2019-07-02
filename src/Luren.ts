@@ -16,6 +16,7 @@ import Path from 'path'
 import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDatasource } from './datasource/LurenDatasource'
+import Controller from './lib/Controller'
 import { createController } from './lib/helper'
 import { getFileLoaderConfig, importModules } from './lib/utils'
 
@@ -325,8 +326,9 @@ export class Luren implements IKoa {
   }
   private _loadControllers() {
     this._controllers.forEach((item) => {
-      const ctrl = createController(item, this._onError)
-      this._router.use(ctrl.routes(), ctrl.allowedMethods())
+      const ctrl = createController(this, item)
+      // load to the router
+      // this._router.use(ctrl)
     })
   }
 }
