@@ -1,14 +1,15 @@
 import Debug from 'debug'
+import { EventEmitter } from 'events'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { List, Map } from 'immutable'
-import { METADATA_KEY } from 'inversify'
 import { Container } from 'inversify'
+import { METADATA_KEY } from 'inversify'
 import Keygrip from 'keygrip'
-import Koa, { BaseContext, Context } from 'koa'
+import Koa, { BaseContext, Context, Middleware } from 'koa'
 import helmet from 'koa-helmet'
 import mount from 'koa-mount'
-import Router, { IRouterContext } from 'koa-router'
+import Router from 'koa-router'
 import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
 import { Server } from 'net'
@@ -16,9 +17,11 @@ import Path from 'path'
 import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDatasource } from './datasource/LurenDatasource'
-import Controller from './lib/Controller'
-import { createController } from './lib/helper'
-import { getFileLoaderConfig, importModules } from './lib/utils'
+import { createController, loadControllersRouter } from './lib/helper'
+import { adaptMiddleware, getFileLoaderConfig, importModules } from './lib/utils'
+import BodyParser from './middleware/BodyParser'
+import ErrorProcessor from './middleware/ErrorProcessor'
+import { ISecuritySettings } from './types'
 
 const debug = Debug('luren')
 
@@ -57,8 +60,11 @@ export class Luren implements IKoa {
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
   private _datasource: Map<string, IDatasource> = Map()
-  private _onError?: (err: any, ctx: IRouterContext) => void
   private _httpServer?: Server
+  private _securitySettings: ISecuritySettings = {}
+  private _defaultBodyParser?: Middleware = adaptMiddleware(new BodyParser())
+  private _eventEmitter: EventEmitter = new EventEmitter()
+
   constructor(options?: {
     container?: Container
     bootOptions?: IModuleLoaderOptions
@@ -68,6 +74,7 @@ export class Luren implements IKoa {
   }) {
     this._koa = new Koa()
     this._koa.use(helmet())
+    this._koa.use(new ErrorProcessor(this._eventEmitter).toMiddleware())
     this._router = new Router()
     if (options) {
       this._container = options.container
@@ -107,10 +114,17 @@ export class Luren implements IKoa {
   public getPrefix() {
     return this._prefix
   }
-  public onError(onError: (err: any, ctx?: Context) => void) {
-    this._onError = onError
-    this._koa.on('error', onError)
+  public onError(onError: (err: any, ctx?: Context) => any) {
+    this._eventEmitter.on('error', onError)
   }
+
+  public setDefaultAuthentication(auth: Middleware) {
+    this._securitySettings.authentication = auth
+  }
+  public setDefaultBodyParser(bodyParser?: Middleware) {
+    this._defaultBodyParser = bodyParser
+  }
+
   public setWorkDirectory(dir: string) {
     this._workDir = dir
   }
@@ -201,6 +215,9 @@ export class Luren implements IKoa {
   }
 
   private async _initialize() {
+    if (this._defaultBodyParser) {
+      this._koa.use(this._defaultBodyParser)
+    }
     await this._loadModelModules()
     await this._loadMiddleware()
     const router = this._router
@@ -325,10 +342,8 @@ export class Luren implements IKoa {
     }
   }
   private _loadControllers() {
-    this._controllers.forEach((item) => {
-      const ctrl = createController(this, item)
-      // load to the router
-      // this._router.use(ctrl)
-    })
+    const ctrls = this._controllers.map((ctrl) => createController(this, ctrl))
+    const router = loadControllersRouter(ctrls, this._securitySettings)
+    this._router.use(router.routes())
   }
 }
