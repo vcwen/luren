@@ -2,22 +2,26 @@ import Ajv from 'ajv'
 import Boom from 'boom'
 import Debug from 'debug'
 import { List, Map } from 'immutable'
+import { Context, Middleware } from 'koa'
+import { IRouterContext } from 'koa-router'
 import Router from 'koa-router'
-import { IMiddleware, IRouterContext } from 'koa-router'
 import _ from 'lodash'
 import { deserialize, jsSchemaToJsonSchema, serialize, validate } from 'luren-schema'
+import { IJsonSchema } from 'luren-schema/dist/types'
+import Path from 'path'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
+import { ISecuritySettings } from '../types'
 import Action from './Action'
 import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
 import { JsDataTypes } from './JsDataTypes'
-import { parseFormData } from './utils'
+
 const ajv = new Ajv()
 
 const debug = Debug('luren')
@@ -30,7 +34,7 @@ const getParam = (source: any, metadata: ParamMetadata) => {
   }
 }
 
-export const getParams = (ctx: IRouterContext, next: () => any, paramsMetadata: List<ParamMetadata> = List()) => {
+export const getParams = (ctx: Context, next: () => any, paramsMetadata: List<ParamMetadata> = List()) => {
   return paramsMetadata.map((metadata) => {
     let value: any
     switch (metadata.source) {
@@ -72,13 +76,19 @@ export const getParams = (ctx: IRouterContext, next: () => any, paramsMetadata: 
         break
       case 'session':
         value = getParam(_.get(ctx, 'session'), metadata)
+        if (metadata.root) {
+          return value
+        }
         break
       case 'request':
         value = getParam(ctx.request, metadata)
+        if (metadata.root) {
+          return value
+        }
         break
       case 'next':
         value = next
-        break
+        return value
       default:
         throw new TypeError('Invalid source:' + metadata.source)
     }
@@ -89,9 +99,13 @@ export const getParams = (ctx: IRouterContext, next: () => any, paramsMetadata: 
         return
       }
     }
+    // not do type validation is it's built-in object
+    if (metadata.root && ['query', 'header', 'context', 'request', 'session', 'next'].includes(metadata.source)) {
+      return value
+    }
     const schema = metadata.schema
-    const jsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
-    if (jsonSchema.type !== 'string' && typeof value === 'string') {
+    const jsonSchema: IJsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
+    if (jsonSchema.type && jsonSchema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
@@ -105,89 +119,68 @@ export const getParams = (ctx: IRouterContext, next: () => any, paramsMetadata: 
     try {
       value = deserialize(schema, value, JsDataTypes)
     } catch (err) {
-      debug(err)
       throw Boom.badRequest(err)
     }
     return value
   })
 }
 
-export function applyCtrlMiddleware(router: Router, middleware: List<IMiddleware>) {
-  middleware.forEach((mw) => {
-    router.use(mw)
-  })
-}
-
-export async function processRoute(ctx: IRouterContext, controller: any, propKey: string, args: any[]) {
-  const response = await controller[propKey].apply(controller, args)
-  if (response === undefined || response === null) {
-    return
-  }
-  if (response instanceof HttpResponse) {
-    ctx.status = response.status
-    if (response.headers) {
-      ctx.set(response.headers)
+export function createUserProcess(controller: any, propKey: string) {
+  return async function userProcess(ctx: IRouterContext, next: () => Promise<any>): Promise<any> {
+    const paramsMetadata: List<ParamMetadata> =
+      Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
+    const args = getParams(ctx, next, paramsMetadata)
+    const response = await controller[propKey].apply(controller, args)
+    if (response === undefined || response === null) {
+      return
     }
-    switch (response.status) {
-      case HttpStatusCode.MOVED_PERMANENTLY:
-      case HttpStatusCode.FOUND:
-        return ctx.redirect(response.body)
-      default:
-        ctx.body = response.body
-    }
-  } else {
-    const resultMetadataMap: Map<number, ResponseMetadata> =
-      Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
-    const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
-    if (resMetadata) {
-      try {
-        ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
-      } catch (err) {
-        debug(err)
-        throw Boom.internal(err)
+    if (response instanceof HttpResponse) {
+      ctx.status = response.status
+      if (response.headers) {
+        ctx.set(response.headers)
+      }
+      switch (response.status) {
+        case HttpStatusCode.MOVED_PERMANENTLY:
+        case HttpStatusCode.FOUND:
+          return ctx.redirect(response.body)
+        default:
+          ctx.body = response.body
       }
     } else {
-      ctx.body = response
+      const resultMetadataMap: Map<number, ResponseMetadata> =
+        Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
+      const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
+      if (resMetadata) {
+        ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
+      } else {
+        ctx.body = response
+      }
     }
   }
 }
 
-export function createAction(controller: object, propKey: string) {
-  const paramsMetadata: List<ParamMetadata> =
-    Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-  const process = async (ctx: IRouterContext, next: any) => {
+export function createProcess(controller: object, propKey: string) {
+  const userProcess = createUserProcess(controller, propKey)
+  const process = async (ctx: IRouterContext, next: () => Promise<any>) => {
     try {
-      if (!ctx.disableFormParser && ctx.is('multipart/form-data')) {
-        const { fields, files } = await parseFormData(ctx)
-        const request: any = ctx.request
-        request.body = fields
-        request.files = files
-      }
-      const args = getParams(ctx, next, paramsMetadata)
-      await processRoute(ctx, controller, propKey, args.toArray())
-      await next()
+      const response = await userProcess(ctx, next)
+      return response
     } catch (err) {
       if (Boom.isBoom(err)) {
-        if (err.isServer) {
-          throw err
-        } else {
-          ctx.status = err.output.statusCode
-          const response = !_.isEmpty(err.output.payload.attributes)
-            ? err.output.payload.attributes
-            : err.output.payload.message
-          const resultMetadataMap: Map<number, ResponseMetadata> =
-            Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
-          const resMetadata = resultMetadataMap.get(err.output.statusCode)
-          if (resMetadata && resMetadata.strict) {
-            const [valid] = validate(resMetadata.schema, response, JsDataTypes)
-            if (valid) {
-              ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
-            } else {
-              ctx.body = response
-            }
+        ctx.status = err.output.statusCode
+        const errorData = err.data
+        const errorMessage = err.message
+        const resultMetadataMap: Map<number, ResponseMetadata> =
+          Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
+        const resMetadata = resultMetadataMap.get(err.output.statusCode)
+        if (resMetadata) {
+          if (resMetadata.schema.type === 'string') {
+            ctx.body = errorMessage
           } else {
-            ctx.body = response
+            ctx.body = serialize(resMetadata.schema, errorData, JsDataTypes)
           }
+        } else {
+          ctx.body = errorMessage
         }
       } else {
         throw err
@@ -197,30 +190,63 @@ export function createAction(controller: object, propKey: string) {
   return process
 }
 
-export function createRoute(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
-  const process = createAction(controller, propKey) as any
+export function createAction(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
+  const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
+  const process = createProcess(controller, propKey)
   const action = new Action(luren, routeMetadata.method, routeMetadata.path, process)
-
-  const middleware: List<IMiddleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
-  return {
-    method: routeMetadata.method.toLowerCase(),
-    path: routeMetadata.path,
-    action,
-    middleware
-  }
+  action.middleware = middleware
+  return action
 }
 
-export function createRoutes(controller: object) {
+export function createActions(luren: Luren, controller: object) {
   const routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, controller)
   return routeMetadataMap
     .map((routeMetadata, prop) => {
-      return createRoute(controller, prop, routeMetadata)
+      return createAction(luren, controller, prop, routeMetadata)
     })
     .toList()
 }
 export function createController(luren: Luren, ctrl: object) {
   const controller = new Controller(luren)
   controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
-  const routes = createRoutes(ctrl)
+  controller.actions = createActions(luren, ctrl)
   return controller
+}
+
+export function createControllerRouter(controller: Controller, securitySettings: ISecuritySettings) {
+  const router = new Router({ prefix: controller.prefix })
+  router.use(...controller.middleware)
+
+  for (const action of controller.actions) {
+    const version = action.version || controller.version || ''
+    const path = Path.join('/', version, controller.path, action.path)
+    let middleware = action.middleware
+    const authentication =
+      action.securitySettings.authentication ||
+      controller.securitySettings.authentication ||
+      securitySettings.authentication
+
+    if (authentication) {
+      middleware = middleware.unshift(authentication)
+    }
+    const authorization =
+      action.securitySettings.authorization ||
+      controller.securitySettings.authorization ||
+      securitySettings.authorization
+    if (authorization) {
+      middleware = middleware.unshift(...authorization)
+    }
+
+    router[action.method](path, ...middleware, action.process)
+  }
+  return router
+}
+
+export function loadControllersRouter(controllers: List<Controller>, securitySettings: ISecuritySettings) {
+  const router = new Router()
+  controllers.forEach((ctrl) => {
+    const ctrlRouter = createControllerRouter(ctrl, securitySettings)
+    router.use(ctrlRouter.routes())
+  })
+  return router
 }
