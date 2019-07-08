@@ -14,9 +14,12 @@ import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
 import { Server } from 'net'
 import Path from 'path'
+import { AuthenticationType } from './constants'
 import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDatasource } from './datasource/LurenDatasource'
+import { AuthenticationMetadata } from './decorators'
+import AuthenticationProcessor from './lib/Authentication'
 import { createController, loadControllersRouter } from './lib/helper'
 import { adaptMiddleware, getFileLoaderConfig, importModules } from './lib/utils'
 import BodyParser from './middleware/BodyParser'
@@ -118,8 +121,12 @@ export class Luren implements IKoa {
     this._eventEmitter.on('error', onError)
   }
 
-  public setDefaultAuthentication(auth: Middleware) {
-    this._securitySettings.authentication = auth
+  public setDefaultAuthentication(auth: Middleware | AuthenticationProcessor) {
+    const authMetadata: AuthenticationMetadata =
+      auth instanceof AuthenticationProcessor
+        ? new AuthenticationMetadata(auth.type, auth.toMiddleware(), auth)
+        : new AuthenticationMetadata(AuthenticationType.UNKNOWN, auth)
+    this._securitySettings.authentication = authMetadata
   }
   public setDefaultBodyParser(bodyParser?: Middleware) {
     this._defaultBodyParser = bodyParser
@@ -174,6 +181,9 @@ export class Luren implements IKoa {
   }
   public setControllerConfig(config: IModuleLoaderOptions) {
     this._controllerConfig = getFileLoaderConfig(config, 'controllers')
+  }
+  public getSecuritySettings() {
+    return this._securitySettings
   }
   public plugin(...plugins: IPlugin[]) {
     for (const p of plugins) {

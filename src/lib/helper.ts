@@ -228,10 +228,11 @@ export function createController(luren: Luren, ctrl: object) {
 export function createControllerRouter(controller: Controller, securitySettings: ISecuritySettings) {
   const router = new Router({ prefix: controller.prefix })
   let ctrlMiddleware = controller.middleware
-  const ctrlAuthentication = controller.securitySettings.authentication || securitySettings.authentication
+  const ctrlAuthentication: AuthenticationMetadata | undefined =
+    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller) || securitySettings.authentication
 
   if (ctrlAuthentication) {
-    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication)
+    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication.middleware)
   }
   const ctrlAuthorization = controller.securitySettings.authorization || securitySettings.authorization
   if (ctrlAuthorization) {
@@ -246,7 +247,7 @@ export function createControllerRouter(controller: Controller, securitySettings:
     const authentication = action.securitySettings.authentication
 
     if (authentication) {
-      middleware = middleware.unshift(authentication)
+      middleware = middleware.unshift(authentication.middleware)
     }
     const authorization = action.securitySettings.authorization
     if (authorization) {
