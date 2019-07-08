@@ -15,7 +15,7 @@ export default class ErrorProcessor extends Processor {
       await next()
       if (ctx.status >= HttpStatusCode.INTERNAL_SERVER_ERROR) {
         // tslint:disable-next-line: no-console
-        console.info(ctx.status, ctx.body)
+        console.error(ctx.status, ctx.body)
       }
     } catch (err) {
       ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR

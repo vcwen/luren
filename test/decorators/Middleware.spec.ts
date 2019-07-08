@@ -3,9 +3,9 @@ import { Context } from 'koa'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import 'reflect-metadata'
 import { MetadataKey } from '../../src/constants/MetadataKey'
+import { Get } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
 import { Middleware } from '../../src/decorators/Middleware'
-import { Get } from '../../src/decorators/Route'
 describe('Middleware decorator', () => {
   describe('Middleware', () => {
     it('should set middleware for controller', () => {

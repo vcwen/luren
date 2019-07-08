@@ -1,12 +1,10 @@
 import decamelize from 'decamelize'
-import { Map } from 'immutable'
 import _ from 'lodash'
 import Path from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { Constructor } from '../types/Constructor'
-import { RouteMetadata } from './Route'
 
 export interface ICtrlOptions {
   version?: string
@@ -46,16 +44,5 @@ export function Controller(options: ICtrlOptions = {}) {
   return <T>(constructor: Constructor<T>) => {
     const metadata = getCtrlMetadata(options, constructor)
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, constructor.prototype)
-    let routeMetadataMap: Map<string, RouteMetadata> =
-      Reflect.getMetadata(MetadataKey.ROUTES, constructor.prototype) || Map()
-    routeMetadataMap = routeMetadataMap.withMutations((map) => {
-      for (const [prop, routeMetadata] of map) {
-        const version = routeMetadata.version || metadata.version || ''
-        const path = Path.join('/', metadata.prefix, version, metadata.path, routeMetadata.path)
-        routeMetadata.path = path
-        map.set(prop, routeMetadata)
-      }
-    })
-    Reflect.defineMetadata(MetadataKey.ROUTES, routeMetadataMap, constructor.prototype)
   }
 }

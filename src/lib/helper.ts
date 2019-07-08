@@ -10,7 +10,7 @@ import Path from 'path'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import { CtrlMetadata, ResponseMetadata, RouteMetadata } from '../decorators'
+import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
 import { ISecuritySettings } from '../types'
@@ -182,19 +182,19 @@ export function createProcess(controller: object, propKey: string) {
   return process
 }
 
-export function createAction(luren: Luren, controller: object, propKey: string, routeMetadata: RouteMetadata) {
+export function createAction(luren: Luren, controller: object, propKey: string, actionMetadata: ActionMetadata) {
   const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   const process = createProcess(controller, propKey)
-  const action = new Action(luren, routeMetadata.method, routeMetadata.path, process)
+  const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
   action.middleware = middleware
   return action
 }
 
 export function createActions(luren: Luren, controller: object) {
-  const routeMetadataMap: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, controller)
-  return routeMetadataMap
-    .map((routeMetadata, prop) => {
-      return createAction(luren, controller, prop, routeMetadata)
+  const actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, controller)
+  return actionMetadataMap
+    .map((actionMetadata, prop) => {
+      return createAction(luren, controller, prop, actionMetadata)
     })
     .toList()
 }
@@ -235,8 +235,7 @@ export function createControllerRouter(controller: Controller, securitySettings:
     if (authorization) {
       middleware = middleware.unshift(...authorization)
     }
-
-    router[action.method](path, ...middleware, action.process)
+    router[action.method.toLowerCase()](path, ...middleware, action.process)
   }
   return router
 }

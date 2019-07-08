@@ -2,25 +2,25 @@ import { Map } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../../src/constants/HttpMethod'
 import { MetadataKey } from '../../src/constants/MetadataKey'
-import { Delete, Get, Patch, Post, Put, Route, RouteMetadata } from '../../src/decorators/Route'
+import { Action, ActionMetadata, Delete, Get, Patch, Post, Put } from '../../src/decorators/Action'
 
-describe('Route', () => {
+describe('ACtion', () => {
   it('should invoke directly when param is constructor', () => {
     class TestController {
-      @Route()
+      @Action()
       public getName(): string {
         return 'vc'
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'GET', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'GET', name: 'getName', path: '/getName', deprecated: false })
   })
 
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
     class TestController {
-      @Route({
+      @Action({
         name: 'MyTest',
         path: '/testPath',
         method: HttpMethod.POST,
@@ -30,8 +30,8 @@ describe('Route', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       name: 'MyTest',
       path: '/testPath',
       method: 'POST',
@@ -50,8 +50,8 @@ describe('Get', () => {
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, RouteMetadata> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'GET', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'GET', name: 'getName', path: '/getName', deprecated: false })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -65,8 +65,8 @@ describe('Get', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       deprecated: false,
       name: 'MyTest',
       path: '/testPath',
@@ -86,8 +86,8 @@ describe('POST', () => {
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'POST', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'POST', name: 'getName', path: '/getName', deprecated: false })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -101,8 +101,8 @@ describe('POST', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       name: 'CreateTest',
       path: '/create',
       method: 'POST',
@@ -122,8 +122,8 @@ describe('PUT', () => {
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'PUT', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'PUT', name: 'getName', path: '/getName', deprecated: false })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -137,8 +137,8 @@ describe('PUT', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       name: 'UpdateTest',
       path: '/test',
       method: 'PUT',
@@ -158,8 +158,8 @@ describe('PATCH', () => {
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'PATCH', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'PATCH', name: 'getName', path: '/getName', deprecated: false })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -173,8 +173,8 @@ describe('PATCH', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       name: 'UpdateTest',
       path: '/test',
       method: 'PATCH',
@@ -194,8 +194,8 @@ describe('DELETE', () => {
       }
     }
     const ctrl = new TestController()
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, ctrl)
-    expect(routes.get('getName')).toEqual({ method: 'DELETE', name: 'getName', path: '/getName', deprecated: false })
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions.get('getName')).toEqual({ method: 'DELETE', name: 'getName', path: '/getName', deprecated: false })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -208,8 +208,8 @@ describe('DELETE', () => {
         return 'vc'
       }
     }
-    const routes: Map<string, any> = Reflect.getMetadata(MetadataKey.ROUTES, TestController.prototype)
-    expect(routes.get('getName')).toEqual({
+    const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
       name: 'DeleteTest',
       path: '/test',
       method: 'DELETE',

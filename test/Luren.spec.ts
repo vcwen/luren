@@ -5,7 +5,7 @@ import Path from 'path'
 import request from 'supertest'
 import { HttpMethod, HttpStatusCode, redirect } from '../src'
 import { ParamSource } from '../src/constants/ParamSource'
-import { Controller, Middleware, Param, Response, Route } from '../src/decorators'
+import { Action, Controller, Middleware, Param, Response } from '../src/decorators'
 import IncomingFile from '../src/lib/IncomingFile'
 import StreamResponse from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'
@@ -18,25 +18,25 @@ class Person {
   public age!: number
 }
 
-@Controller()
+@Controller({ prefix: '/api' })
 // tslint:disable-next-line:max-classes-per-file
 export default class PersonController {
-  @Route()
+  @Action()
   @Response({ type: Person })
   public hello(@Param({ name: 'name', in: ParamSource.QUERY }) name: string) {
     return { name: name || 'vc', age: 15 }
   }
-  @Route({ method: HttpMethod.POST, path: '/something' })
+  @Action({ method: HttpMethod.POST, path: '/something' })
   @Response({ type: ['string'] })
   public doSomething(@Param({ name: 'name', in: ParamSource.BODY, required: true }) name: string) {
     return ['ok', name]
   }
-  @Route({ path: '/redirect' })
+  @Action({ path: '/redirect' })
   public redirect() {
     // tslint:disable-next-line: no-magic-numbers
     return redirect('http://localhost/redirect', 301)
   }
-  @Route({ method: HttpMethod.PUT })
+  @Action({ method: HttpMethod.PUT })
   @Response({ type: { criteria: 'object', skip: 'number?' }, strict: true })
   @Middleware(bodyParser() as any)
   public hog(
@@ -46,14 +46,14 @@ export default class PersonController {
     // tslint:disable-next-line: no-magic-numbers
     return filter
   }
-  @Route()
+  @Action()
   @Response({ type: { criteria: 'object', skip: 'number?' }, strict: true })
   @Middleware(bodyParser() as any)
   public wrong() {
     // tslint:disable-next-line: no-magic-numbers
     return { name: 'vc' }
   }
-  @Route({ method: HttpMethod.POST })
+  @Action({ method: HttpMethod.POST })
   @Response({ type: { status: 'string' } })
   public upload(@Param({ name: 'avatar', in: 'body', type: 'file' }) avatar: IncomingFile) {
     // tslint:disable-next-line: no-magic-numbers
@@ -63,7 +63,7 @@ export default class PersonController {
       throw new Error('invalid file')
     }
   }
-  @Route()
+  @Action()
   @Response({ type: { status: 'stream' } })
   public download() {
     const rs = fs.createReadStream(Path.resolve(__dirname, './files/avatar.jpg'))

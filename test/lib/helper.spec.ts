@@ -2,9 +2,9 @@ import { badRequest } from 'boom'
 import 'reflect-metadata'
 import { HttpMethod, Luren } from '../../src'
 import { MetadataKey } from '../../src/constants/MetadataKey'
+import { Delete, Get, Post, Put } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
 import { Param } from '../../src/decorators/Param'
-import { Delete, Get, Post, Put } from '../../src/decorators/Route'
 import { createAction, createActions, createController, createProcess } from '../../src/lib/helper'
 import { OK, redirect } from '../../src/lib/HttpResponse'
 jest.disableAutomock()
@@ -298,20 +298,20 @@ describe('helper', () => {
       })
     })
   })
-  describe('createRoute', () => {
-    it('should create the specific route', async () => {
-      const route: any = createAction(
+  describe('createAction', () => {
+    it('should create the specific action', async () => {
+      const action: any = createAction(
         luren,
         controller,
         'sayHello',
-        Reflect.getMetadata(MetadataKey.ROUTES, controller).get('sayHello')
+        Reflect.getMetadata(MetadataKey.ACTIONS, controller).get('sayHello')
       )
-      expect(route.method).toEqual(HttpMethod.PUT)
-      expect(route.path).toEqual('/tests/hello')
+      expect(action.method).toEqual(HttpMethod.PUT)
+      expect(action.path).toEqual('hello')
     })
   })
-  describe('createRoutes', () => {
-    it('should create all routes of controller', () => {
+  describe('createActions', () => {
+    it('should create all actions of controller', () => {
       const routes = createActions(luren, controller)
       // tslint:disable-next-line:no-magic-numbers
       expect(routes.toArray()).toHaveLength(16)

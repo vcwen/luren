@@ -3,7 +3,7 @@ export const MetadataKey = {
   AUTHORIZATION: Symbol('AUTHORIZATION'),
   CONTROLLER: Symbol('CONTROLLER'),
   MIDDLEWARE: Symbol('MIDDLEWARE'),
-  ROUTES: Symbol('ROUTES'),
+  ACTIONS: Symbol('ACTIONS'),
   PARAMS: Symbol('PARAMS'),
   RESPONSE: Symbol('RESPONSE'),
   INDEX: Symbol('INDEX'),
