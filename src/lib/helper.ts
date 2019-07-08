@@ -1,18 +1,16 @@
 import Ajv from 'ajv'
 import Boom from 'boom'
-import Debug from 'debug'
 import { List, Map } from 'immutable'
 import { Context, Middleware } from 'koa'
-import { IRouterContext } from 'koa-router'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { deserialize, jsSchemaToJsonSchema, serialize, validate } from 'luren-schema'
+import { deserialize, jsSchemaToJsonSchema, serialize } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import { ResponseMetadata, RouteMetadata } from '../decorators'
+import { CtrlMetadata, ResponseMetadata, RouteMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
 import { ISecuritySettings } from '../types'
@@ -24,8 +22,6 @@ import { JsDataTypes } from './JsDataTypes'
 
 const ajv = new Ajv()
 
-const debug = Debug('luren')
-
 const getParam = (source: any, metadata: ParamMetadata) => {
   if (metadata.root) {
     return source
@@ -34,7 +30,7 @@ const getParam = (source: any, metadata: ParamMetadata) => {
   }
 }
 
-export const getParams = (ctx: Context, next: () => any, paramsMetadata: List<ParamMetadata> = List()) => {
+export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = List()) => {
   return paramsMetadata.map((metadata) => {
     let value: any
     switch (metadata.source) {
@@ -86,9 +82,6 @@ export const getParams = (ctx: Context, next: () => any, paramsMetadata: List<Pa
           return value
         }
         break
-      case 'next':
-        value = next
-        return value
       default:
         throw new TypeError('Invalid source:' + metadata.source)
     }
@@ -126,11 +119,11 @@ export const getParams = (ctx: Context, next: () => any, paramsMetadata: List<Pa
 }
 
 export function createUserProcess(controller: any, propKey: string) {
-  return async function userProcess(ctx: IRouterContext, next: () => Promise<any>): Promise<any> {
+  return async function userProcess(ctx: Context): Promise<any> {
     const paramsMetadata: List<ParamMetadata> =
       Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-    const args = getParams(ctx, next, paramsMetadata)
-    const response = await controller[propKey].apply(controller, args)
+    const args = getParams(ctx, paramsMetadata)
+    const response = await controller[propKey].apply(controller, args.toArray())
     if (response === undefined || response === null) {
       return
     }
@@ -161,10 +154,9 @@ export function createUserProcess(controller: any, propKey: string) {
 
 export function createProcess(controller: object, propKey: string) {
   const userProcess = createUserProcess(controller, propKey)
-  const process = async (ctx: IRouterContext, next: () => Promise<any>) => {
+  const process = async (ctx: Context) => {
     try {
-      const response = await userProcess(ctx, next)
-      return response
+      await userProcess(ctx)
     } catch (err) {
       if (Boom.isBoom(err)) {
         ctx.status = err.output.statusCode
@@ -208,6 +200,13 @@ export function createActions(luren: Luren, controller: object) {
 }
 export function createController(luren: Luren, ctrl: object) {
   const controller = new Controller(luren)
+  const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, ctrl)
+  controller.name = ctrlMetadata.name
+  controller.plural = ctrlMetadata.plural
+  controller.prefix = ctrlMetadata.prefix
+  controller.path = ctrlMetadata.path
+  controller.version = ctrlMetadata.version
+  controller.desc = ctrlMetadata.desc
   controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
   controller.actions = createActions(luren, ctrl)
   return controller

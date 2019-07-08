@@ -16,7 +16,7 @@ describe('Controller', () => {
     const controller = Reflect.getMetadata(MetadataKey.CONTROLLER, Test.prototype)
     expect(controller).toEqual({
       name: 'MyName',
-      path: '/api/my-names',
+      path: '/my-names',
       plural: 'my-names',
       prefix: '/api',
       desc: 'This is a testing controller'

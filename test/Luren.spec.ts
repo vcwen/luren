@@ -139,7 +139,10 @@ describe('Luren', () => {
     const p = new Promise((resolve) => {
       luren.onError((err, ctx) => {
         expect(err).toBeInstanceOf(Error)
-        expect(ctx.url).toBe('/api/people/wrong')
+        if (ctx) {
+          expect(ctx.url).toBe('/api/people/wrong')
+        }
+
         resolve()
       })
     })

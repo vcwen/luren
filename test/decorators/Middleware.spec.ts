@@ -1,4 +1,5 @@
 import { List } from 'immutable'
+import { Context } from 'koa'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import 'reflect-metadata'
 import { MetadataKey } from '../../src/constants/MetadataKey'
@@ -8,7 +9,7 @@ import { Get } from '../../src/decorators/Route'
 describe('Middleware decorator', () => {
   describe('Middleware', () => {
     it('should set middleware for controller', () => {
-      const middleware1 = (ctx: IRouterContext) => {
+      const middleware1 = (ctx: Context) => {
         ctx.body = 'ok'
       }
       @Controller()
@@ -19,10 +20,10 @@ describe('Middleware decorator', () => {
       expect(middleware.contains(middleware1)).toBeTruthy()
     })
     it('should set middleware before controller in order', () => {
-      const middleware1 = (ctx: IRouterContext) => {
+      const middleware1 = (ctx: Context) => {
         ctx.body = 'ok'
       }
-      const middleware2 = (ctx: IRouterContext) => {
+      const middleware2 = (ctx: Context) => {
         ctx.body = 'override'
       }
       // tslint:disable-next-line:max-classes-per-file
@@ -35,7 +36,7 @@ describe('Middleware decorator', () => {
       expect(middleware.toArray()).toEqual([middleware1, middleware2])
     })
     it('should set middleware for route', () => {
-      const middleware1 = (ctx: IRouterContext) => {
+      const middleware1 = (ctx: Context) => {
         ctx.body = 'ok'
       }
       // tslint:disable-next-line:max-classes-per-file
@@ -53,10 +54,10 @@ describe('Middleware decorator', () => {
       expect(middleware.toArray()).toContain(middleware1)
     })
     it('should set middleware for route in order', () => {
-      const middleware1 = (ctx: IRouterContext) => {
+      const middleware1 = (ctx: Context) => {
         ctx.body = 'ok'
       }
-      const middleware2 = (ctx: IRouterContext) => {
+      const middleware2 = (ctx: Context) => {
         ctx.body = 'override'
       }
       // tslint:disable-next-line:max-classes-per-file

@@ -38,7 +38,6 @@ export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor<
   const plural = options.plural || pluralize.plural(decamelize(name, '-'))
   const path = options.path || Path.join('/', plural)
   const metadata = new CtrlMetadata(name, path, options.version, options.desc)
-  metadata.plural = plural
   metadata.prefix = prefix
   return metadata
 }
