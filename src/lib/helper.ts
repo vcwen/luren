@@ -253,7 +253,7 @@ export function createControllerRouter(controller: Controller, securitySettings:
     if (authorization) {
       middleware = middleware.push(authorization)
     }
-    router[action.method.toLowerCase()](path, ...middleware, action.process)
+    ;(router as any)[action.method.toLowerCase()](path, ...middleware, action.process)
   }
   return router
 }

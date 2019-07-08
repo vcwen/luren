@@ -1,4 +1,4 @@
-import { Context } from 'koa'
+import { Context, Middleware } from 'koa'
 import { AuthenticationType, HttpStatusCode } from '../constants'
 import { getRequestParam } from './helper'
 import Processor from './Processor'
@@ -7,7 +7,7 @@ import { adaptMiddleware } from './utils'
 export default abstract class AuthenticationProcessor extends Processor {
   public abstract type: AuthenticationType
   public abstract async process(...args: any[]): Promise<boolean>
-  public toMiddleware() {
+  public toMiddleware(): Middleware {
     return adaptMiddleware(this, async (res, ctx, next) => {
       if (res) {
         await next()
