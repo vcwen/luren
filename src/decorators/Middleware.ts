@@ -2,9 +2,20 @@ import { List } from 'immutable'
 import { Context, Middleware as IMiddleware } from 'koa'
 import _ from 'lodash'
 import 'reflect-metadata'
+import { AuthenticationType } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
+import AuthenticationProcessor from '../lib/Authentication'
 import { IMiddlewareConditions, INext } from '../types'
-
+export class AuthenticationMetadata {
+  public type: AuthenticationType
+  public middleware: IMiddleware
+  public processor?: AuthenticationProcessor
+  constructor(type: AuthenticationType, middleware: IMiddleware, processor?: AuthenticationProcessor) {
+    this.type = type
+    this.middleware = middleware
+    this.processor = processor
+  }
+}
 export function Middleware(...middleware: IMiddleware[]) {
   return (...args: any[]) => {
     if (args.length === 1) {
@@ -19,14 +30,19 @@ export function Middleware(...middleware: IMiddleware[]) {
   }
 }
 
-export function Authentication(middleware: IMiddleware) {
+export function Authentication(middleware: AuthenticationProcessor | IMiddleware) {
+  const authMetadata: AuthenticationMetadata =
+    middleware instanceof AuthenticationProcessor
+      ? new AuthenticationMetadata(middleware.type, middleware.toMiddleware(), middleware)
+      : new AuthenticationMetadata(AuthenticationType.UNKNOWN, middleware)
+
   return (...args: any[]) => {
     if (args.length === 1) {
       const [constructor] = args
-      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, middleware, constructor.prototype)
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, authMetadata, constructor.prototype)
     } else {
       const [target, propertyKey] = args
-      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, middleware, target, propertyKey)
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, authMetadata, target, propertyKey)
     }
   }
 }

@@ -1,7 +1,7 @@
 import Ajv from 'ajv'
 import Boom from 'boom'
 import { List, Map } from 'immutable'
-import { Context, Middleware } from 'koa'
+import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
 import { deserialize, jsSchemaToJsonSchema, serialize } from 'luren-schema'
@@ -10,7 +10,7 @@ import Path from 'path'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
+import { ActionMetadata, AuthenticationMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
 import { ISecuritySettings } from '../types'
@@ -183,10 +183,22 @@ export function createProcess(controller: object, propKey: string) {
 }
 
 export function createAction(luren: Luren, controller: object, propKey: string, actionMetadata: ActionMetadata) {
-  const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
+  let middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   const process = createProcess(controller, propKey)
   const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
   action.middleware = middleware
+  const authentication: AuthenticationMetadata | undefined = Reflect.getMetadata(
+    MetadataKey.AUTHENTICATION,
+    controller,
+    propKey
+  )
+  if (authentication) {
+    middleware = middleware.unshift(authentication.middleware)
+  }
+  const authorization = Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller, propKey)
+  if (authorization) {
+    middleware = middleware.push(authorization)
+  }
   return action
 }
 
@@ -208,32 +220,37 @@ export function createController(luren: Luren, ctrl: object) {
   controller.version = ctrlMetadata.version
   controller.desc = ctrlMetadata.desc
   controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
+
   controller.actions = createActions(luren, ctrl)
   return controller
 }
 
 export function createControllerRouter(controller: Controller, securitySettings: ISecuritySettings) {
   const router = new Router({ prefix: controller.prefix })
-  router.use(...controller.middleware)
+  let ctrlMiddleware = controller.middleware
+  const ctrlAuthentication = controller.securitySettings.authentication || securitySettings.authentication
+
+  if (ctrlAuthentication) {
+    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication)
+  }
+  const ctrlAuthorization = controller.securitySettings.authorization || securitySettings.authorization
+  if (ctrlAuthorization) {
+    ctrlMiddleware = ctrlMiddleware.push(ctrlAuthorization)
+  }
+  router.use(...ctrlMiddleware)
 
   for (const action of controller.actions) {
     const version = action.version || controller.version || ''
     const path = Path.join('/', version, controller.path, action.path)
     let middleware = action.middleware
-    const authentication =
-      action.securitySettings.authentication ||
-      controller.securitySettings.authentication ||
-      securitySettings.authentication
+    const authentication = action.securitySettings.authentication
 
     if (authentication) {
       middleware = middleware.unshift(authentication)
     }
-    const authorization =
-      action.securitySettings.authorization ||
-      controller.securitySettings.authorization ||
-      securitySettings.authorization
+    const authorization = action.securitySettings.authorization
     if (authorization) {
-      middleware = middleware.unshift(...authorization)
+      middleware = middleware.push(authorization)
     }
     router[action.method.toLowerCase()](path, ...middleware, action.process)
   }
@@ -247,4 +264,17 @@ export function loadControllersRouter(controllers: List<Controller>, securitySet
     router.use(ctrlRouter.routes())
   })
   return router
+}
+
+export const getRequestParam = (request: Request, key: string, source: string) => {
+  switch (source) {
+    case 'header':
+      return _.get(request, ['header', key])
+    case 'path':
+      return _.get(request, ['params', key])
+    case 'query':
+      return _.get(request, ['query', key])
+    case 'body':
+      return _.get(request, ['body', key])
+  }
 }

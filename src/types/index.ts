@@ -1,4 +1,3 @@
-import { List } from 'immutable'
 import { Context, Middleware } from 'koa'
 
 export type IProcess = (...args: any[]) => Promise<any>
@@ -7,7 +6,7 @@ export type IAuthenticate = (...args: any[]) => Promise<boolean>
 export type IAuthorize = (...args: any[]) => Promise<boolean>
 export interface ISecuritySettings {
   authentication?: Middleware
-  authorization?: List<Middleware>
+  authorization?: Middleware
 }
 
 export interface IMiddlewareAdaptable<T = any> {
