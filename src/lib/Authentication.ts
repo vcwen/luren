@@ -5,6 +5,7 @@ import Processor from './Processor'
 import { adaptMiddleware } from './utils'
 
 export default abstract class AuthenticationProcessor extends Processor {
+  public abstract name: string
   public abstract type: AuthenticationType
   public abstract async process(...args: any[]): Promise<boolean>
   public toMiddleware(): Middleware {
@@ -21,12 +22,14 @@ export default abstract class AuthenticationProcessor extends Processor {
 
 // tslint:disable-next-line: max-classes-per-file
 export class APIKeyAuthentication extends AuthenticationProcessor {
+  public name: string
   public type = AuthenticationType.API_KEY
-  private key: string
-  private source: string
+  public key: string
+  public source: string
   private validateKey: (key: string) => Promise<boolean>
-  constructor(key: string, source: string, validateKey: (key: string) => Promise<boolean>) {
+  constructor(name: string, key: string, source: string, validateKey: (key: string) => Promise<boolean>) {
     super()
+    this.name = name
     this.key = key
     this.validateKey = validateKey
     this.source = source
