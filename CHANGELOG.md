@@ -1,6 +1,22 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.0.20](https://github.com/vcwen/luren/compare/v0.0.16...v0.0.20) (2019-07-08)
+
+
+### Bug Fixes
+
+* **all:** fix issues & tests ([5ea3075](https://github.com/vcwen/luren/commit/5ea3075))
+* **Luren:** fix controllers ([4d3221d](https://github.com/vcwen/luren/commit/4d3221d))
+* **Luren:** middlewareOptions optional ([da9b94f](https://github.com/vcwen/luren/commit/da9b94f))
+
+
+### Features
+
+* **middleware:** authetication & authorization ([6fdc6f2](https://github.com/vcwen/luren/commit/6fdc6f2))
+
+
 
 <a name="0.0.19"></a>
 ## [0.0.19](https://github.com/vcwen/luren/compare/v0.0.18...v0.0.19) (2019-06-16)
