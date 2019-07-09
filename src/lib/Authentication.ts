@@ -17,6 +17,7 @@ export default abstract class AuthenticationProcessor extends Processor<boolean>
       }
     })
   }
+  public abstract equals(another: AuthenticationProcessor): boolean
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -39,6 +40,31 @@ export class APIKeyAuthentication extends AuthenticationProcessor {
       return false
     }
   }
+  public equals(another: AuthenticationProcessor) {
+    if (this === another) {
+      return true
+    }
+    if (another instanceof APIKeyAuthentication) {
+      if (this.type !== another.type) {
+        return false
+      }
+      if (this.name !== another.name) {
+        return false
+      }
+      if (this.key !== another.key) {
+        return false
+      }
+      if (this.source !== another.source) {
+        return false
+      }
+      if (this.validateKey !== another.validateKey) {
+        return false
+      }
+      return true
+    } else {
+      return false
+    }
+  }
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -49,5 +75,8 @@ export class NoneAuthentication extends AuthenticationProcessor {
   }
   public async process(): Promise<boolean> {
     return true
+  }
+  public equals(another: AuthenticationProcessor) {
+    return another.type === AuthenticationType.NONE
   }
 }
