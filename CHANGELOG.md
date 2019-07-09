@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.27](https://github.com/vcwen/luren/compare/v0.0.26...v0.0.27) (2019-07-09)
+
+
+### Bug Fixes
+
+* **schema:** fix according to new luren-schema version ([b361a0b](https://github.com/vcwen/luren/commit/b361a0b))
+
+
+
 ### [0.0.26](https://github.com/vcwen/luren/compare/v0.0.25...v0.0.26) (2019-07-09)
 
 
