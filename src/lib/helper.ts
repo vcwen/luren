@@ -8,13 +8,14 @@ import { deserialize, jsSchemaToJsonSchema, serialize } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
-import { MetadataKey } from '../constants'
+import { AuthenticationType, MetadataKey } from '../constants'
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import { ActionMetadata, AuthenticationMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
+import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
 import { ISecuritySettings } from '../types'
 import Action from './Action'
+import AuthenticationProcessor from './Authentication'
 import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
@@ -187,13 +188,9 @@ export function createAction(luren: Luren, controller: object, propKey: string, 
   const process = createProcess(controller, propKey)
   const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
   action.middleware = middleware
-  const authentication: AuthenticationMetadata | undefined = Reflect.getMetadata(
-    MetadataKey.AUTHENTICATION,
-    controller,
-    propKey
-  )
+  const authentication: AuthenticationProcessor = Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller, propKey)
   if (authentication) {
-    middleware = middleware.unshift(authentication.middleware)
+    middleware = middleware.unshift(authentication.toMiddleware())
   }
   const authorization = Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller, propKey)
   if (authorization) {
@@ -228,11 +225,11 @@ export function createController(luren: Luren, ctrl: object) {
 export function createControllerRouter(controller: Controller, securitySettings: ISecuritySettings) {
   const router = new Router({ prefix: controller.prefix })
   let ctrlMiddleware = controller.middleware
-  const ctrlAuthentication: AuthenticationMetadata | undefined =
+  const ctrlAuthentication: AuthenticationProcessor =
     Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller) || securitySettings.authentication
 
-  if (ctrlAuthentication) {
-    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication.middleware)
+  if (ctrlAuthentication && ctrlAuthentication.type !== AuthenticationType.NONE) {
+    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication.toMiddleware())
   }
   const ctrlAuthorization = controller.securitySettings.authorization || securitySettings.authorization
   if (ctrlAuthorization) {
@@ -246,8 +243,8 @@ export function createControllerRouter(controller: Controller, securitySettings:
     let middleware = action.middleware
     const authentication = action.securitySettings.authentication
 
-    if (authentication) {
-      middleware = middleware.unshift(authentication.middleware)
+    if (authentication && ctrlAuthentication.type !== AuthenticationType.NONE) {
+      middleware = middleware.unshift(authentication.toMiddleware())
     }
     const authorization = action.securitySettings.authorization
     if (authorization) {

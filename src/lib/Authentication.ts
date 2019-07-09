@@ -4,8 +4,7 @@ import { getRequestParam } from './helper'
 import Processor from './Processor'
 import { adaptMiddleware } from './utils'
 
-export default abstract class AuthenticationProcessor extends Processor {
-  public abstract name: string
+export default abstract class AuthenticationProcessor extends Processor<boolean> {
   public abstract type: AuthenticationType
   public abstract async process(...args: any[]): Promise<boolean>
   public toMiddleware(): Middleware {
@@ -22,14 +21,12 @@ export default abstract class AuthenticationProcessor extends Processor {
 
 // tslint:disable-next-line: max-classes-per-file
 export class APIKeyAuthentication extends AuthenticationProcessor {
-  public name: string
   public type = AuthenticationType.API_KEY
   public key: string
   public source: string
   private validateKey: (key: string) => Promise<boolean>
-  constructor(name: string, key: string, source: string, validateKey: (key: string) => Promise<boolean>) {
+  constructor(key: string, source: string, validateKey: (key: string) => Promise<boolean>) {
     super()
-    this.name = name
     this.key = key
     this.validateKey = validateKey
     this.source = source
@@ -41,5 +38,16 @@ export class APIKeyAuthentication extends AuthenticationProcessor {
     } else {
       return false
     }
+  }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class NoneAuthentication extends AuthenticationProcessor {
+  public type = AuthenticationType.NONE
+  constructor() {
+    super()
+  }
+  public async process(): Promise<boolean> {
+    return true
   }
 }

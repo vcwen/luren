@@ -5,6 +5,6 @@ export { MetadataKey } from './MetadataKey'
 export * from './ServiceIdentifier'
 
 export enum AuthenticationType {
-  UNKNOWN = 'UNKNOWN',
+  NONE = 'NONE',
   API_KEY = 'API_KEY'
 }

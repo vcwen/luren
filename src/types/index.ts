@@ -1,12 +1,13 @@
-import { Context, Middleware } from 'koa'
-import { AuthenticationMetadata } from '../decorators'
+import { Middleware } from 'koa'
+import AuthenticationProcessor from '../lib/Authentication'
+import Processor from '../lib/Processor'
 
 export type IProcess = (...args: any[]) => Promise<any>
 export type INext = () => Promise<any>
 export type IAuthenticate = (...args: any[]) => Promise<boolean>
 export type IAuthorize = (...args: any[]) => Promise<boolean>
 export interface ISecuritySettings {
-  authentication?: AuthenticationMetadata
+  authentication?: AuthenticationProcessor
   authorization?: Middleware
 }
 
@@ -14,5 +15,4 @@ export interface IMiddlewareAdaptable<T = any> {
   process(...args: any[]): Promise<T>
   toMiddleware(): Middleware
 }
-export type IValidationMiddleware = (context: Context, next: () => Promise<any>) => Promise<boolean> | boolean
-export type IMiddlewareConditions = { [key in 'and' | 'or']: Array<IValidationMiddleware | IMiddlewareConditions> }
+export type IProcessorConditions = { [key in 'and' | 'or']: Array<Processor<boolean> | IProcessorConditions> }

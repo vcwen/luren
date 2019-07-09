@@ -2,20 +2,13 @@ import { List } from 'immutable'
 import { Context, Middleware as IMiddleware } from 'koa'
 import _ from 'lodash'
 import 'reflect-metadata'
-import { AuthenticationType } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
-import AuthenticationProcessor from '../lib/Authentication'
-import { IMiddlewareConditions, INext } from '../types'
-export class AuthenticationMetadata {
-  public type: AuthenticationType
-  public middleware: IMiddleware
-  public processor?: AuthenticationProcessor
-  constructor(type: AuthenticationType, middleware: IMiddleware, processor?: AuthenticationProcessor) {
-    this.type = type
-    this.middleware = middleware
-    this.processor = processor
-  }
-}
+import AuthenticationProcessor, { NoneAuthentication } from '../lib/Authentication'
+import AuthorizationProcessor from '../lib/Authorization'
+import Processor from '../lib/Processor'
+import { adaptMiddleware } from '../lib/utils'
+import { INext, IProcessorConditions } from '../types'
+
 export function Middleware(...middleware: IMiddleware[]) {
   return (...args: any[]) => {
     if (args.length === 1) {
@@ -30,34 +23,44 @@ export function Middleware(...middleware: IMiddleware[]) {
   }
 }
 
-export function Authentication(middleware: AuthenticationProcessor | IMiddleware) {
-  const authMetadata: AuthenticationMetadata =
-    middleware instanceof AuthenticationProcessor
-      ? new AuthenticationMetadata(middleware.type, middleware.toMiddleware(), middleware)
-      : new AuthenticationMetadata(AuthenticationType.UNKNOWN, middleware)
-
+export function NoAuthentication() {
+  const processor = new NoneAuthentication()
   return (...args: any[]) => {
     if (args.length === 1) {
       const [constructor] = args
-      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, authMetadata, constructor.prototype)
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, processor, constructor.prototype)
     } else {
       const [target, propertyKey] = args
-      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, authMetadata, target, propertyKey)
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, processor, target, propertyKey)
     }
   }
 }
 
-export const composeConditionalMiddleware = (
-  middlewareConditions: IMiddlewareConditions,
-  processor: (result: boolean) => Promise<any>
+export function Authentication(processor: AuthenticationProcessor) {
+  return (...args: any[]) => {
+    if (args.length === 1) {
+      const [constructor] = args
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, processor, constructor.prototype)
+    } else {
+      const [target, propertyKey] = args
+      Reflect.defineMetadata(MetadataKey.AUTHENTICATION, processor, target, propertyKey)
+    }
+  }
+}
+
+export const composeConditionalProcessor = (
+  processorConditions: IProcessorConditions,
+  resultHandler: (result: boolean) => Promise<any>
 ) => {
   return async (ctx: Context, next: INext) => {
     // tslint:disable-next-line: no-empty
     const emptyFunc = async () => {}
-    const getResult = async (conditions: IMiddlewareConditions): Promise<boolean> => {
+    const getResult = async (conditions: IProcessorConditions): Promise<boolean> => {
       if (conditions.and) {
         for (const condition of conditions.and) {
-          const res = await (typeof condition === 'function' ? condition(ctx, emptyFunc) : getResult(condition))
+          const res = await (condition instanceof Processor
+            ? adaptMiddleware(condition)(ctx, emptyFunc)
+            : getResult(condition))
           if (!res) {
             return false
           }
@@ -65,7 +68,9 @@ export const composeConditionalMiddleware = (
         return true
       } else {
         for (const condition of conditions.or) {
-          const res = await (typeof condition === 'function' ? condition(ctx, emptyFunc) : getResult(condition))
+          const res = await (condition instanceof Processor
+            ? adaptMiddleware(condition)(ctx, emptyFunc)
+            : getResult(condition))
           if (res) {
             return true
           }
@@ -73,22 +78,20 @@ export const composeConditionalMiddleware = (
         return false
       }
     }
-    const result = await getResult(middlewareConditions)
-    await processor(result)
+    const result = await getResult(processorConditions)
+    await resultHandler(result)
     await next()
   }
 }
 
-export function Authorization(middleware: IMiddleware) {
+export function Authorization(processor: AuthorizationProcessor) {
   return (...args: any[]) => {
     if (args.length === 1) {
       const [constructor] = args
-      const mw: List<IMiddleware> = Reflect.getOwnMetadata(MetadataKey.AUTHORIZATION, constructor.prototype) || List()
-      Reflect.defineMetadata(MetadataKey.AUTHORIZATION, mw.concat(middleware), constructor.prototype)
+      Reflect.defineMetadata(MetadataKey.AUTHORIZATION, processor, constructor.prototype)
     } else {
       const [target, propertyKey] = args
-      const mw: List<IMiddleware> = Reflect.getOwnMetadata(MetadataKey.AUTHORIZATION, target, propertyKey) || List()
-      Reflect.defineMetadata(MetadataKey.AUTHORIZATION, mw.concat(middleware), target, propertyKey)
+      Reflect.defineMetadata(MetadataKey.AUTHORIZATION, processor, target, propertyKey)
     }
   }
 }

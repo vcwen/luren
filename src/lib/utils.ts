@@ -86,7 +86,7 @@ export const adaptMiddleware = <T>(
   return async function middleware(ctx: Context, next: INext) {
     const paramsMetadata: List<ParamMetadata> =
       Reflect.getOwnMetadata(MetadataKey.PARAMS, middleware, 'process') || List()
-    let result: any
+    let result: T
     if (paramsMetadata.isEmpty()) {
       result = await processor.process(ctx, next)
     } else {
