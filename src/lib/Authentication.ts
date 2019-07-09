@@ -1,11 +1,17 @@
 import { Context, Middleware } from 'koa'
+import uid from 'uid-safe'
 import { AuthenticationType, HttpStatusCode } from '../constants'
 import { getRequestParam } from './helper'
 import Processor from './Processor'
 import { adaptMiddleware } from './utils'
 
 export default abstract class AuthenticationProcessor extends Processor<boolean> {
+  public name: string
   public abstract type: AuthenticationType
+  constructor(name: string) {
+    super()
+    this.name = name
+  }
   public abstract async process(...args: any[]): Promise<boolean>
   public toMiddleware(): Middleware {
     return adaptMiddleware(this, async (res, ctx, next) => {
@@ -26,11 +32,19 @@ export class APIKeyAuthentication extends AuthenticationProcessor {
   public key: string
   public source: string
   private validateKey: (key: string) => Promise<boolean>
-  constructor(key: string, source: string, validateKey: (key: string) => Promise<boolean>) {
-    super()
-    this.key = key
-    this.validateKey = validateKey
-    this.source = source
+  constructor(options: {
+    name?: string
+    key: string
+    source: string
+    validateKey: (key: string) => Promise<boolean>
+    description?: string
+  }) {
+    // tslint:disable-next-line: no-magic-numbers
+    super(options.name || 'API_KEY_' + uid.sync(5))
+    this.key = options.key
+    this.validateKey = options.validateKey
+    this.source = options.source
+    this.description = options.description
   }
   public async process(context: Context): Promise<boolean> {
     const apiKey = getRequestParam(context.request, this.key, this.source)
@@ -71,7 +85,7 @@ export class APIKeyAuthentication extends AuthenticationProcessor {
 export class NoneAuthentication extends AuthenticationProcessor {
   public type = AuthenticationType.NONE
   constructor() {
-    super()
+    super('')
   }
   public async process(): Promise<boolean> {
     return true

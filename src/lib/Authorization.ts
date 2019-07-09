@@ -1,10 +1,16 @@
 import { Context, Middleware } from 'koa'
 import { HttpStatusCode } from '../constants'
-import { IMiddlewareAdaptable, IProcessorConditions } from '../types'
+import { IProcessorConditions } from '../types'
 import Processor from './Processor'
 import { adaptMiddleware } from './utils'
 
-export default abstract class AuthorizationProcessor implements IMiddlewareAdaptable<boolean> {
+export default abstract class AuthorizationProcessor extends Processor<boolean> {
+  public name: string
+  constructor(name: string, descriptions?: string) {
+    super()
+    this.name = name
+    this.description = descriptions
+  }
   public abstract async process(...args: any[]): Promise<boolean>
   public toMiddleware(): Middleware {
     return adaptMiddleware(this, async (res, ctx, next) => {
@@ -21,8 +27,8 @@ export default abstract class AuthorizationProcessor implements IMiddlewareAdapt
 // tslint:disable-next-line: max-classes-per-file
 export class ComposedAuthorizationProcessor extends AuthorizationProcessor {
   private _conditions: IProcessorConditions
-  constructor(conditions: IProcessorConditions) {
-    super()
+  constructor(name: string, conditions: IProcessorConditions) {
+    super(name)
     this._conditions = conditions
   }
   public async process(ctx: Context): Promise<boolean> {
