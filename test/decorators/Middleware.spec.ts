@@ -5,7 +5,8 @@ import 'reflect-metadata'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Get } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
-import { Middleware } from '../../src/decorators/Middleware'
+import { Authentication, Middleware } from '../../src/decorators/Middleware'
+import AuthenticationProcessor, { APIKeyAuthentication } from '../../src/lib/Authentication'
 describe('Middleware decorator', () => {
   describe('Middleware', () => {
     it('should set middleware for controller', () => {
@@ -74,6 +75,27 @@ describe('Middleware decorator', () => {
       // tslint:disable-next-line:no-magic-numbers
       expect(middleware.size).toBe(2)
       expect(middleware.toArray()).toEqual([middleware1, middleware2])
+    })
+  })
+  describe('Authentication', () => {
+    it('authenticate the controller', () => {
+      const auth = new APIKeyAuthentication({
+        name: 'api_key',
+        key: 'authorization',
+        source: 'header',
+        async validateKey(token: string) {
+          return token === 'my_token'
+        }
+      })
+      // tslint:disable-next-line: max-classes-per-file
+      @Controller()
+      @Authentication(auth)
+      class TestController {}
+      const processor: AuthenticationProcessor = Reflect.getMetadata(
+        MetadataKey.AUTHENTICATION,
+        TestController.prototype
+      )
+      expect(processor).toBe(auth)
     })
   })
 })
