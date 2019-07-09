@@ -340,7 +340,7 @@ export class Luren implements IKoa {
   }
   private _loadControllers() {
     const ctrls = this._controllers.map((ctrl) => createController(this, ctrl))
-    const router = loadControllersRouter(ctrls, this._securitySettings)
+    const router = loadControllersRouter(ctrls)
     this._router.use(router.routes())
   }
 }

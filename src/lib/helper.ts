@@ -13,9 +13,9 @@ import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
-import { ISecuritySettings } from '../types'
 import Action from './Action'
 import AuthenticationProcessor from './Authentication'
+import AuthorizationProcessor from './Authorization'
 import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
@@ -188,7 +188,11 @@ export function createAction(luren: Luren, controller: object, propKey: string, 
   const process = createProcess(controller, propKey)
   const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
   action.middleware = middleware
-  const authentication: AuthenticationProcessor = Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller, propKey)
+  const authentication: AuthenticationProcessor | undefined = Reflect.getMetadata(
+    MetadataKey.AUTHENTICATION,
+    controller,
+    propKey
+  )
   if (authentication) {
     middleware = middleware.unshift(authentication.toMiddleware())
   }
@@ -217,23 +221,33 @@ export function createController(luren: Luren, ctrl: object) {
   controller.version = ctrlMetadata.version
   controller.desc = ctrlMetadata.desc
   controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
+  const authentication =
+    Reflect.getMetadata(MetadataKey.AUTHENTICATION, ctrl) || luren.getSecuritySettings().authentication
+  if (authentication) {
+    controller.securitySettings.authentication = authentication
+  }
+
+  const authorization: AuthorizationProcessor | undefined =
+    Reflect.getMetadata(MetadataKey.AUTHORIZATION, ctrl) || luren.getSecuritySettings().authorization
+  if (authorization) {
+    controller.securitySettings.authorization = authorization
+  }
 
   controller.actions = createActions(luren, ctrl)
   return controller
 }
 
-export function createControllerRouter(controller: Controller, securitySettings: ISecuritySettings) {
+export function createControllerRouter(controller: Controller) {
   const router = new Router({ prefix: controller.prefix })
   let ctrlMiddleware = controller.middleware
-  const ctrlAuthentication: AuthenticationProcessor =
-    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller) || securitySettings.authentication
+  const ctrlAuthentication: AuthenticationProcessor = Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller)
 
   if (ctrlAuthentication && ctrlAuthentication.type !== AuthenticationType.NONE) {
     ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication.toMiddleware())
   }
-  const ctrlAuthorization = controller.securitySettings.authorization || securitySettings.authorization
+  const ctrlAuthorization = controller.securitySettings.authorization
   if (ctrlAuthorization) {
-    ctrlMiddleware = ctrlMiddleware.push(ctrlAuthorization)
+    ctrlMiddleware = ctrlMiddleware.push(ctrlAuthorization.toMiddleware())
   }
   router.use(...ctrlMiddleware)
 
@@ -248,17 +262,17 @@ export function createControllerRouter(controller: Controller, securitySettings:
     }
     const authorization = action.securitySettings.authorization
     if (authorization) {
-      middleware = middleware.push(authorization)
+      middleware = middleware.push(authorization.toMiddleware())
     }
     ;(router as any)[action.method.toLowerCase()](path, ...middleware, action.process)
   }
   return router
 }
 
-export function loadControllersRouter(controllers: List<Controller>, securitySettings: ISecuritySettings) {
+export function loadControllersRouter(controllers: List<Controller>) {
   const router = new Router()
   controllers.forEach((ctrl) => {
-    const ctrlRouter = createControllerRouter(ctrl, securitySettings)
+    const ctrlRouter = createControllerRouter(ctrl)
     router.use(ctrlRouter.routes())
   })
   return router
