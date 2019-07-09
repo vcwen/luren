@@ -3,15 +3,17 @@ import { createJsDataTypes } from 'luren-schema'
 export const JsDataTypes = createJsDataTypes()
 
 JsDataTypes.add('file', {
-  json: {
-    type: 'string',
-    additionalProps: { format: 'binary' }
+  toJsonSchema() {
+    return {
+      type: 'string',
+      format: 'binary'
+    }
   }
 })
 JsDataTypes.add('stream', {
-  json: {
-    type: 'string',
-    additionalProps: {
+  toJsonSchema() {
+    return {
+      type: 'string',
       format: 'binary'
     }
   }
