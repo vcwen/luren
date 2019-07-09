@@ -281,7 +281,7 @@ export function loadControllersRouter(controllers: List<Controller>) {
 export const getRequestParam = (request: Request, key: string, source: string) => {
   switch (source) {
     case 'header':
-      return _.get(request, ['header', key])
+      return _.get(request, ['header', key.toLowerCase()])
     case 'path':
       return _.get(request, ['params', key])
     case 'query':
