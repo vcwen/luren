@@ -151,8 +151,10 @@ export class Luren implements IKoa {
   public getRouter() {
     return this._router
   }
-  public getHttpServer() {
-    return this._httpServer
+  public close() {
+    if (this._httpServer) {
+      this._httpServer.close()
+    }
   }
 
   public getControllers() {
