@@ -145,12 +145,6 @@ export class Luren implements IKoa {
     }
   }
 
-  public getKoa() {
-    return this._koa
-  }
-  public getRouter() {
-    return this._router
-  }
   public close() {
     if (this._httpServer) {
       this._httpServer.close()
@@ -187,18 +181,15 @@ export class Luren implements IKoa {
     }
   }
 
-  public use(...middleware: Koa.Middleware[]): Router
-  public use(path: string, ...middleware: Koa.Middleware[]): Router
+  public use(middleware: Koa.Middleware): Luren
+  public use(path: string, middleware: Koa.Middleware): Luren
   public use(...args: any[]) {
-    if (args.length === 0) {
-      return
-    }
-    const path = args[0]
-    if (typeof path === 'string') {
-      return this._router.use(path, ..._.tail(args))
+    if (args.length === 1) {
+      this._koa.use(args[0])
     } else {
-      return this._router.use(args)
+      this._koa.use(mount(args[0], args[1]))
     }
+    return this
   }
 
   public serve(path: string, options: SendOptions): void
