@@ -20,7 +20,7 @@ build: compile
 test: export NODE_ENV = testing
 test: node_modules
 	NODE_ENV=testing npx jest --runInBand
-publish: build
+publish: test build
 	standard-version -r ${VER} &&  npm publish
 clean:
 	rm -rf ./dist
