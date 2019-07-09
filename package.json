@@ -1,6 +1,6 @@
 {
   "name": "luren",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Luren is a simple framework based on Koa2",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
