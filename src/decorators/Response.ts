@@ -15,10 +15,10 @@ export interface IResponseOptions {
 
 export class ResponseMetadata {
   public status: number = HttpStatusCode.OK
-  public schema: IJsSchema
   public strict: boolean = false
   public mime?: string
   public desc?: string
+  public schema: IJsSchema
   constructor(status: number, schema: IJsSchema, strict: boolean = true, desc?: string) {
     this.status = status
     this.schema = schema
@@ -55,7 +55,7 @@ export function ErrorResponse(options: IErrorOptions): PropertyDecorator {
   return (target: any, propertyKey: string) => {
     let resMetadata: Map<number, ResponseMetadata> =
       Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
-    const status = options.status || HttpStatusCode.OK
+    const status = options.status
     const schema = options.schema ? options.schema : normalizeSimpleSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.strict, options.desc)
     resMetadata = resMetadata.set(metadata.status, metadata)

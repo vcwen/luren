@@ -1,2 +1,2 @@
-export * from './LurenDatasource'
+export * from './LurenDataSource'
 export * from './LurenQueryExecutor'
