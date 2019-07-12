@@ -1,9 +1,9 @@
-import { IDatasourceOptions, IQueryExecutor, LurenDatasource } from '../../src'
+import { IDataSourceOptions, IQueryExecutor, LurenDatasource } from '../../src'
 import { Constructor } from '../../src/types/Constructor'
 
 describe('LurenDatasource', () => {
   it('should define base protocol', () => {
-    class Datasource extends LurenDatasource {
+    class DataSource extends LurenDatasource {
       public async getQueryExecutor<T>(model: Constructor<T>): Promise<IQueryExecutor> {
         return model as any
       }
@@ -13,11 +13,11 @@ describe('LurenDatasource', () => {
       public getUrl() {
         return this._connectUrl
       }
-      protected getConnectUrl(options: IDatasourceOptions): string {
+      protected getConnectUrl(options: IDataSourceOptions): string {
         return options.url as string
       }
     }
-    const ds = new Datasource({ url: 'test://connect_url' })
+    const ds = new DataSource({ url: 'test://connect_url' })
     expect(ds.getUrl()).toBe('test://connect_url')
   })
 })

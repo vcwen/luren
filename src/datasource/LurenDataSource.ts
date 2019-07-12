@@ -1,7 +1,7 @@
 import { Constructor } from '../types/Constructor'
 import { IQueryExecutor } from './LurenQueryExecutor'
 
-export interface IDatasourceOptions {
+export interface IDataSourceOptions {
   url?: string
   host?: string
   port?: number
@@ -15,10 +15,10 @@ export interface IDataSource {
 
 export abstract class LurenDatasource implements IDataSource {
   protected _connectUrl: string
-  constructor(options: IDatasourceOptions) {
+  constructor(options: IDataSourceOptions) {
     this._connectUrl = this.getConnectUrl(options)
   }
   public abstract getQueryExecutor<T extends object>(model: Constructor<T>): Promise<IQueryExecutor>
   public abstract loadSchema<T extends object>(model: Constructor<T>): Promise<boolean>
-  protected abstract getConnectUrl(options: IDatasourceOptions): string
+  protected abstract getConnectUrl(options: IDataSourceOptions): string
 }

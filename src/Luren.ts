@@ -16,7 +16,7 @@ import { Server } from 'net'
 import Path from 'path'
 import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
-import { IDatasource } from './datasource/LurenDatasource'
+import { IDataSource } from './datasource/LurenDataSource'
 import AuthenticationProcessor from './lib/Authentication'
 import { createController, loadControllersRouter } from './lib/helper'
 import { adaptMiddleware, getFileLoaderConfig, importModules } from './lib/utils'
@@ -60,7 +60,7 @@ export class Luren implements IKoa {
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
-  private _datasource: Map<string, IDatasource> = Map()
+  private _datasource: Map<string, IDataSource> = Map()
   private _httpServer?: Server
   private _securitySettings: ISecuritySettings = {}
   private _defaultBodyParser?: Middleware = adaptMiddleware(new BodyParser())
@@ -155,12 +155,12 @@ export class Luren implements IKoa {
     return this._controllers
   }
 
-  public addDatasource(name: string, datasource: IDatasource) {
-    this._datasource = this._datasource.set(name, datasource)
+  public addDatasource(name: string, dataSource: IDataSource) {
+    this._datasource = this._datasource.set(name, dataSource)
   }
 
-  public setDefaultDatasource(datasource: IDatasource) {
-    this._datasource = this._datasource.set('default', datasource)
+  public setDefaultDatasource(dataSource: IDataSource) {
+    this._datasource = this._datasource.set('default', dataSource)
   }
 
   public registerControllers(...controllers: object[]) {
