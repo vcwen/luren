@@ -8,12 +8,12 @@ export interface IDatasourceOptions {
   [prop: string]: any
 }
 
-export interface IDatasource {
+export interface IDataSource {
   getQueryExecutor<T extends object>(model: Constructor<T>): Promise<IQueryExecutor>
   loadSchema<T extends object>(model: Constructor<T>): Promise<boolean>
 }
 
-export abstract class LurenDatasource implements IDatasource {
+export abstract class LurenDatasource implements IDataSource {
   protected _connectUrl: string
   constructor(options: IDatasourceOptions) {
     this._connectUrl = this.getConnectUrl(options)
