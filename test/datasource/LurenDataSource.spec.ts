@@ -1,9 +1,9 @@
-import { IDataSourceOptions, IQueryExecutor, LurenDatasource } from '../../src'
+import { IDataSourceOptions, IQueryExecutor, LurenDataSource } from '../../src'
 import { Constructor } from '../../src/types/Constructor'
 
-describe('LurenDatasource', () => {
+describe('LurenDataSource', () => {
   it('should define base protocol', () => {
-    class DataSource extends LurenDatasource {
+    class DataSource extends LurenDataSource {
       public async getQueryExecutor<T>(model: Constructor<T>): Promise<IQueryExecutor> {
         return model as any
       }

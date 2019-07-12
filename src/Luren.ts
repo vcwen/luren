@@ -155,11 +155,11 @@ export class Luren implements IKoa {
     return this._controllers
   }
 
-  public addDatasource(name: string, dataSource: IDataSource) {
+  public addDataSource(name: string, dataSource: IDataSource) {
     this._datasource = this._datasource.set(name, dataSource)
   }
 
-  public setDefaultDatasource(dataSource: IDataSource) {
+  public setDefaultDataSource(dataSource: IDataSource) {
     this._datasource = this._datasource.set('default', dataSource)
   }
 

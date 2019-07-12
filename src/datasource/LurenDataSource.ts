@@ -13,7 +13,7 @@ export interface IDataSource {
   loadSchema<T extends object>(model: Constructor<T>): Promise<boolean>
 }
 
-export abstract class LurenDatasource implements IDataSource {
+export abstract class LurenDataSource implements IDataSource {
   protected _connectUrl: string
   constructor(options: IDataSourceOptions) {
     this._connectUrl = this.getConnectUrl(options)
