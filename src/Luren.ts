@@ -77,13 +77,12 @@ export class Luren implements IKoa {
     this._koa.use(helmet())
     this._koa.use(new ErrorProcessor(this._eventEmitter).toMiddleware())
     this._router = new Router()
-    if (options) {
-      this._container = options.container
-      this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
-      this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
-      this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
-      this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
-    }
+    options = options || {}
+    this._container = options.container
+    this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
+    this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
+    this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
+    this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
   }
 
   public get proxy() {
