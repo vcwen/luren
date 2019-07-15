@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.33](https://github.com/vcwen/luren/compare/v0.0.32...v0.0.33) (2019-07-15)
+
+
+### Bug Fixes
+
+* **Luren:** constructor ([0a5df0e](https://github.com/vcwen/luren/commit/0a5df0e))
+
+
+
 ### [0.0.32](https://github.com/vcwen/luren/compare/v0.0.31...v0.0.32) (2019-07-12)
 
 
