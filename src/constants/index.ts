@@ -6,5 +6,5 @@ export * from './ServiceIdentifier'
 
 export enum AuthenticationType {
   NONE = 'NONE',
-  API_KEY = 'API_KEY'
+  API_TOKEN = 'API_TOKEN'
 }
