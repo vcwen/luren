@@ -1,92 +1,14 @@
-# Changelog
+# Change Log
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [0.0.33](https://github.com/vcwen/luren/compare/v0.0.32...v0.0.33) (2019-07-15)
+<a name="0.0.34"></a>
+## [0.0.34](https://github.com/vcwen/luren/compare/v0.0.30...v0.0.34) (2019-07-19)
 
 
 ### Bug Fixes
 
 * **Luren:** constructor ([0a5df0e](https://github.com/vcwen/luren/commit/0a5df0e))
-
-
-
-### [0.0.32](https://github.com/vcwen/luren/compare/v0.0.31...v0.0.32) (2019-07-12)
-
-
-
-### [0.0.31](https://github.com/vcwen/luren/compare/v0.0.30...v0.0.31) (2019-07-12)
-
-
-
-### [0.0.30](https://github.com/vcwen/luren/compare/v0.0.29...v0.0.30) (2019-07-12)
-
-
-
-### [0.0.29](https://github.com/vcwen/luren/compare/v0.0.28...v0.0.29) (2019-07-09)
-
-
-### Bug Fixes
-
-* **helper.ts:** param name to lower case ([405f534](https://github.com/vcwen/luren/commit/405f534))
-
-
-
-### [0.0.28](https://github.com/vcwen/luren/compare/v0.0.27...v0.0.28) (2019-07-09)
-
-
-
-### [0.0.27](https://github.com/vcwen/luren/compare/v0.0.26...v0.0.27) (2019-07-09)
-
-
-### Bug Fixes
-
-* **schema:** fix according to new luren-schema version ([b361a0b](https://github.com/vcwen/luren/commit/b361a0b))
-
-
-
-### [0.0.26](https://github.com/vcwen/luren/compare/v0.0.25...v0.0.26) (2019-07-09)
-
-
-### Bug Fixes
-
-* **luren:** fix use() ([5dea083](https://github.com/vcwen/luren/commit/5dea083))
-
-
-
-### [0.0.25](https://github.com/vcwen/luren/compare/v0.0.24...v0.0.25) (2019-07-09)
-
-
-
-### [0.0.24](https://github.com/vcwen/luren/compare/v0.0.23...v0.0.24) (2019-07-09)
-
-
-
-### [0.0.23](https://github.com/vcwen/luren/compare/v0.0.22...v0.0.23) (2019-07-09)
-
-
-
-### [0.0.22](https://github.com/vcwen/luren/compare/v0.0.21...v0.0.22) (2019-07-09)
-
-
-
-### [0.0.21](https://github.com/vcwen/luren/compare/v0.0.20...v0.0.21) (2019-07-08)
-
-
-
-### [0.0.20](https://github.com/vcwen/luren/compare/v0.0.16...v0.0.20) (2019-07-08)
-
-
-### Bug Fixes
-
-* **all:** fix issues & tests ([5ea3075](https://github.com/vcwen/luren/commit/5ea3075))
-* **Luren:** fix controllers ([4d3221d](https://github.com/vcwen/luren/commit/4d3221d))
-* **Luren:** middlewareOptions optional ([da9b94f](https://github.com/vcwen/luren/commit/da9b94f))
-
-
-### Features
-
-* **middleware:** authetication & authorization ([6fdc6f2](https://github.com/vcwen/luren/commit/6fdc6f2))
 
 
 
