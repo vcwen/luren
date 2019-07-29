@@ -2839,10 +2839,11 @@ loose-envify@^1.0.0:
   integrity sha1-ce5R+nvkyuwaY4OffmgtgTLTDK8=
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
-luren-schema@^0.0.28:
-  version "0.0.28"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.28.tgz?cache=0&sync_timestamp=1563522024391&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.0.28.tgz#731d0340d55937a7bc2523f03825a1f1404fa477"
-  integrity sha1-cx0DQNVZN6e8JSPwOCWh8UBPpHc=
+
+luren-schema@^0.0.33:
+  version "0.0.33"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.33.tgz#d95cfb6bfae1c273820c6a6d217324566f9c0f66"
+  integrity sha1-2Vz7a/rhwnOCDGptIXMkVm+cD2Y=
   dependencies:
     immutable "^4.0.0-rc.12"
     lodash "^4.17.11"

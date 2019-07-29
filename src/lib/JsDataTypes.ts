@@ -1,7 +1,5 @@
-import { createJsDataTypes, defineSchema, IJsSchema } from 'luren-schema'
+import { defineSchema, IJsSchema, JsDataTypes } from 'luren-schema'
 import IncomingFile from './IncomingFile'
-
-export const JsDataTypes = createJsDataTypes()
 
 defineSchema(IncomingFile, { type: 'file' })
 

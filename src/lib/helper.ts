@@ -4,7 +4,7 @@ import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { deserialize, jsSchemaToJsonSchema, serialize } from 'luren-schema'
+import { deserialize, JsDataTypes, jsSchemaToJsonSchema, serialize } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
@@ -19,7 +19,6 @@ import AuthorizationProcessor from './Authorization'
 import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
-import { JsDataTypes } from './JsDataTypes'
 
 const ajv = new Ajv()
 
