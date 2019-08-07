@@ -133,7 +133,7 @@ describe('Luren', () => {
       server.close()
     }
   })
-  it("should transform the response if it's strict", async () => {
+  it('should error if response is wrong', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
     const p = new Promise((resolve) => {
@@ -146,7 +146,6 @@ describe('Luren', () => {
         resolve()
       })
     })
-
     luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {

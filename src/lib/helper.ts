@@ -4,7 +4,7 @@ import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { deserialize, JsDataTypes, jsSchemaToJsonSchema, serialize } from 'luren-schema'
+import { deserialize, serialize, toJsonSchema } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
@@ -97,7 +97,7 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
       return value
     }
     const schema = metadata.schema
-    const jsonSchema: IJsonSchema = jsSchemaToJsonSchema(schema, JsDataTypes)
+    const jsonSchema: IJsonSchema = toJsonSchema(schema)
     if (jsonSchema.type && jsonSchema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
@@ -110,7 +110,7 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
       throw Boom.badRequest(ajv.errorsText())
     }
     try {
-      value = deserialize(schema, value, JsDataTypes)
+      value = deserialize(value, schema)
     } catch (err) {
       throw Boom.badRequest(err)
     }
@@ -144,7 +144,7 @@ export function createUserProcess(controller: any, propKey: string) {
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
       const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
       if (resMetadata) {
-        ctx.body = serialize(resMetadata.schema, response, JsDataTypes)
+        ctx.body = serialize(response, resMetadata.schema)
       } else {
         ctx.body = response
       }
@@ -169,7 +169,7 @@ export function createProcess(controller: object, propKey: string) {
           if (resMetadata.schema.type === 'string') {
             ctx.body = errorMessage
           } else {
-            ctx.body = serialize(resMetadata.schema, errorData, JsDataTypes)
+            ctx.body = serialize(errorData, resMetadata.schema)
           }
         } else {
           ctx.body = errorMessage

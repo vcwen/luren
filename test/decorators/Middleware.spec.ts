@@ -6,7 +6,7 @@ import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Get } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
 import { Authentication, Middleware } from '../../src/decorators/Middleware'
-import AuthenticationProcessor, { APIKeyAuthentication } from '../../src/lib/Authentication'
+import AuthenticationProcessor, { APITokenAuthentication } from '../../src/lib/Authentication'
 describe('Middleware decorator', () => {
   describe('Middleware', () => {
     it('should set middleware for controller', () => {
@@ -79,11 +79,11 @@ describe('Middleware decorator', () => {
   })
   describe('Authentication', () => {
     it('authenticate the controller', () => {
-      const auth = new APIKeyAuthentication({
+      const auth = new APITokenAuthentication({
         name: 'api_key',
         key: 'authorization',
         source: 'header',
-        async validateKey(token: string) {
+        async validate(token: string) {
           return token === 'my_token'
         }
       })

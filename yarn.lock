@@ -641,6 +641,16 @@ ajv@^6.10.0, ajv@^6.5.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
+ajv@^6.10.2:
+  version "6.10.2"
+  resolved "https://registry.npm.taobao.org/ajv/download/ajv-6.10.2.tgz#d3cea04d6b017b2894ad69040fec8b623eb4bd52"
+  integrity sha1-086gTWsBeyiUrWkED+yLYj60vVI=
+  dependencies:
+    fast-deep-equal "^2.0.1"
+    fast-json-stable-stringify "^2.0.0"
+    json-schema-traverse "^0.4.1"
+    uri-js "^4.2.2"
+
 ansi-escapes@^3.0.0:
   version "3.2.0"
   resolved "https://registry.npm.taobao.org/ansi-escapes/download/ansi-escapes-3.2.0.tgz#8780b98ff9dbf5638152d1f1fe5c1d7b4442976b"
@@ -2840,11 +2850,12 @@ loose-envify@^1.0.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
-luren-schema@^0.0.33:
-  version "0.0.33"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.33.tgz#d95cfb6bfae1c273820c6a6d217324566f9c0f66"
-  integrity sha1-2Vz7a/rhwnOCDGptIXMkVm+cD2Y=
+luren-schema@^0.0.35:
+  version "0.0.35"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.35.tgz?cache=0&sync_timestamp=1565161767097&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.0.35.tgz#fc580a8c29b8feb7bde8ebe71684e63b259c0c73"
+  integrity sha1-/FgKjCm4/re96OvnFoTmOyWcDHM=
   dependencies:
+    ajv "^6.10.2"
     immutable "^4.0.0-rc.12"
     lodash "^4.17.11"
     reflect-metadata "^0.1.13"

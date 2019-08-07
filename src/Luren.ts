@@ -1,3 +1,5 @@
+import './lib/JsDataTypes'
+
 import Debug from 'debug'
 import { EventEmitter } from 'events'
 import { IncomingMessage, ServerResponse } from 'http'
