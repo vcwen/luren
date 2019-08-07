@@ -3,7 +3,7 @@ import bodyParser = require('koa-bodyparser')
 import { Prop, Schema } from 'luren-schema'
 import Path from 'path'
 import request from 'supertest'
-import { HttpMethod, HttpStatusCode, redirect } from '../src'
+import { APITokenAuthentication, HttpMethod, HttpStatusCode, redirect } from '../src'
 import { ParamSource } from '../src/constants/ParamSource'
 import { Action, Controller, Middleware, Param, Response } from '../src/decorators'
 import IncomingFile from '../src/lib/IncomingFile'
@@ -83,6 +83,29 @@ describe('Luren', () => {
         .get('/api/people/hello?name=vincent')
         .expect(200)
       expect(res.body).toEqual({ name: 'vincent', age: 15 })
+    } finally {
+      server.close()
+    }
+  })
+  it('should authenticate the request', async () => {
+    const luren = new Luren()
+    luren.setDefaultAuthentication(
+      new APITokenAuthentication({
+        key: 'Authorization',
+        source: 'header',
+        validate: async (token) => {
+          return token === 'my_token'
+        }
+      })
+    )
+    const ctrl = new PersonController()
+    luren.registerControllers(ctrl)
+    const server = await luren.listen(3001)
+    try {
+      await request(server)
+        .get('/api/people/hello?name=vincent')
+        .set('Authorization', 'my_toke')
+        .expect(401)
     } finally {
       server.close()
     }

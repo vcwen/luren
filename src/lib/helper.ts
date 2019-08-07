@@ -186,19 +186,24 @@ export function createAction(luren: Luren, controller: object, propKey: string, 
   let middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   const process = createProcess(controller, propKey)
   const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
-  action.middleware = middleware
-  const authentication: AuthenticationProcessor | undefined = Reflect.getMetadata(
-    MetadataKey.AUTHENTICATION,
-    controller,
-    propKey
-  )
-  if (authentication) {
+
+  const authentication: AuthenticationProcessor | undefined =
+    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller, propKey) ||
+    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller) ||
+    luren.getSecuritySettings().authentication
+  if (authentication && authentication.type !== AuthenticationType.NONE) {
     middleware = middleware.unshift(authentication.toMiddleware())
   }
-  const authorization = Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller, propKey)
+  const authorization: AuthorizationProcessor | undefined =
+    Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller, propKey) ||
+    Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller) ||
+    luren.getSecuritySettings().authorization
   if (authorization) {
-    middleware = middleware.push(authorization)
+    middleware = middleware.push(authorization.toMiddleware())
   }
+  action.securitySettings.authentication = authentication
+  action.securitySettings.authorization = authorization
+  action.middleware = middleware
   return action
 }
 
@@ -238,32 +243,11 @@ export function createController(luren: Luren, ctrl: object) {
 
 export function createControllerRouter(controller: Controller) {
   const router = new Router({ prefix: controller.prefix })
-  let ctrlMiddleware = controller.middleware
-  const ctrlAuthentication: AuthenticationProcessor = Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller)
-
-  if (ctrlAuthentication && ctrlAuthentication.type !== AuthenticationType.NONE) {
-    ctrlMiddleware = ctrlMiddleware.unshift(ctrlAuthentication.toMiddleware())
-  }
-  const ctrlAuthorization = controller.securitySettings.authorization
-  if (ctrlAuthorization) {
-    ctrlMiddleware = ctrlMiddleware.push(ctrlAuthorization.toMiddleware())
-  }
-  router.use(...ctrlMiddleware)
-
+  router.use(...controller.middleware)
   for (const action of controller.actions) {
     const version = action.version || controller.version || ''
     const path = Path.join('/', version, controller.path, action.path)
-    let middleware = action.middleware
-    const authentication = action.securitySettings.authentication
-
-    if (authentication && ctrlAuthentication.type !== AuthenticationType.NONE) {
-      middleware = middleware.unshift(authentication.toMiddleware())
-    }
-    const authorization = action.securitySettings.authorization
-    if (authorization) {
-      middleware = middleware.push(authorization.toMiddleware())
-    }
-    ;(router as any)[action.method.toLowerCase()](path, ...middleware, action.process)
+    ;(router as any)[action.method.toLowerCase()](path, ...action.middleware, action.process)
   }
   return router
 }
