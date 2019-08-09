@@ -1,6 +1,20 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.0.35](https://github.com/vcwen/luren/compare/v0.0.33...v0.0.35) (2019-08-09)
+
+
+### Build System
+
+* **package.json:** upgrade deps ([50ea4d5](https://github.com/vcwen/luren/commit/50ea4d5))
+
+
+### Features
+
+* **all:** upgrade luren-schema ([3ee66c8](https://github.com/vcwen/luren/commit/3ee66c8))
+
+
 
 <a name="0.0.34"></a>
 ## [0.0.34](https://github.com/vcwen/luren/compare/v0.0.30...v0.0.34) (2019-07-19)
