@@ -1,6 +1,6 @@
 import { List } from 'immutable'
 import _ from 'lodash'
-import { IJsSchema, normalizeSimpleSchema, SimpleType } from 'luren-schema'
+import { IJsSchema, SimpleType, utils } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
@@ -17,7 +17,6 @@ export interface IParamOptions {
   desc?: string
   root?: boolean
   format?: string
-  strict?: boolean
   mime?: string
 }
 
@@ -28,10 +27,9 @@ export class ParamMetadata {
   public required: boolean = false
   public root: boolean = false
   public format?: string
-  public strict: boolean = true
   public mime?: string
   public desc?: string
-  constructor(name: string = '', source: Source, schema: IJsSchema, required: boolean = false) {
+  constructor(name: string = '', source: Source, schema: IJsSchema, required: boolean) {
     this.name = name
     this.source = source
     this.schema = schema
@@ -44,18 +42,18 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
   let paramRequired = options.required
   if (options.schema) {
     paramSchema = options.schema
+    if (paramRequired === undefined) {
+      paramRequired = true
+    }
   } else {
-    const [schema, required] = normalizeSimpleSchema(options.type || 'string')
+    const [schema, required] = utils.convertSimpleSchemaToJsSchema(options.type || 'string')
     paramSchema = schema
-    if (typeof paramRequired !== 'boolean') {
+    if (paramRequired === undefined) {
       paramRequired = required
     }
   }
   const metadata = new ParamMetadata(options.name, options.in || ParamSource.QUERY, paramSchema, paramRequired)
   metadata.root = options.root || false
-  if (options.strict) {
-    metadata.strict = true
-  }
   metadata.format = options.format
   metadata.mime = options.mime
 
@@ -140,15 +138,15 @@ export function Request() {
 export function Session() {
   return Param({ in: ParamSource.SESSION, root: true, type: 'object' })
 }
-export function Body() {
-  return Param({ in: ParamSource.BODY, root: true, type: 'object' })
+export function Body(type: SimpleType = 'object') {
+  return Param({ in: ParamSource.BODY, root: true, type })
 }
 
 export function Next() {
   return Param({ in: ParamSource.NEXT, type: 'function' })
 }
 
-function inSource(source: ParamSource) {
+export function inSource(source: ParamSource) {
   return (...args: any[]) => {
     let name: string
     let type: SimpleType = 'string'
