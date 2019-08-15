@@ -1,6 +1,7 @@
 import { Context, Middleware } from 'koa'
 import uid from 'uid-safe'
 import { AuthenticationType, HttpStatusCode } from '../constants'
+import { INext } from '../types'
 import { getRequestParam } from './helper'
 import Processor from './Processor'
 import { adaptMiddleware } from './utils'
@@ -23,7 +24,6 @@ export default abstract class AuthenticationProcessor extends Processor<boolean>
       }
     })
   }
-  public abstract equals(another: AuthenticationProcessor): boolean
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -54,31 +54,6 @@ export class APITokenAuthentication extends AuthenticationProcessor {
       return false
     }
   }
-  public equals(another: AuthenticationProcessor) {
-    if (this === another) {
-      return true
-    }
-    if (another instanceof APITokenAuthentication) {
-      if (this.type !== another.type) {
-        return false
-      }
-      if (this.name !== another.name) {
-        return false
-      }
-      if (this.key !== another.key) {
-        return false
-      }
-      if (this.source !== another.source) {
-        return false
-      }
-      if (this.validate !== another.validate) {
-        return false
-      }
-      return true
-    } else {
-      return false
-    }
-  }
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -90,7 +65,17 @@ export class NoneAuthentication extends AuthenticationProcessor {
   public async process(): Promise<boolean> {
     return true
   }
-  public equals(another: AuthenticationProcessor) {
-    return another.type === AuthenticationType.NONE
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class ComposedAuthentication extends AuthenticationProcessor {
+  public type = AuthenticationType.COMPOSED
+  private _process: (...args: any[]) => Promise<true>
+  constructor(process: (...args: any[]) => Promise<true>) {
+    super('')
+    this._process = process
+  }
+  public async process(ctx: Context, next: INext): Promise<boolean> {
+    return this._process(ctx, next)
   }
 }

@@ -1,6 +1,6 @@
 import { Context, Middleware } from 'koa'
 import { HttpStatusCode } from '../constants'
-import { IProcessorConditions } from '../types'
+import { INext } from '../types'
 import Processor from './Processor'
 import { adaptMiddleware } from './utils'
 
@@ -25,38 +25,13 @@ export default abstract class AuthorizationProcessor extends Processor<boolean> 
 }
 
 // tslint:disable-next-line: max-classes-per-file
-export class ComposedAuthorizationProcessor extends AuthorizationProcessor {
-  private _conditions: IProcessorConditions
-  constructor(name: string, conditions: IProcessorConditions) {
+export class ComposedAuthorization extends AuthorizationProcessor {
+  private _process: (...args: any[]) => Promise<boolean>
+  constructor(name: string, process: (...args: any[]) => Promise<boolean>) {
     super(name)
-    this._conditions = conditions
+    this._process = process
   }
-  public async process(ctx: Context): Promise<boolean> {
-    // tslint:disable-next-line: no-empty
-    const emptyFunc = async () => {}
-    const getResult = async (conditions: IProcessorConditions): Promise<boolean> => {
-      if (conditions.and) {
-        for (const condition of conditions.and) {
-          const res = await (condition instanceof Processor
-            ? adaptMiddleware(condition)(ctx, emptyFunc)
-            : getResult(condition))
-          if (!res) {
-            return false
-          }
-        }
-        return true
-      } else {
-        for (const condition of conditions.or) {
-          const res = await (condition instanceof Processor
-            ? adaptMiddleware(condition)(ctx, emptyFunc)
-            : getResult(condition))
-          if (res) {
-            return true
-          }
-        }
-        return false
-      }
-    }
-    return getResult(this._conditions)
+  public async process(ctx: Context, next: INext): Promise<boolean> {
+    return this._process(ctx, next)
   }
 }
