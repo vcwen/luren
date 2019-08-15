@@ -1,5 +1,3 @@
-import './lib/JsDataTypes'
-
 import Debug from 'debug'
 import { EventEmitter } from 'events'
 import { IncomingMessage, ServerResponse } from 'http'
@@ -20,6 +18,7 @@ import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDataSource } from './datasource/LurenDataSource'
 import AuthenticationProcessor from './lib/Authentication'
+import './lib/DataTypes'
 import { createController, loadControllersRouter } from './lib/helper'
 import { adaptMiddleware, getFileLoaderConfig, importModules } from './lib/utils'
 import BodyParser from './middleware/BodyParser'
