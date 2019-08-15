@@ -1,15 +1,21 @@
+const METADATA_KEY_PREFIX = 'luren:'
+
+const key = (metadataKey: string) => {
+  return METADATA_KEY_PREFIX + metadataKey
+}
+
 export const MetadataKey = {
-  AUTHENTICATION: Symbol('AUTHENTICATION'),
-  AUTHORIZATION: Symbol('AUTHORIZATION'),
-  CONTROLLER: Symbol('CONTROLLER'),
-  MIDDLEWARE: Symbol('MIDDLEWARE'),
-  ACTIONS: Symbol('ACTIONS'),
-  PARAMS: Symbol('PARAMS'),
-  RESPONSE: Symbol('RESPONSE'),
-  INDEX: Symbol('INDEX'),
-  MODEL: Symbol('MODEL'),
-  ACL: Symbol('ACL'),
-  RESOURCE: Symbol('RESOURCE')
+  AUTHENTICATION: key('AUTHENTICATION'),
+  AUTHORIZATION: key('AUTHORIZATION'),
+  CONTROLLER: key('CONTROLLER'),
+  MIDDLEWARE: key('MIDDLEWARE'),
+  ACTIONS: key('ACTIONS'),
+  PARAMS: key('PARAMS'),
+  RESPONSE: key('RESPONSE'),
+  INDEX: key('INDEX'),
+  MODEL: key('MODEL'),
+  ACL: key('ACL'),
+  RESOURCE: key('RESOURCE')
 }
 
 export default MetadataKey
