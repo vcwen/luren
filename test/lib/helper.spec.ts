@@ -82,6 +82,7 @@ const luren = new Luren()
 
 describe('helper', () => {
   describe('createAction', () => {
+    const next = async () => {}
     it('should create the action', async () => {
       const action = createProcess(controller, 'sayHello')
       const ctx: any = {
@@ -90,7 +91,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('hello vincent')
     })
     it('action should inject param from query', async () => {
@@ -101,7 +102,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from path', async () => {
@@ -112,7 +113,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from body', async () => {
@@ -123,7 +124,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from header', async () => {
@@ -134,7 +135,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject context param', async () => {
@@ -145,7 +146,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject undefined if param is not present', async () => {
@@ -159,7 +160,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.body).toEqual('hello undefined')
     })
     it('action should throw error if a required param is not present', async () => {
@@ -178,7 +179,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
     })
     it('action should inject number param', async () => {
       const action = createProcess(controller, 'numberParam')
@@ -191,7 +192,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
     })
     it('action should throw error when param has invalid data', async () => {
       const action = createProcess(controller, 'numberParam')
@@ -209,7 +210,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
     })
     it('action should valid param throw superstruct it type is object', async () => {
       const action = createProcess(controller, 'superstructParam')
@@ -227,7 +228,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
     })
     it('action should throw error if param can not pass the superstruct validation', async () => {
       const action = createProcess(controller, 'superstructParam')
@@ -241,7 +242,7 @@ describe('helper', () => {
         }
       }
       try {
-        await action(ctx)
+        await action(ctx, next)
       } catch (ex) {
         expect(ex).toBeInstanceOf(TypeError)
       }
@@ -253,7 +254,7 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx)
+      await action(ctx, next)
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual('hello')
     })
@@ -268,7 +269,7 @@ describe('helper', () => {
           return false
         }
       } as any
-      await action(ctx)
+      await action(ctx, next)
       // tslint:disable-next-line:no-magic-numbers
       expect(ctx.status).toBe(302)
     })
@@ -284,7 +285,7 @@ describe('helper', () => {
           return false
         }
       } as any
-      await action(ctx)
+      await action(ctx, next)
     })
     it("action should re-throw the error if it's not a boom error", async () => {
       const action = createProcess(controller, 'errorResponse')
@@ -293,7 +294,7 @@ describe('helper', () => {
           return false
         }
       } as any
-      action(ctx).catch((ex) => {
+      action(ctx, next).catch((ex) => {
         expect(ex).toBeInstanceOf(Error)
       })
     })

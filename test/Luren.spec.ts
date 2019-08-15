@@ -10,6 +10,7 @@ import IncomingFile from '../src/lib/IncomingFile'
 import StreamResponse from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'
 
+
 @Schema()
 class Person {
   @Prop({ required: true })
@@ -37,7 +38,7 @@ export default class PersonController {
     return redirect('http://localhost/redirect', 301)
   }
   @Action({ method: HttpMethod.PUT })
-  @Response({ type: { criteria: 'object', skip: 'number?' }, strict: true })
+  @Response({ type: { criteria: 'object', skip: 'number?' } })
   @Middleware(bodyParser() as any)
   public hog(
     @Param({ name: 'filter', in: 'body', type: { criteria: 'object', skip: 'number?', limit: 'number?' }, root: true })
@@ -47,7 +48,7 @@ export default class PersonController {
     return filter
   }
   @Action()
-  @Response({ type: { criteria: 'object', skip: 'number?' }, strict: true })
+  @Response({ type: { criteria: 'object', skip: 'number?' } })
   @Middleware(bodyParser() as any)
   public wrong() {
     // tslint:disable-next-line: no-magic-numbers

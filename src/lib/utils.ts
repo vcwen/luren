@@ -90,7 +90,7 @@ export const adaptMiddleware = <T>(
     if (paramsMetadata.isEmpty()) {
       result = await processor.process(ctx, next)
     } else {
-      const args = getParams(ctx, paramsMetadata)
+      const args = getParams(ctx, next, paramsMetadata)
       result = await processor.process(...args)
     }
     if (resultHandler) {

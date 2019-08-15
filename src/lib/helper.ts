@@ -4,7 +4,6 @@ import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { deserialize, serialize, toJsonSchema } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
@@ -13,6 +12,7 @@ import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { Luren } from '../Luren'
+import { INext } from '../types'
 import Action from './Action'
 import AuthenticationProcessor from './Authentication'
 import AuthorizationProcessor from './Authorization'
@@ -30,7 +30,7 @@ const getParam = (source: any, metadata: ParamMetadata) => {
   }
 }
 
-export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = List()) => {
+export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamMetadata> = List()) => {
   return paramsMetadata.map((metadata) => {
     let value: any
     switch (metadata.source) {
@@ -82,6 +82,8 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
           return value
         }
         break
+      case 'next':
+        return next
       default:
         throw new TypeError('Invalid source:' + metadata.source)
     }
@@ -92,12 +94,16 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
         return
       }
     }
-    // not do type validation is it's built-in object
+    // not do type validation when it's built-in object
     if (metadata.root && ['query', 'header', 'context', 'request', 'session', 'next'].includes(metadata.source)) {
       return value
     }
     const schema = metadata.schema
+<<<<<<< HEAD
     const jsonSchema: IJsonSchema = toJsonSchema(schema)
+=======
+    const jsonSchema: IJsonSchema = utils.toJsonSchema(schema)
+>>>>>>> refactor(all):
     if (jsonSchema.type && jsonSchema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
@@ -110,7 +116,11 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
       throw Boom.badRequest(ajv.errorsText())
     }
     try {
+<<<<<<< HEAD
       value = deserialize(value, schema)
+=======
+      value = utils.deserialize(value, schema)
+>>>>>>> refactor(all):
     } catch (err) {
       throw Boom.badRequest(err)
     }
@@ -119,10 +129,10 @@ export const getParams = (ctx: Context, paramsMetadata: List<ParamMetadata> = Li
 }
 
 export function createUserProcess(controller: any, propKey: string) {
-  return async function userProcess(ctx: Context): Promise<any> {
+  return async function userProcess(ctx: Context, next: INext): Promise<any> {
     const paramsMetadata: List<ParamMetadata> =
       Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-    const args = getParams(ctx, paramsMetadata)
+    const args = getParams(ctx, next, paramsMetadata)
     const response = await controller[propKey].apply(controller, args.toArray())
     if (response === undefined || response === null) {
       return
@@ -144,7 +154,11 @@ export function createUserProcess(controller: any, propKey: string) {
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
       const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
       if (resMetadata) {
+<<<<<<< HEAD
         ctx.body = serialize(response, resMetadata.schema)
+=======
+        ctx.body = utils.serialize(response, resMetadata.schema)
+>>>>>>> refactor(all):
       } else {
         ctx.body = response
       }
@@ -154,9 +168,9 @@ export function createUserProcess(controller: any, propKey: string) {
 
 export function createProcess(controller: object, propKey: string) {
   const userProcess = createUserProcess(controller, propKey)
-  const process = async (ctx: Context) => {
+  const process = async (ctx: Context, next: INext) => {
     try {
-      await userProcess(ctx)
+      await userProcess(ctx, next)
     } catch (err) {
       if (Boom.isBoom(err)) {
         ctx.status = err.output.statusCode
@@ -169,7 +183,11 @@ export function createProcess(controller: object, propKey: string) {
           if (resMetadata.schema.type === 'string') {
             ctx.body = errorMessage
           } else {
+<<<<<<< HEAD
             ctx.body = serialize(errorData, resMetadata.schema)
+=======
+            ctx.body = utils.serialize(errorData, resMetadata.schema)
+>>>>>>> refactor(all):
           }
         } else {
           ctx.body = errorMessage

@@ -16,4 +16,7 @@ export interface IMiddlewareAdaptable<T = any> {
   process(...args: any[]): Promise<T>
   toMiddleware(): Middleware
 }
-export type IProcessorConditions = { [key in 'and' | 'or']: Array<Processor<boolean> | IProcessorConditions> }
+export interface IProcessorConditions<T = Processor<boolean>> {
+  or?: Array<T | IProcessorConditions<T>>
+  and?: Array<T | IProcessorConditions<T>>
+}
