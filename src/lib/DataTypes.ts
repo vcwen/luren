@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { DataTypes, IJsSchema, JsType } from 'luren-schema'
 import { defineJsSchema } from 'luren-schema/dist/lib/utils'
 import { Stream } from 'stream'
@@ -9,6 +10,9 @@ defineJsSchema(Stream, { type: 'stream' })
 class FileType extends JsType {
   public type: string = 'file'
   public validate(value: any): [boolean, string?] {
+    if (_.isNil(value)) {
+      return [true]
+    }
     if (value instanceof IncomingFile) {
       return [true]
     } else {
@@ -16,8 +20,8 @@ class FileType extends JsType {
     }
   }
   public deserialize(value: any, schema: IJsSchema) {
-    if (value === undefined) {
-      return schema.default
+    if (_.isNil(value)) {
+      return this.getDefaultValue(schema)
     } else {
       if (value instanceof IncomingFile) {
         return value
@@ -39,6 +43,9 @@ DataTypes.register('file', new FileType())
 class StreamType extends JsType {
   public type: string = 'stream'
   public validate(value: any): [boolean, string?] {
+    if (_.isNil(value)) {
+      return [true]
+    }
     if (value instanceof Stream) {
       return [true]
     } else {
@@ -47,7 +54,7 @@ class StreamType extends JsType {
   }
   public deserialize(value: any, schema: IJsSchema) {
     if (value === undefined) {
-      return schema.default
+      return this.getDefaultValue(schema)
     } else {
       if (value instanceof Stream) {
         return value
