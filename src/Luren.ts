@@ -61,7 +61,7 @@ export class Luren implements IKoa {
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
-  private _datasource: Map<string, IDataSource> = Map()
+  private _dataSource: Map<string, IDataSource> = Map()
   private _httpServer?: Server
   private _securitySettings: ISecuritySettings = {}
   private _defaultBodyParser?: Middleware = adaptMiddleware(new BodyParser())
@@ -156,11 +156,11 @@ export class Luren implements IKoa {
   }
 
   public addDataSource(name: string, dataSource: IDataSource) {
-    this._datasource = this._datasource.set(name, dataSource)
+    this._dataSource = this._dataSource.set(name, dataSource)
   }
 
   public setDefaultDataSource(dataSource: IDataSource) {
-    this._datasource = this._datasource.set('default', dataSource)
+    this._dataSource = this._dataSource.set('default', dataSource)
   }
 
   public registerControllers(...controllers: object[]) {
@@ -325,7 +325,7 @@ export class Luren implements IKoa {
         if (!model) {
           continue
         }
-        for (const ds of this._datasource.values()) {
+        for (const ds of this._dataSource.values()) {
           ds.loadSchema(model)
         }
       }
