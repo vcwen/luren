@@ -4,7 +4,7 @@ import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { utils } from 'luren-schema'
+import { JsTypes, utils } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
@@ -113,7 +113,7 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
       throw Boom.badRequest(ajv.errorsText())
     }
     try {
-      value = utils.deserialize(value, schema, { include: ['virtual'], exclude: ['private'] })
+      value = JsTypes.deserialize(value, schema, { include: ['virtual'], exclude: ['private'] })
     } catch (err) {
       throw Boom.badRequest(err)
     }
@@ -147,7 +147,7 @@ export function createUserProcess(controller: any, propKey: string) {
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
       const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
       if (resMetadata) {
-        ctx.body = utils.serialize(response, resMetadata.schema, { include: ['virtual'], exclude: ['private'] })
+        ctx.body = JsTypes.serialize(response, resMetadata.schema, { exclude: ['private'] })
       } else {
         ctx.body = response
       }
@@ -172,7 +172,7 @@ export function createProcess(controller: object, propKey: string) {
           if (resMetadata.schema.type === 'string') {
             ctx.body = errorMessage
           } else {
-            ctx.body = utils.serialize(errorData, resMetadata.schema, { include: ['virtual'], exclude: ['private'] })
+            ctx.body = JsTypes.serialize(errorData, resMetadata.schema, { exclude: ['private'] })
           }
         } else {
           ctx.body = errorMessage

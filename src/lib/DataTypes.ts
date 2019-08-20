@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { DataTypes, IJsSchema, JsType } from 'luren-schema'
+import { IJsSchema, JsType, JsTypes } from 'luren-schema'
 import { defineJsSchema } from 'luren-schema/dist/lib/utils'
 import { Stream } from 'stream'
 import IncomingFile from './IncomingFile'
@@ -37,7 +37,7 @@ class FileType extends JsType {
     }
   }
 }
-DataTypes.register('file', new FileType())
+JsTypes.register('file', new FileType(JsTypes))
 
 // tslint:disable-next-line: max-classes-per-file
 class StreamType extends JsType {
@@ -70,4 +70,4 @@ class StreamType extends JsType {
     }
   }
 }
-DataTypes.register('stream', new StreamType())
+JsTypes.register('stream', new StreamType(JsTypes))

@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { DataTypes, MetadataKey } from 'luren-schema'
+import { JsTypes, MetadataKey } from 'luren-schema'
 import Path from 'path'
 import { Stream } from 'stream'
 import '../../src/lib/DataTypes'
@@ -16,16 +16,16 @@ describe('DataTypes', () => {
     expect(metadata.schema).toEqual({ type: 'stream' })
   })
   it('should  file type in DataTypes', () => {
-    const jsType = DataTypes.get('file')
+    const jsType = JsTypes.get('file')
     expect(jsType.type).toBe('file')
   })
   it('should  stream stream in DataTypes', () => {
-    const jsType = DataTypes.get('stream')
+    const jsType = JsTypes.get('stream')
     expect(jsType.type).toBe('stream')
   })
 
   describe('type:file', () => {
-    const fileType = DataTypes.get('file')
+    const fileType = JsTypes.get('file')
     it('validate', () => {
       const incomingFile = new IncomingFile('', '', '', 0)
       const [res1] = fileType.validate(incomingFile, { type: 'file' })
@@ -46,7 +46,7 @@ describe('DataTypes', () => {
     })
   })
   describe('type:stream', () => {
-    const streamType = DataTypes.get('stream')
+    const streamType = JsTypes.get('stream')
     it('validate', () => {
       const stream = fs.createReadStream(Path.resolve(__dirname, __filename))
       const [res1] = streamType.validate(stream, { type: 'stream' })
