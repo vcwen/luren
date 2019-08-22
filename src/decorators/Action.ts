@@ -10,6 +10,7 @@ export interface IActionOptions {
   method?: HttpMethod
   version?: string
   deprecated?: boolean
+  summary?: string
   desc?: string
 }
 
@@ -19,13 +20,12 @@ export class ActionMetadata {
   public method: HttpMethod
   public deprecated: boolean = false
   public version?: string
+  public summary?: string
   public desc?: string
-  constructor(name: string, method: HttpMethod, path: string, version?: string, desc?: string) {
+  constructor(name: string, method: HttpMethod, path: string) {
     this.name = name
     this.method = method
     this.path = path
-    this.version = version
-    this.desc = desc
   }
 }
 
@@ -33,7 +33,16 @@ const getActionMetadata = (options: IActionOptions, _: object, propertyKey: stri
   const name = options.name || propertyKey
   const method = options.method || HttpMethod.GET
   const path = options.path || '/' + propertyKey
-  const metadata = new ActionMetadata(name, method, path, options.version, options.desc)
+  const metadata = new ActionMetadata(name, method, path)
+  if (options.version) {
+    metadata.version = options.version
+  }
+  if (options.summary) {
+    metadata.summary = options.summary
+  }
+  if (options.desc) {
+    metadata.desc = options.desc
+  }
   return metadata
 }
 

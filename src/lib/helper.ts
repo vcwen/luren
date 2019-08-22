@@ -21,7 +21,7 @@ import Controller from './Controller'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
 
-const ajv = new Ajv()
+const ajv = new Ajv({ useDefaults: true })
 
 const getParam = (source: any, metadata: ParamMetadata) => {
   if (metadata.root) {
