@@ -4,7 +4,7 @@ import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
 import _ from 'lodash'
-import { JsTypes, utils } from 'luren-schema'
+import { JsTypes } from 'luren-schema'
 import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
@@ -100,7 +100,7 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
       return value
     }
     const schema = metadata.schema
-    const jsonSchema: IJsonSchema = utils.toJsonSchema(schema)
+    const jsonSchema: IJsonSchema = JsTypes.toJsonSchema(schema)
     if (jsonSchema.type && jsonSchema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
