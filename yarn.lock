@@ -1838,10 +1838,19 @@ has@^1.0.1, has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-helmet-crossdomain@0.4.0:
-  version "0.4.0"
-  resolved "https://registry.npm.taobao.org/helmet-crossdomain/download/helmet-crossdomain-0.4.0.tgz#5f1fe5a836d0325f1da0a78eaa5fd8429078894e"
-  integrity sha1-Xx/lqDbQMl8doKeOql/YQpB4iU4=
+
+header-case@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npm.taobao.org/header-case/download/header-case-1.0.1.tgz#9535973197c144b09613cd65d317ef19963bd02d"
+  integrity sha1-lTWXMZfBRLCWE81l0xfvGZY70C0=
+  dependencies:
+    no-case "^2.2.0"
+    upper-case "^1.1.3"
+
+helmet-crossdomain@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npm.taobao.org/helmet-crossdomain/download/helmet-crossdomain-0.3.0.tgz#707e2df930f13ad61f76ed08e1bb51ab2b2e85fa"
+  integrity sha1-cH4t+TDxOtYfdu0I4btRqysuhfo=
 
 helmet-csp@2.9.4:
   version "2.9.4"
@@ -2915,6 +2924,15 @@ loose-envify@^1.0.0:
   integrity sha1-ce5R+nvkyuwaY4OffmgtgTLTDK8=
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
+<<<<<<< HEAD
+=======
+
+lower-case@^1.1.1:
+  version "1.1.4"
+  resolved "https://registry.npm.taobao.org/lower-case/download/lower-case-1.1.4.tgz#9a2cabd1b9e8e0ae993a4bf7d5875c39c42e8eac"
+  integrity sha1-miyr0bno4K6ZOkv31YdcOcQujqw=
+
+>>>>>>> feat(Response): add response header options
 luren-schema@^0.0.47:
   version "0.0.47"
   resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.47.tgz#179809ee68b6310591d62227c8810aac704db2de"
@@ -3014,6 +3032,19 @@ mime@^1.4.1:
   resolved "https://registry.npm.taobao.org/mime/download/mime-1.6.0.tgz?cache=0&sync_timestamp=1560034758817&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fmime%2Fdownload%2Fmime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"
   integrity sha1-Ms2eXGRVO9WNGaVor0Uqz/BJgbE=
 
+<<<<<<< HEAD
+=======
+mime@^2.4.4:
+  version "2.4.4"
+  resolved "https://registry.npm.taobao.org/mime/download/mime-2.4.4.tgz#bd7b91135fc6b01cde3e9bae33d659b63d8857e5"
+  integrity sha1-vXuRE1/GsBzePpuuM9ZZtj2IV+U=
+
+mimic-fn@^2.0.0:
+  version "2.1.0"
+  resolved "https://registry.npm.taobao.org/mimic-fn/download/mimic-fn-2.1.0.tgz#7ed2c2ccccaf84d3ffcb7a69b57711fc2083401b"
+  integrity sha1-ftLCzMyvhNP/y3pptXcR/CCDQBs=
+
+>>>>>>> feat(Response): add response header options
 minimatch@^3.0.4:
   version "3.0.4"
   resolved "https://registry.npm.taobao.org/minimatch/download/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
@@ -3135,6 +3166,13 @@ nice-try@^1.0.4:
   version "1.0.5"
   resolved "https://registry.npm.taobao.org/nice-try/download/nice-try-1.0.5.tgz#a3378a7696ce7d223e88fc9b764bd7ef1089e366"
   integrity sha1-ozeKdpbOfSI+iPybdkvX7xCJ42Y=
+
+no-case@^2.2.0:
+  version "2.3.2"
+  resolved "https://registry.npm.taobao.org/no-case/download/no-case-2.3.2.tgz#60b813396be39b3f1288a4c1ed5d1e7d28b464ac"
+  integrity sha1-YLgTOWvjmz8SiKTB7V0efSi0ZKw=
+  dependencies:
+    lower-case "^1.1.1"
 
 nocache@2.1.0:
   version "2.1.0"
@@ -4375,6 +4413,11 @@ unset-value@^1.0.0:
   dependencies:
     has-value "^0.3.1"
     isobject "^3.0.0"
+
+upper-case@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.npm.taobao.org/upper-case/download/upper-case-1.1.3.tgz#f6b4501c2ec4cdd26ba78be7222961de77621598"
+  integrity sha1-9rRQHC7EzdJrp4vnIilh3ndiFZg=
 
 uri-js@^4.2.2:
   version "4.2.2"

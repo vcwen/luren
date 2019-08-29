@@ -147,6 +147,9 @@ export function createUserProcess(controller: any, propKey: string) {
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
       const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
       if (resMetadata) {
+        if (!_.isEmpty(resMetadata.headers)) {
+          Object.assign(ctx.headers, resMetadata.headers)
+        }
         ctx.body = JsTypes.serialize(response, resMetadata.schema, { exclude: ['private'] })
       } else {
         ctx.body = response

@@ -1,5 +1,6 @@
 import { Fields, Files, IncomingForm } from 'formidable'
 import { promises as fs } from 'fs'
+import headerCase from 'header-case'
 import { List } from 'immutable'
 import { Context } from 'koa'
 import _ from 'lodash'
@@ -99,4 +100,36 @@ export const adaptMiddleware = <T>(
       return result
     }
   }
+}
+
+export const normalizeHeaderCase = (headers: { [name: string]: string }) => {
+  const normalizedHeaders: { [name: string]: string } = {}
+  const props = Object.getOwnPropertyNames(headers)
+  for (const prop of props) {
+    let header = prop.toLowerCase()
+    switch (header) {
+      case 'etag':
+        header = 'ETag'
+        break
+      case 'dnt':
+        header = 'DNT'
+        break
+      case 'te':
+        header = 'TE'
+        break
+      case 'www-authenticate':
+        header = 'WWW-Authenticate'
+        break
+      case 'x-dns-prefetch-control':
+        header = 'X-DNS-Prefetch-Control'
+        break
+      case 'x-xss-protection':
+        header = 'X-XSS-Protection'
+        break
+      default:
+        header = headerCase(prop)
+    }
+    normalizedHeaders[header] = headers[prop]
+  }
+  return normalizedHeaders
 }

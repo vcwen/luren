@@ -11,7 +11,7 @@ describe('Response', () => {
       public doSomething() {
         return 'hello'
       }
-      @Response({ type: 'file' })
+      @Response({ type: 'file', headers: { 'Cache-Control': 'max-age=10000' } })
       public file() {
         return new IncomingFile('name', 'path', 'type', 1)
       }
@@ -82,20 +82,21 @@ describe('Response', () => {
       })
     )
     const fileResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'file')
-    expect(fileResMap.get(HttpStatusCode.OK)).toEqual(
-      expect.objectContaining({
-        status: 200,
-        mime: 'application/octet-stream',
-        schema: expect.objectContaining({ type: 'file' })
-      })
-    )
+    expect(fileResMap.get(HttpStatusCode.OK)).toEqual({
+      status: 200,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Cache-Control': 'max-age=10000'
+      },
+      schema: expect.objectContaining({ type: 'file' })
+    })
     const streamResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'stream')
-    expect(streamResMap.get(HttpStatusCode.OK)).toEqual(
-      expect.objectContaining({
-        status: 200,
-        mime: 'image/png',
-        schema: expect.objectContaining({ type: 'stream' })
-      })
-    )
+    expect(streamResMap.get(HttpStatusCode.OK)).toEqual({
+      status: 200,
+      headers: {
+        'Content-Type': 'image/png'
+      },
+      schema: { type: 'stream' }
+    })
   })
 })

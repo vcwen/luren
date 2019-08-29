@@ -1,8 +1,10 @@
 import { Map } from 'immutable'
 import { IJsSchema, SimpleType, utils } from 'luren-schema'
+import mime from 'mime'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
+import { normalizeHeaderCase } from '../lib/utils'
 import { PropertyDecorator } from '../types/PropertyDecorator'
 export interface IResponseOptions {
   status?: number
@@ -10,17 +12,20 @@ export interface IResponseOptions {
   schema?: IJsSchema
   desc?: string
   mime?: string
+  headers?: { [name: string]: any }
 }
 
 export class ResponseMetadata {
   public status: number = HttpStatusCode.OK
-  public mime?: string
   public desc?: string
   public schema: IJsSchema
+  public headers?: { [name: string]: any }
   constructor(status: number, schema: IJsSchema, desc?: string) {
     this.status = status
     this.schema = schema
-    this.desc = desc
+    if (desc) {
+      this.desc = desc
+    }
   }
 }
 
@@ -33,9 +38,15 @@ export function Response(options: IResponseOptions = {}): PropertyDecorator {
       ? options.schema
       : utils.convertSimpleSchemaToJsSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.desc)
-    metadata.mime = options.mime
-    if (schema.type === 'file' || schema.type === 'stream') {
-      metadata.mime = metadata.mime || 'application/octet-stream'
+
+    metadata.headers = normalizeHeaderCase(options.headers || {})
+
+    if (options.mime) {
+      const mimeType = mime.getType(options.mime)
+      Reflect.set(metadata.headers, 'Content-Type', mimeType ? mimeType : options.mime)
+    }
+    if ((schema.type === 'file' || schema.type === 'stream') && !metadata.headers['Content-Type']) {
+      Reflect.set(metadata.headers, 'Content-Type', 'application/octet-stream')
     }
     resMetadata = resMetadata.set(metadata.status, metadata)
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
