@@ -22,5 +22,7 @@ test: node_modules
 	NODE_ENV=testing npx jest --runInBand
 publish: build
 	standard-version -r ${VER} &&  npm publish
+coveralls:
+	NODE_ENV=testing npx jest --runInBand --coverage --coverageReporters=text-lcov | npx coveralls
 clean:
 	rm -rf ./dist
