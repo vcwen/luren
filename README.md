@@ -17,7 +17,7 @@ src
 ```
 
 
-####Controller
+#### Controller
 Controller提供API的组件，也是Luren中最重要的一个组件，一个controller即代表一个资源，controller中包含多个action，即资源相关的API。下面的controller会生成一个`POST /api/v1/demos/foo`的API， 当接受请求时会检查相应的参数，如header，query，body等然后处理之后传递给相应的action函数，在action函数返回结果之后，会将结果根据Response类型进行处理然后返回。
 
 ```typescript
@@ -33,7 +33,7 @@ export default class DemoController {
 
 ```
 
-####Middleware
+#### Middleware
 Middleware是一个普通函数或者实现IProcess的对象
 
 ```typescript
