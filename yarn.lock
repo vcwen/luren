@@ -97,6 +97,14 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.0.0"
 
+"@babel/runtime-corejs2@^7.2.0":
+  version "7.6.3"
+  resolved "https://registry.npm.taobao.org/@babel/runtime-corejs2/download/@babel/runtime-corejs2-7.6.3.tgz#de3f446b3fb688b98cbd220474d1a7cad909bcb8"
+  integrity sha1-3j9Eaz+2iLmMvSIEdNGnytkJvLg=
+  dependencies:
+    core-js "^2.6.5"
+    regenerator-runtime "^0.13.2"
+
 "@babel/template@^7.1.0", "@babel/template@^7.4.0", "@babel/template@^7.6.0":
   version "7.6.0"
   resolved "https://registry.npm.taobao.org/@babel/template/download/@babel/template-7.6.0.tgz#7f0159c7f5012230dad64cca42ec9bdb5c9536e6"
@@ -1128,6 +1136,11 @@ copy-to@^2.0.1:
   resolved "https://registry.npm.taobao.org/copy-to/download/copy-to-2.0.1.tgz#2680fbb8068a48d08656b6098092bdafc906f4a5"
   integrity sha1-JoD7uAaKSNCGVrYJgJK9r8kG9KU=
 
+core-js@^2.6.5:
+  version "2.6.10"
+  resolved "https://registry.npm.taobao.org/core-js/download/core-js-2.6.10.tgz#8a5b8391f8cc7013da703411ce5b585706300d7f"
+  integrity sha1-iluDkfjMcBPacDQRzltYVwYwDX8=
+
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://registry.npm.taobao.org/core-util-is/download/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
@@ -1222,12 +1235,12 @@ decamelize@^1.2.0:
   resolved "https://registry.npm.taobao.org/decamelize/download/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
   integrity sha1-9lNNFRSCabIDUue+4m9QH5oZEpA=
 
-decamelize@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.npm.taobao.org/decamelize/download/decamelize-2.0.0.tgz#656d7bbc8094c4c788ea53c5840908c9c7d063c7"
-  integrity sha1-ZW17vICUxMeI6lPFhAkIycfQY8c=
+decamelize@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.npm.taobao.org/decamelize/download/decamelize-3.2.0.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fdecamelize%2Fdownload%2Fdecamelize-3.2.0.tgz#84b8e8f4f8c579f938e35e2cc7024907e0090851"
+  integrity sha1-hLjo9PjFefk4414sxwJJB+AJCFE=
   dependencies:
-    xregexp "4.0.0"
+    xregexp "^4.2.4"
 
 decode-uri-component@^0.2.0:
   version "0.2.0"
@@ -1827,7 +1840,7 @@ helmet-csp@2.9.4:
     content-security-policy-builder "2.1.0"
     dasherize "2.0.0"
 
-helmet@^3.15.1:
+helmet@^3.21.1:
   version "3.21.2"
   resolved "https://registry.npm.taobao.org/helmet/download/helmet-3.21.2.tgz#7e2a19d5f6d898a77b5d2858e8e4bb2cda59f19f"
   integrity sha1-fioZ1fbYmKd7XShY6OS7LNpZ8Z8=
@@ -2739,12 +2752,12 @@ koa-convert@^1.2.0:
     co "^4.6.0"
     koa-compose "^3.0.0"
 
-koa-helmet@^4.0.0:
-  version "4.2.1"
-  resolved "https://registry.npm.taobao.org/koa-helmet/download/koa-helmet-4.2.1.tgz#6f6598aa1dbde501c5f7e92b80a5358690cc13d8"
-  integrity sha1-b2WYqh295QHF9+krgKU1hpDME9g=
+koa-helmet@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.npm.taobao.org/koa-helmet/download/koa-helmet-5.2.0.tgz#6529f64dd4539261a9bb0a56e201e4976f0200f0"
+  integrity sha1-ZSn2TdRTkmGpuwpW4gHkl28CAPA=
   dependencies:
-    helmet "^3.15.1"
+    helmet "^3.21.1"
 
 koa-is-json@^1.0.0:
   version "1.0.0"
@@ -3438,10 +3451,10 @@ pkg-dir@^3.0.0:
   dependencies:
     find-up "^3.0.0"
 
-pluralize@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.npm.taobao.org/pluralize/download/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
-  integrity sha1-KYuJ34uTsCIdv0Ia0rGx6iP8Z3c=
+pluralize@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.npm.taobao.org/pluralize/download/pluralize-8.0.0.tgz#1a6fa16a38d12a1901e0320fa017051c539ce3b1"
+  integrity sha1-Gm+hajjRKhkB4DIPoBcFHFOc47E=
 
 pn@^1.1.0:
   version "1.1.0"
@@ -3590,6 +3603,11 @@ reflect-metadata@^0.1.13:
   version "0.1.13"
   resolved "https://registry.npm.taobao.org/reflect-metadata/download/reflect-metadata-0.1.13.tgz#67ae3ca57c972a2aa1642b10fe363fe32d49dc08"
   integrity sha1-Z648pXyXKiqhZCsQ/jY/4y1J3Ag=
+
+regenerator-runtime@^0.13.2:
+  version "0.13.3"
+  resolved "https://registry.npm.taobao.org/regenerator-runtime/download/regenerator-runtime-0.13.3.tgz#7cf6a77d8f5c6f60eb73c5fc1955b2ceb01e6bf5"
+  integrity sha1-fPanfY9cb2Drc8X8GVWyzrAea/U=
 
 regex-not@^1.0.0, regex-not@^1.0.2:
   version "1.0.2"
@@ -4497,10 +4515,12 @@ xml-name-validator@^3.0.0:
   resolved "https://registry.npm.taobao.org/xml-name-validator/download/xml-name-validator-3.0.0.tgz#6ae73e06de4d8c6e47f9fb181f78d648ad457c6a"
   integrity sha1-auc+Bt5NjG5H+fsYH3jWSK1FfGo=
 
-xregexp@4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npm.taobao.org/xregexp/download/xregexp-4.0.0.tgz#e698189de49dd2a18cc5687b05e17c8e43943020"
-  integrity sha1-5pgYneSd0qGMxWh7BeF8jkOUMCA=
+xregexp@^4.2.4:
+  version "4.2.4"
+  resolved "https://registry.npm.taobao.org/xregexp/download/xregexp-4.2.4.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fxregexp%2Fdownload%2Fxregexp-4.2.4.tgz#02a4aea056d65a42632c02f0233eab8e4d7e57ed"
+  integrity sha1-AqSuoFbWWkJjLALwIz6rjk1+V+0=
+  dependencies:
+    "@babel/runtime-corejs2" "^7.2.0"
 
 y18n@^4.0.0:
   version "4.0.0"
