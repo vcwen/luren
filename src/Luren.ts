@@ -230,19 +230,19 @@ export class Luren implements IKoa {
     try {
       const modules = await importModules(this._workDir, config)
       for (const module of modules) {
-        const middleware = module.default
+        let middleware = module.default
         if (!middleware) {
           continue
         }
-        if (Array.isArray(middleware)) {
-          for (const m of middleware) {
-            if (typeof m === 'function') {
-              this._koa.use(m)
-            }
+        if (!Array.isArray(middleware)) {
+          middleware = [middleware]
+        }
+        for (let m of middleware) {
+          if (typeof m.toMiddleware === 'function') {
+            m = m.toMiddleware()
           }
-        } else {
-          if (typeof middleware === 'function') {
-            this._koa.use(middleware)
+          if (typeof m === 'function') {
+            this._koa.use(m)
           }
         }
       }
