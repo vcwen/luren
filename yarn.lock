@@ -1442,6 +1442,14 @@ escodegen@^1.9.1:
   optionalDependencies:
     source-map "~0.6.1"
 
+eslint-plugin-prettier@^2.2.0:
+  version "2.7.0"
+  resolved "https://registry.npm.taobao.org/eslint-plugin-prettier/download/eslint-plugin-prettier-2.7.0.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Feslint-plugin-prettier%2Fdownload%2Feslint-plugin-prettier-2.7.0.tgz#b4312dcf2c1d965379d7f9d5b5f8aaadc6a45904"
+  integrity sha1-tDEtzywdllN51/nVtfiqrcakWQQ=
+  dependencies:
+    fast-diff "^1.1.1"
+    jest-docblock "^21.0.0"
+
 esprima@^3.1.3:
   version "3.1.3"
   resolved "https://registry.npm.taobao.org/esprima/download/esprima-3.1.3.tgz#fdca51cee6133895e3c88d535ce49dbff62a4633"
@@ -1563,6 +1571,11 @@ fast-deep-equal@^2.0.1:
   version "2.0.1"
   resolved "https://registry.npm.taobao.org/fast-deep-equal/download/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
   integrity sha1-ewUhjd+WZ79/Nwv3/bLLFf3Qqkk=
+
+fast-diff@^1.1.1:
+  version "1.2.0"
+  resolved "https://registry.npm.taobao.org/fast-diff/download/fast-diff-1.2.0.tgz#73ee11982d86caaf7959828d519cfe927fac5f03"
+  integrity sha1-c+4RmC2Gyq95WYKNUZz+kn+sXwM=
 
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0:
   version "2.0.0"
@@ -2303,6 +2316,11 @@ jest-diff@^24.9.0:
     jest-get-type "^24.9.0"
     pretty-format "^24.9.0"
 
+jest-docblock@^21.0.0:
+  version "21.2.0"
+  resolved "https://registry.npm.taobao.org/jest-docblock/download/jest-docblock-21.2.0.tgz#51529c3b30d5fd159da60c27ceedc195faf8d414"
+  integrity sha1-UVKcOzDV/RWdpgwnzu3Blfr41BQ=
+
 jest-docblock@^24.3.0:
   version "24.9.0"
   resolved "https://registry.npm.taobao.org/jest-docblock/download/jest-docblock-24.9.0.tgz#7970201802ba560e1c4092cc25cbedf5af5a8ce2"
@@ -2847,6 +2865,11 @@ levn@~0.3.0:
   dependencies:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
+
+lines-and-columns@^1.1.6:
+  version "1.1.6"
+  resolved "https://registry.npm.taobao.org/lines-and-columns/download/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
+  integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
 
 load-json-file@^4.0.0:
   version "4.0.0"
@@ -3470,6 +3493,11 @@ prelude-ls@~1.1.2:
   version "1.1.2"
   resolved "https://registry.npm.taobao.org/prelude-ls/download/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
   integrity sha1-IZMqVJ9eUv/ZqCf1cOBL5iqX2lQ=
+
+prettier@^1.18.2:
+  version "1.18.2"
+  resolved "https://registry.npm.taobao.org/prettier/download/prettier-1.18.2.tgz#6823e7c5900017b4bd3acf46fe9ac4b4d7bda9ea"
+  integrity sha1-aCPnxZAAF7S9Os9G/prEtNe9qeo=
 
 pretty-format@^24.9.0:
   version "24.9.0"
@@ -4255,10 +4283,24 @@ ts-node@^8.0.2:
     source-map-support "^0.5.6"
     yn "^3.0.0"
 
-tslint-config-prettier@^1.15.0:
+tslib@^1.7.1:
+  version "1.10.0"
+  resolved "https://registry.npm.taobao.org/tslib/download/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
+  integrity sha1-w8GflZc/sKYpc/sJ2Q2WHuQ+XIo=
+
+tslint-config-prettier@^1.18.0:
   version "1.18.0"
   resolved "https://registry.npm.taobao.org/tslint-config-prettier/download/tslint-config-prettier-1.18.0.tgz#75f140bde947d35d8f0d238e0ebf809d64592c37"
   integrity sha1-dfFAvelH012PDSOODr+AnWRZLDc=
+
+tslint-plugin-prettier@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.npm.taobao.org/tslint-plugin-prettier/download/tslint-plugin-prettier-2.0.1.tgz#95b6a3b766622ffc44375825d7760225c50c3680"
+  integrity sha1-lbajt2ZiL/xEN1gl13YCJcUMNoA=
+  dependencies:
+    eslint-plugin-prettier "^2.2.0"
+    lines-and-columns "^1.1.6"
+    tslib "^1.7.1"
 
 tsscmp@1.0.6:
   version "1.0.6"
