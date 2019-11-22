@@ -20,7 +20,7 @@ import { IDataSource } from './datasource/LurenDataSource'
 import AuthenticationProcessor from './lib/Authentication'
 import './lib/DataTypes'
 import { createController, loadControllersRouter } from './lib/helper'
-import { adaptMiddleware, getFileLoaderConfig, importModules } from './lib/utils'
+import { getFileLoaderConfig, importModules, toMiddleware } from './lib/utils'
 import BodyParser from './middleware/BodyParser'
 import ErrorProcessor from './middleware/ErrorProcessor'
 import { ISecuritySettings } from './types'
@@ -64,7 +64,7 @@ export class Luren implements IKoa {
   private _dataSource: Map<string, IDataSource> = Map()
   private _httpServer?: Server
   private _securitySettings: ISecuritySettings = {}
-  private _defaultBodyParser?: Middleware = adaptMiddleware(new BodyParser())
+  private _defaultBodyParser?: Middleware = toMiddleware(new BodyParser())
   private _eventEmitter: EventEmitter = new EventEmitter()
 
   constructor(options?: {

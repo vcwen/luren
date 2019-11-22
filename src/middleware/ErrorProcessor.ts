@@ -1,3 +1,4 @@
+import { isBoom } from 'boom'
 import { EventEmitter } from 'events'
 import { Context } from 'koa'
 import { HttpStatusCode } from '../constants'
@@ -11,19 +12,24 @@ export default class ErrorProcessor extends Processor {
     this._errorEmitter = errorEmitter
   }
   public async process(ctx: Context, next: INext) {
+    let error: any
     try {
       await next()
       if (ctx.status >= HttpStatusCode.INTERNAL_SERVER_ERROR) {
-        // tslint:disable-next-line: no-console
-        console.error(ctx.status, ctx.body)
+        error = ctx.body
       }
     } catch (err) {
-      ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
-      ctx.body = 'Internal Server Error'
-      // tslint:disable-next-line: no-console
-      console.error(err)
-      if (this._errorEmitter) {
-        this._errorEmitter.emit('error', err, ctx)
+      if (isBoom(err)) {
+        ctx.status = err.output.statusCode
+        ctx.body = err.output.payload
+      } else {
+        error = 'Internal Server Error'
+        ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
+        ctx.body = error
+
+        if (this._errorEmitter) {
+          this._errorEmitter.emit('error', err, ctx)
+        }
       }
     }
   }

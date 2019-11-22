@@ -2,20 +2,14 @@ import { List } from 'immutable'
 import { Context } from 'koa'
 import { IMiddleware, IRouterContext } from 'koa-router'
 import 'reflect-metadata'
-import { AuthenticationType, InQuery } from '../../src'
+import { AuthenticationType } from '../../src'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Get } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
-import {
-  Authentication,
-  Authorization,
-  composeConditionalProcessors,
-  Middleware,
-  NoAuthentication
-} from '../../src/decorators/Middleware'
+import { Authentication, Authorization, Middleware, NoAuthentication } from '../../src/decorators/Middleware'
 import AuthenticationProcessor, { APITokenAuthentication } from '../../src/lib/Authentication'
-import AuthorizationProcessor, { ComposedAuthorization } from '../../src/lib/Authorization'
-import { INext } from '../../src/types'
+import AuthorizationProcessor from '../../src/lib/Authorization'
+
 describe('Middleware decorator', () => {
   describe('Middleware', () => {
     it('should set middleware for controller', () => {
@@ -147,7 +141,7 @@ describe('Middleware decorator', () => {
       // tslint:disable-next-line: max-classes-per-file
       class AdminAuthorization extends AuthorizationProcessor {
         public async process() {
-          return true
+          return
         }
       }
       const auth = new AdminAuthorization('isAdmin')
@@ -171,81 +165,6 @@ describe('Middleware decorator', () => {
         'foo'
       )
       expect(actionProcessor).toBe(auth)
-    })
-  })
-  describe('composeConditionalProcessors', () => {
-    it('compose the processors', async () => {
-      // tslint:disable-next-line: max-classes-per-file
-      class AdminAuthorization extends AuthorizationProcessor {
-        public async process(ctx: Context) {
-          return ctx.query.isAdmin === true
-        }
-      }
-      const adminAuth = new AdminAuthorization('isAdmin')
-      // tslint:disable-next-line: max-classes-per-file
-      class OwnerAuthorization extends AuthorizationProcessor {
-        public async process(ctx: Context) {
-          return ctx.query.isOwner === true
-        }
-      }
-      const ownerAuth = new OwnerAuthorization('isOwner')
-      const auth = composeConditionalProcessors({ or: [adminAuth, ownerAuth] }, (process) => {
-        return new ComposedAuthorization('', process)
-      })
-      // tslint:disable-next-line: max-classes-per-file
-      @Controller()
-      @Authorization(auth)
-      class TestController {
-        @Authorization(auth)
-        public foo() {
-          return 'ok'
-        }
-      }
-      const ctrlProcessor: AuthorizationProcessor = Reflect.getMetadata(
-        MetadataKey.AUTHORIZATION,
-        TestController.prototype
-      )
-      expect(ctrlProcessor).toBe(auth)
-      const actionProcessor: AuthorizationProcessor = Reflect.getOwnMetadata(
-        MetadataKey.AUTHORIZATION,
-        TestController.prototype,
-        'foo'
-      )
-      expect(actionProcessor).toBe(auth)
-      const res = await auth.process({ query: { isAdmin: true, isOwner: false } } as any, (() => {}) as any)
-      expect(res).toBeTruthy()
-    })
-    it('should compose different conditions', async () => {
-      // tslint:disable-next-line: max-classes-per-file
-      class AdminAuthorization extends AuthorizationProcessor {
-        public async process(ctx: Context) {
-          return ctx.query.isAdmin === true
-        }
-      }
-      const adminAuth = new AdminAuthorization('isAdmin')
-      // tslint:disable-next-line: max-classes-per-file
-      class OwnerAuthorization extends AuthorizationProcessor {
-        public async process(ctx: Context, next: INext) {
-          await next()
-          return ctx.query.isOwner === true
-        }
-      }
-      const ownerAuth = new OwnerAuthorization('isOwner')
-      // tslint:disable-next-line: max-classes-per-file
-      class FooAuthorization extends AuthorizationProcessor {
-        public async process(@InQuery('name') name: string) {
-          return name === 'foo'
-        }
-      }
-      const fooAuth = new FooAuthorization('foo')
-      const auth = composeConditionalProcessors(
-        { and: [adminAuth, ownerAuth, { and: [adminAuth, ownerAuth] }, { or: [{}] }, { or: [fooAuth] }] },
-        (process) => {
-          return new ComposedAuthorization('', process)
-        }
-      )
-      const res = await auth.process({ query: { isAdmin: true, isOwner: true, name: 'bar' } } as any, (() => {}) as any)
-      expect(res).toBeFalsy()
     })
   })
 })

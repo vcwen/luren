@@ -1,18 +1,15 @@
-import { Middleware } from 'koa'
-import { IMiddlewareAdaptable } from '../types'
-import { adaptMiddleware } from './utils'
+import { toMiddleware } from './utils'
 
-export interface IProcessor<T = any> extends IMiddlewareAdaptable<T> {
+export interface IProcessor {
   name?: string
   description?: string
-  process(...args: any[]): Promise<T>
-  toMiddleware(): Middleware
+  process(...args: any[]): Promise<void>
 }
-export default abstract class Processor<T = any> implements IProcessor<T> {
+export default abstract class Processor implements IProcessor {
   public name?: string
   public description?: string
-  public abstract async process(...args: any[]): Promise<T>
-  public toMiddleware(): Middleware {
-    return adaptMiddleware(this)
+  public abstract async process(...args: any[]): Promise<void>
+  public toMiddleware() {
+    return toMiddleware(this)
   }
 }

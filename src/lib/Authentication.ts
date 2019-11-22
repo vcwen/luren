@@ -1,28 +1,16 @@
-import { Context, Middleware } from 'koa'
+import Boom from 'boom'
+import { Context } from 'koa'
 import uid from 'uid-safe'
-import { AuthenticationType, HttpStatusCode } from '../constants'
-import { INext } from '../types'
+import { AuthenticationType } from '../constants'
 import { getRequestParam } from './helper'
 import Processor from './Processor'
-import { adaptMiddleware } from './utils'
 
-export default abstract class AuthenticationProcessor extends Processor<boolean> {
+export default abstract class AuthenticationProcessor extends Processor {
   public name: string
   public abstract type: string
   constructor(name: string) {
     super()
     this.name = name
-  }
-  public abstract async process(...args: any[]): Promise<boolean>
-  public toMiddleware(): Middleware {
-    return adaptMiddleware(this, async (res, ctx, next) => {
-      if (res) {
-        await next()
-      } else {
-        ctx.status = HttpStatusCode.UNAUTHORIZED
-        ctx.body = 'Unauthorized'
-      }
-    })
   }
 }
 
@@ -46,12 +34,10 @@ export class APITokenAuthentication extends AuthenticationProcessor {
     this.source = options.source
     this.description = options.description
   }
-  public async process(context: Context): Promise<boolean> {
+  public async process(context: Context) {
     const token = getRequestParam(context.request, this.key, this.source)
-    if (token) {
-      return this.validate(token)
-    } else {
-      return false
+    if (!token || !(await this.validate(token))) {
+      throw Boom.unauthorized(`${this.key} is invalid in ${this.source}`)
     }
   }
 }
@@ -60,22 +46,9 @@ export class APITokenAuthentication extends AuthenticationProcessor {
 export class NoneAuthentication extends AuthenticationProcessor {
   public type = AuthenticationType.NONE
   constructor() {
-    super('')
+    super('NO_AUTHENTICATION')
   }
-  public async process(): Promise<boolean> {
-    return true
-  }
-}
-
-// tslint:disable-next-line: max-classes-per-file
-export class ComposedAuthentication extends AuthenticationProcessor {
-  public type = AuthenticationType.COMPOSED
-  private _process: (...args: any[]) => Promise<true>
-  constructor(process: (...args: any[]) => Promise<true>) {
-    super('')
-    this._process = process
-  }
-  public async process(ctx: Context, next: INext): Promise<boolean> {
-    return this._process(ctx, next)
+  public async process() {
+    return undefined
   }
 }

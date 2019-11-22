@@ -10,7 +10,6 @@ import IncomingFile from '../src/lib/IncomingFile'
 import StreamResponse from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'
 
-
 @Schema()
 class Person {
   @Prop({ required: true })
@@ -166,7 +165,6 @@ describe('Luren', () => {
         if (ctx) {
           expect(ctx.url).toBe('/api/people/wrong')
         }
-
         resolve()
       })
     })

@@ -146,6 +146,7 @@ export function createUserProcess(controller: any, propKey: string) {
       const resultMetadataMap: Map<number, ResponseMetadata> =
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
       const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
+
       if (resMetadata) {
         if (!_.isEmpty(resMetadata.headers)) {
           Object.assign(ctx.headers, resMetadata.headers)

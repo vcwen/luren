@@ -9,8 +9,9 @@ import 'reflect-metadata'
 import { MetadataKey } from '../constants'
 import { ParamMetadata } from '../decorators'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
-import { IMiddlewareAdaptable, INext } from '../types'
+import { INext } from '../types'
 import { getParams } from './helper'
+import { IProcessor } from './Processor'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
   const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
@@ -80,24 +81,24 @@ export const parseFormData = async (ctx: Context) => {
   })
 }
 
-export const adaptMiddleware = <T>(
-  processor: IMiddlewareAdaptable<T>,
-  resultHandler?: (res: T, ctx: Context, next: INext) => Promise<any>
-) => {
+export const toMiddleware = (processor: IProcessor) => {
   return async function middleware(ctx: Context, next: INext) {
     const paramsMetadata: List<ParamMetadata> =
       Reflect.getOwnMetadata(MetadataKey.PARAMS, middleware, 'process') || List()
-    let result: T
-    if (paramsMetadata.isEmpty()) {
-      result = await processor.process(ctx, next)
-    } else {
-      const args = getParams(ctx, next, paramsMetadata)
-      result = await processor.process(...args)
+
+    let nextCalled = false
+    const wrappedNext = async () => {
+      nextCalled = true
+      return next()
     }
-    if (resultHandler) {
-      return resultHandler(result, ctx, next)
+    if (paramsMetadata.isEmpty()) {
+      await processor.process(ctx, wrappedNext)
     } else {
-      return result
+      const args = getParams(ctx, wrappedNext, paramsMetadata)
+      await processor.process(...args)
+    }
+    if (!nextCalled) {
+      return next()
     }
   }
 }
