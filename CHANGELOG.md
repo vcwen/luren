@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.0"></a>
+# [0.1.0](https://github.com/vcwen/luren/compare/v0.0.38...v0.1.0) (2019-11-22)
+
+
+### Bug Fixes
+
+* **Luren.ts:** import middleware ([70d12ba](https://github.com/vcwen/luren/commit/70d12ba))
+
+
+### Features
+
+* **Response:** add response header options ([a681355](https://github.com/vcwen/luren/commit/a681355))
+
+
 
 <a name="0.0.37"></a>
 ## [0.0.37](https://github.com/vcwen/luren/compare/v0.0.36...v0.0.37) (2019-08-16)
