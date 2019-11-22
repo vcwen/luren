@@ -2,20 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-<a name="0.0.40"></a>
-## [0.0.40](https://github.com/vcwen/luren/compare/v0.0.39...v0.0.40) (2019-08-23)
-
-
-
-<a name="0.0.39"></a>
-## [0.0.39](https://github.com/vcwen/luren/compare/v0.0.38...v0.0.39) (2019-08-23)
-
-
-
-<a name="0.0.38"></a>
-## [0.0.38](https://github.com/vcwen/luren/compare/v0.0.37...v0.0.38) (2019-08-20)
-
-
 
 <a name="0.0.37"></a>
 ## [0.0.37](https://github.com/vcwen/luren/compare/v0.0.36...v0.0.37) (2019-08-16)
@@ -71,12 +57,6 @@ All notable changes to this project will be documented in this file. See [standa
 * **Luren:** middlewareOptions optional ([da9b94f](https://github.com/vcwen/luren/commit/da9b94f))
 
 
-
-<a name="0.0.17"></a>
-## [0.0.17](https://github.com/vcwen/luren/compare/v0.0.16...v0.0.17) (2019-06-13)
-
-
-
 <a name="0.0.16"></a>
 ## [0.0.16](https://github.com/vcwen/luren/compare/v0.0.14...v0.0.16) (2019-06-10)
 
@@ -86,13 +66,6 @@ All notable changes to this project will be documented in this file. See [standa
 * **helper.ts:** fix parsing request params ([24a7a6a](https://github.com/vcwen/luren/commit/24a7a6a))
 * **package.json:** fix peerDep ([aee31b8](https://github.com/vcwen/luren/commit/aee31b8))
 
-
-
-<a name="0.0.15"></a>
-## [0.0.15](https://github.com/vcwen/luren/compare/v0.0.14...v0.0.15) (2019-06-06)
-
-
-
 <a name="0.0.14"></a>
 ## [0.0.14](https://github.com/vcwen/luren/compare/v0.0.13...v0.0.14) (2019-06-06)
 
@@ -100,12 +73,6 @@ All notable changes to this project will be documented in this file. See [standa
 ### Bug Fixes
 
 * **middleware:** only load function middleware ([87d4465](https://github.com/vcwen/luren/commit/87d4465))
-
-
-
-<a name="0.0.13"></a>
-## [0.0.13](https://github.com/vcwen/luren/compare/v0.0.11...v0.0.13) (2019-05-31)
-
 
 
 <a name="0.0.11"></a>
