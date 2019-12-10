@@ -24,8 +24,13 @@ describe('Response', () => {
       public foo() {
         return 'hello'
       }
-      @Response({ schema: { type: 'number' } })
-      @ErrorResponse({ status: 403, schema: { type: 'object' }, desc: 'when the thing is not found' })
+      @Response({ schema: { type: 'number' }, example: 123 })
+      @ErrorResponse({
+        status: 403,
+        schema: { type: 'object' },
+        desc: 'when the thing is not found',
+        example: { code: 111, reason: 'this is an error message' }
+      })
       public bar() {
         return 1
       }
@@ -69,7 +74,8 @@ describe('Response', () => {
     expect(barResMap.get(HttpStatusCode.OK)).toEqual(
       expect.objectContaining({
         status: 200,
-        schema: expect.objectContaining({ type: 'number' })
+        schema: expect.objectContaining({ type: 'number' }),
+        example: 123
       })
     )
     expect(barResMap.get(HttpStatusCode.FORBIDDEN)).toEqual(
@@ -78,7 +84,8 @@ describe('Response', () => {
         schema: {
           type: 'object'
         },
-        desc: 'when the thing is not found'
+        desc: 'when the thing is not found',
+        example: { code: 111, reason: 'this is an error message' }
       })
     )
     const fileResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'file')

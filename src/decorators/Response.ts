@@ -13,6 +13,7 @@ export interface IResponseOptions {
   desc?: string
   mime?: string
   headers?: { [name: string]: any }
+  example?: any
 }
 
 export class ResponseMetadata {
@@ -20,6 +21,7 @@ export class ResponseMetadata {
   public desc?: string
   public schema: IJsSchema
   public headers?: { [name: string]: any }
+  public example?: any
   constructor(status: number, schema: IJsSchema, desc?: string) {
     this.status = status
     this.schema = schema
@@ -38,8 +40,11 @@ export function Response(options: IResponseOptions = {}): PropertyDecorator {
       ? options.schema
       : utils.convertSimpleSchemaToJsSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.desc)
-
     metadata.headers = normalizeHeaderCase(options.headers || {})
+
+    if (options.example) {
+      metadata.example = options.example
+    }
 
     if (options.mime) {
       const mimeType = mime.getType(options.mime)
@@ -58,6 +63,7 @@ export interface IErrorOptions {
   type?: any
   schema?: IJsSchema
   desc?: string
+  example?: any
 }
 
 export function ErrorResponse(options: IErrorOptions): PropertyDecorator {
@@ -67,7 +73,11 @@ export function ErrorResponse(options: IErrorOptions): PropertyDecorator {
     const status = options.status
     const schema = options.schema ? options.schema : utils.convertSimpleSchemaToJsSchema(options.type || 'string')[0]
     const metadata = new ResponseMetadata(status, schema, options.desc)
+    if (options.example) {
+      metadata.example = options.example
+    }
     resMetadata = resMetadata.set(metadata.status, metadata)
+
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
 }

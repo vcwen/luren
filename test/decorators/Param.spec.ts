@@ -28,7 +28,7 @@ describe('Param', () => {
       public test(
         @Param({ name: 'name', in: 'path' }) name: string,
         @Param({ name: 'age', in: 'query', required: false }) age: number,
-        @Param({ name: 'foo', in: 'body', schema: { type: 'number' } }) foo: number,
+        @Param({ name: 'foo', in: 'body', schema: { type: 'number' }, example: 1123 }) foo: number,
         @Param({ name: 'bar', schema: { type: 'boolean' }, required: true }) bar: boolean
       ) {
         return name + age + foo + bar
@@ -44,7 +44,13 @@ describe('Param', () => {
         root: false
       }),
       expect.objectContaining({ name: 'age', required: false, source: 'query', schema: { type: 'string' } }),
-      expect.objectContaining({ name: 'foo', required: true, source: 'body', schema: { type: 'number' } }),
+      expect.objectContaining({
+        name: 'foo',
+        required: true,
+        source: 'body',
+        schema: { type: 'number' },
+        example: 1123
+      }),
       expect.objectContaining({ name: 'bar', required: true, source: 'query', schema: { type: 'boolean' } })
     ])
   })

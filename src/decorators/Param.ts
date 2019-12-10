@@ -19,6 +19,7 @@ export interface IParamOptions {
   format?: string
   mime?: string
   default?: any
+  example?: any
 }
 
 export class ParamMetadata {
@@ -31,6 +32,7 @@ export class ParamMetadata {
   public mime?: string
   public desc?: string
   public default: any
+  public example?: any
   constructor(name: string = '', source: Source, schema: IJsSchema, required: boolean) {
     this.name = name
     this.source = source
@@ -59,12 +61,18 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
   if (options.format) {
     metadata.format = options.format
   }
+  if (options.desc) {
+    metadata.desc = options.desc
+  }
   if (options.mime) {
     metadata.mime = options.mime
   }
   if (options.default) {
     metadata.default = options.default
     metadata.schema.default = options.default
+  }
+  if (options.example) {
+    metadata.example = options.example
   }
 
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
