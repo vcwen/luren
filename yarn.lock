@@ -2929,12 +2929,13 @@ lower-case@^1.1.1:
   resolved "https://registry.npm.taobao.org/lower-case/download/lower-case-1.1.4.tgz#9a2cabd1b9e8e0ae993a4bf7d5875c39c42e8eac"
   integrity sha1-miyr0bno4K6ZOkv31YdcOcQujqw=
 
-luren-schema@^0.0.47:
-  version "0.0.47"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.0.47.tgz#179809ee68b6310591d62227c8810aac704db2de"
-  integrity sha1-F5gJ7mi2MQWR1iInyIEKrHBNst4=
+luren-schema@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.1.2.tgz#9c2f1d10ff70efee8744be2817907f026ad3ff3a"
+  integrity sha1-nC8dEP9w7+6HRL4oF5B/AmrT/zo=
   dependencies:
     ajv "^6.10.2"
+    coveralls "^3.0.7"
     immutable "^4.0.0-rc.12"
     lodash "^4.17.11"
     luxon "^1.17.2"
