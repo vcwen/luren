@@ -238,7 +238,7 @@ export class Luren implements IKoa {
           middleware = [middleware]
         }
         for (let m of middleware) {
-          if (typeof m.toMiddleware === 'function') {
+          if (m && typeof m.toMiddleware === 'function') {
             m = m.toMiddleware()
           }
           if (typeof m === 'function') {

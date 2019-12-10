@@ -49,6 +49,6 @@ export class NoneAuthentication extends AuthenticationProcessor {
     super('NO_AUTHENTICATION')
   }
   public async process() {
-    return undefined
+    return false
   }
 }

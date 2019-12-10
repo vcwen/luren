@@ -91,13 +91,14 @@ export const toMiddleware = (processor: IProcessor) => {
       nextCalled = true
       return next()
     }
+    let res = false
     if (paramsMetadata.isEmpty()) {
-      await processor.process(ctx, wrappedNext)
+      res = await processor.process(ctx, wrappedNext)
     } else {
       const args = getParams(ctx, wrappedNext, paramsMetadata)
-      await processor.process(...args)
+      res = await processor.process(...args)
     }
-    if (!nextCalled) {
+    if (!res && !nextCalled) {
       return next()
     }
   }

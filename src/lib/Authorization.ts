@@ -7,5 +7,5 @@ export default abstract class AuthorizationProcessor extends Processor {
     this.name = name
     this.description = description
   }
-  public abstract async process(...args: any[]): Promise<void>
+  public abstract async process(...args: any[]): Promise<any>
 }
