@@ -251,9 +251,15 @@ export function createController(luren: Luren, ctrl: object) {
 export function createControllerRouter(controller: Controller) {
   const router = new Router({ prefix: controller.prefix })
   router.use(...controller.middleware)
+  const pathRegex = /(.+)\/$/
   for (const action of controller.actions) {
     const version = action.version || controller.version || ''
-    const path = Path.join('/', version, controller.path, action.path)
+    let path = Path.join('/', version, controller.path, action.path)
+    // strip the ending '/'
+    const match = pathRegex.exec(path)
+    if (match) {
+      path = match[1]
+    }
     ;(router as any)[action.method.toLowerCase()](path, ...action.middleware, action.process)
   }
   return router
