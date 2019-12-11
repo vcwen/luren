@@ -28,10 +28,10 @@ describe('DataTypes', () => {
     const fileType = JsTypes.get('file')
     it('validate', () => {
       const incomingFile = new IncomingFile('', '', '', 0)
-      const [res1] = fileType.validate(incomingFile, { type: 'file' })
-      expect(res1).toBeTruthy()
-      const [res2] = fileType.validate('string', { type: 'file' })
-      expect(res2).toBeFalsy()
+      const res1 = fileType.validate(incomingFile, { type: 'file' })
+      expect(res1.valid).toBeTruthy()
+      const res2 = fileType.validate('string', { type: 'file' })
+      expect(res2.valid).toBeFalsy()
     })
     it('deserialize', () => {
       const incomingFile = new IncomingFile('', '', '', 0)
@@ -49,10 +49,10 @@ describe('DataTypes', () => {
     const streamType = JsTypes.get('stream')
     it('validate', () => {
       const stream = fs.createReadStream(Path.resolve(__dirname, __filename))
-      const [res1] = streamType.validate(stream, { type: 'stream' })
-      expect(res1).toBeTruthy()
-      const [res2] = streamType.validate('string', { type: 'stream' })
-      expect(res2).toBeFalsy()
+      const res1 = streamType.validate(stream, { type: 'stream' })
+      expect(res1.valid).toBeTruthy()
+      const res2 = streamType.validate('string', { type: 'stream' })
+      expect(res2.valid).toBeFalsy()
     })
     it('deserialize', () => {
       const stream = fs.createReadStream(Path.resolve(__dirname, __filename))
