@@ -1,6 +1,13 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.1.2](https://github.com/vcwen/luren/compare/v0.1.0...v0.1.2) (2019-12-11)
+
+
+### Features
+
+* **param & response:** add example option ([965b77b](https://github.com/vcwen/luren/commit/965b77bff72301f326ee74a7bcefac540588c2a2))
 
 <a name="0.1.0"></a>
 # [0.1.0](https://github.com/vcwen/luren/compare/v0.0.38...v0.1.0) (2019-11-22)
