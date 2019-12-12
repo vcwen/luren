@@ -281,7 +281,7 @@ export class Luren implements IKoa {
       const modules = await importModules(this._workDir, config)
       for (const module of modules) {
         const Ctrl = module.default
-        if (!Ctrl) {
+        if (!Ctrl || typeof Ctrl !== 'function') {
           continue
         }
         const isCtrl = Reflect.hasOwnMetadata(MetadataKey.CONTROLLER, Ctrl.prototype)
