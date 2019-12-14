@@ -1,8 +1,9 @@
-import { Map } from 'immutable'
+import { List, Map } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../constants/HttpMethod'
 import { MetadataKey } from '../constants/MetadataKey'
 import { PropertyDecorator } from '../types/PropertyDecorator'
+import { ParamMetadata } from './Param'
 
 export interface IActionOptions {
   name?: string
@@ -49,6 +50,15 @@ const getActionMetadata = (options: IActionOptions, _: object, propertyKey: stri
 export function Action(options: IActionOptions = {}): PropertyDecorator {
   return (target: object, propertyKey: string) => {
     const metadata = getActionMetadata(options, target, propertyKey)
+    if (metadata.method === HttpMethod.GET) {
+      const paramsMetadata: List<ParamMetadata> =
+        Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
+      for (const paramMetadata of paramsMetadata) {
+        if (paramMetadata.source === 'body') {
+          throw new Error(`Cannot put params in body for ${HttpMethod.GET} request`)
+        }
+      }
+    }
     let actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
     actionMetadataMap = actionMetadataMap.set(propertyKey, metadata)
     Reflect.defineMetadata(MetadataKey.ACTIONS, actionMetadataMap, target)
