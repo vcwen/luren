@@ -166,21 +166,17 @@ export function createProcess(controller: object, propKey: string) {
       await userProcess(ctx, next)
     } catch (err) {
       if (Boom.isBoom(err)) {
-        ctx.status = err.output.statusCode
         const errorData = err.data
         const errorMessage = err.message
         const resultMetadataMap: Map<number, ResponseMetadata> =
           Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
         const resMetadata = resultMetadataMap.get(err.output.statusCode)
-        if (resMetadata) {
-          if (resMetadata.schema.type === 'string') {
-            ctx.body = errorMessage
-          } else {
-            ctx.body = JsTypes.serialize(errorData, resMetadata.schema, { exclude: ['private'] })
-          }
+        if (resMetadata && errorData) {
+          ctx.body = JsTypes.serialize(errorData, resMetadata.schema, { exclude: ['private'] })
         } else {
-          ctx.body = errorMessage
+          ctx.body = errorData || errorMessage
         }
+        ctx.status = err.output.statusCode
       } else {
         throw err
       }
