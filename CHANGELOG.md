@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/vcwen/luren/compare/v0.1.0...v0.1.3) (2019-12-16)
+
+
+### Features
+
+* **param & response:** add example option ([965b77b](https://github.com/vcwen/luren/commit/965b77bff72301f326ee74a7bcefac540588c2a2))
+
+
+### Bug Fixes
+
+* **helper.ts:** serialize error response only if error data is available ([87fba5c](https://github.com/vcwen/luren/commit/87fba5c434abb5260ce6c450b2bcd6339ba9c9e4))
+* **luren.ts:** check controller only if it's a function ([eb5efad](https://github.com/vcwen/luren/commit/eb5efad458a1853b317db666ade90af80b209b54))
+
 ### [0.1.2](https://github.com/vcwen/luren/compare/v0.1.0...v0.1.2) (2019-12-11)
 
 
