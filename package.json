@@ -16,6 +16,7 @@
     "boom": "^7.3.0",
     "debug": "^4.1.1",
     "decamelize": "^3.2.0",
+    "fast-safe-stringify": "^2.0.7",
     "formidable": "^1.2.1",
     "header-case": "^1.0.1",
     "immutable": "^4.0.0-rc.12",

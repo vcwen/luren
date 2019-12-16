@@ -1,5 +1,6 @@
 import Ajv from 'ajv'
 import Boom from 'boom'
+import safeStringify from 'fast-safe-stringify'
 import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
 import Router from 'koa-router'
@@ -151,7 +152,15 @@ export function createUserProcess(controller: any, propKey: string) {
         if (!_.isEmpty(resMetadata.headers)) {
           Object.assign(ctx.headers, resMetadata.headers)
         }
-        ctx.body = JsTypes.serialize(response, resMetadata.schema, { exclude: ['private'] })
+        try {
+          ctx.body = JsTypes.serialize(response, resMetadata.schema, { exclude: ['private'] })
+        } catch (err) {
+          throw new Error(
+            `${ctx.method.toUpperCase()} ${ctx.path} - unexpected response: ${
+              err.message ? err.message : ''
+            } \n expected:\n ${safeStringify(resMetadata.schema)} \n actual: \n ${safeStringify(response)}`
+          )
+        }
       } else {
         ctx.body = response
       }

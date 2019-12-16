@@ -1,5 +1,5 @@
-import BodyParser from '../../src/middleware/BodyParser'
 import '../../src/lib/utils'
+import BodyParser from '../../src/middleware/BodyParser'
 
 jest.mock('koa-bodyparser', () => {
   return () => {
