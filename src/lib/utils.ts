@@ -27,7 +27,7 @@ export const importModules = async (workDir: string, config: IModuleLoaderConfig
       await importModules(workDir, { path: Path.resolve(dir, file), pattern })
     } else {
       if ((pattern && pattern.exclude && pattern.exclude.test(file)) || defaultExcludePattern.test(file)) {
-        break
+        continue
       }
       if (
         defaultIncludePattern.test(file) &&
