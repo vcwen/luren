@@ -96,3 +96,11 @@ export function Patch(options?: IActionOptions): PropertyDecorator {
 export function Delete(options?: IActionOptions): PropertyDecorator {
   return methodifyActionDecorator(HttpMethod.DELETE)(options)
 }
+
+export function Hidden() {
+  return (target: object, propertyKey: string) => {
+    let hiddenActions: List<string> = Reflect.getMetadata(MetadataKey.HIDDEN_ACTIONS, target) || List()
+    hiddenActions = hiddenActions.push(propertyKey)
+    Reflect.defineMetadata(MetadataKey.HIDDEN_ACTIONS, hiddenActions, target, propertyKey)
+  }
+}

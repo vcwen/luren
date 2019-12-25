@@ -51,7 +51,10 @@ export function Controller(options: ICtrlOptions = {}) {
     const target = constructor.prototype
     const metadata = getCtrlMetadata(options, constructor)
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, target)
-    const actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
+    // filter out hidden actions
+    const hiddenActions: List<string> = Reflect.getMetadata(MetadataKey.HIDDEN_ACTIONS, target) || List()
+    let actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
+    actionMetadataMap = actionMetadataMap.filterNot((_val, key) => hiddenActions.contains(key))
     Reflect.defineMetadata(MetadataKey.ACTIONS, actionMetadataMap, target)
   }
 }

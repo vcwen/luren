@@ -15,7 +15,8 @@ export const MetadataKey = {
   INDEX: key('INDEX'),
   MODEL: key('MODEL'),
   ACL: key('ACL'),
-  RESOURCE: key('RESOURCE')
+  RESOURCE: key('RESOURCE'),
+  HIDDEN_ACTIONS: key('HIDDEN_ACTIONS')
 }
 
 export default MetadataKey
