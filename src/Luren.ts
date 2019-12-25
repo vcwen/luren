@@ -3,8 +3,6 @@ import { EventEmitter } from 'events'
 import { IncomingMessage, ServerResponse } from 'http'
 import { Http2ServerRequest, Http2ServerResponse } from 'http2'
 import { List, Map } from 'immutable'
-import { Container } from 'inversify'
-import { METADATA_KEY } from 'inversify'
 import Keygrip from 'keygrip'
 import Koa, { BaseContext, Context, Middleware } from 'koa'
 import helmet from 'koa-helmet'
@@ -17,13 +15,16 @@ import Path from 'path'
 import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDataSource } from './datasource/LurenDataSource'
+import { Injectable } from './decorators/Inject'
 import AuthenticationProcessor from './lib/Authentication'
+import { container } from './lib/container'
 import './lib/DataTypes'
 import { createController, loadControllersRouter } from './lib/helper'
 import { getFileLoaderConfig, importModules, toMiddleware } from './lib/utils'
 import BodyParser from './middleware/BodyParser'
 import ErrorProcessor from './middleware/ErrorProcessor'
 import { ISecuritySettings } from './types'
+import { Constructor } from './types/Constructor'
 
 const debug = Debug('luren')
 
@@ -55,9 +56,8 @@ export class Luren implements IKoa {
   private _workDir: string = process.cwd()
   private _koa: Koa
   private _router: Router
-  private _container?: Container
   private _bootConfig?: IModuleLoaderConfig
-  private _controllers: List<object> = List()
+  private _controllers: List<Constructor<any>> = List()
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
@@ -68,7 +68,6 @@ export class Luren implements IKoa {
   private _eventEmitter: EventEmitter = new EventEmitter()
 
   constructor(options?: {
-    container?: Container
     bootOptions?: IModuleLoaderOptions
     middlewareOptions?: IModuleLoaderOptions
     controllerOptions?: IModuleLoaderOptions
@@ -79,7 +78,6 @@ export class Luren implements IKoa {
     this._koa.use(new ErrorProcessor(this._eventEmitter).toMiddleware())
     this._router = new Router()
     options = options || {}
-    this._container = options.container
     this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
     this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
     this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
@@ -163,9 +161,6 @@ export class Luren implements IKoa {
     this._dataSource = this._dataSource.set('default', dataSource)
   }
 
-  public registerControllers(...controllers: object[]) {
-    this._controllers = this._controllers.concat(controllers)
-  }
   public setBootConfig(config: IModuleLoaderOptions) {
     this._bootConfig = getFileLoaderConfig(config, 'boot')
   }
@@ -279,37 +274,12 @@ export class Luren implements IKoa {
     }
     try {
       const modules = await importModules(this._workDir, config)
-      for (const module of modules) {
-        const Ctrl = module.default
-        if (!Ctrl || typeof Ctrl !== 'function') {
-          continue
-        }
-        const isCtrl = Reflect.hasOwnMetadata(MetadataKey.CONTROLLER, Ctrl.prototype)
-        if (isCtrl) {
-          const isInjectable = Reflect.hasOwnMetadata(METADATA_KEY.PARAM_TYPES, Ctrl)
-          if (isInjectable && this._container) {
-            this._container.bind(ServiceIdentifier.CONTROLLER).to(Ctrl)
-          } else {
-            this._controllers = this._controllers.push(new Ctrl())
-          }
-        }
-      }
     } catch (err) {
       if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
         // tslint:disable-next-line:no-console
         console.warn('No controllers directory, skip loading controller modules')
       } else {
         throw err
-      }
-    }
-    if (this._container) {
-      try {
-        const ctrls = this._container.getAll<object>(ServiceIdentifier.CONTROLLER)
-        this._controllers = this._controllers.concat(ctrls)
-      } catch (err) {
-        debug(err)
-        // tslint:disable-next-line: no-console
-        console.warn('No matching bindings found for Controller')
       }
     }
   }
@@ -339,8 +309,11 @@ export class Luren implements IKoa {
     }
   }
   private _loadControllers() {
-    const ctrls = this._controllers.map((ctrl) => createController(this, ctrl))
-    const router = loadControllersRouter(ctrls)
+    const controllers = container.getAll<object>(ServiceIdentifier.CONTROLLER)
+    const ctrls = controllers.map((ctrl) => {
+      return createController(this, ctrl)
+    })
+    const router = loadControllersRouter(List(ctrls))
     this._router.use(router.routes())
   }
 }

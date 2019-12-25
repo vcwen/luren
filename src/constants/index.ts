@@ -10,3 +10,9 @@ export enum AuthenticationType {
   COMPOSED = 'COMPOSED',
   API_TOKEN = 'API_TOKEN'
 }
+
+export enum Scope {
+  SINGLETON = 'SINGLETON',
+  TRANSIENT = 'TRANSIENT',
+  REQUEST = 'REQUEST'
+}

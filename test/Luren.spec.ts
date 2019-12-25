@@ -75,8 +75,6 @@ jest.unmock('koa-router')
 describe('Luren', () => {
   it('should deal the request', async () => {
     const luren = new Luren()
-    const ctrl = new PersonController()
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       const res = await request(server)
@@ -99,7 +97,6 @@ describe('Luren', () => {
       })
     )
     const ctrl = new PersonController()
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       await request(server)
@@ -114,7 +111,6 @@ describe('Luren', () => {
     const luren = new Luren()
     luren.setWorkDirectory(Path.resolve(__dirname, 'server'))
     const ctrl = new PersonController()
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       const res = await request(server)
@@ -130,7 +126,6 @@ describe('Luren', () => {
     const luren = new Luren()
     const ctrl = new PersonController()
 
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       await request(server)
@@ -144,7 +139,6 @@ describe('Luren', () => {
     const luren = new Luren()
     const ctrl = new PersonController()
 
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       const res = await request(server)
@@ -168,7 +162,6 @@ describe('Luren', () => {
         resolve()
       })
     })
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       await request(server)
@@ -182,7 +175,6 @@ describe('Luren', () => {
   it('should parse the file param', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       await request(server)
@@ -197,7 +189,6 @@ describe('Luren', () => {
   it('should download the file ', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
-    luren.registerControllers(ctrl)
     const server = await luren.listen(3001)
     try {
       const res = await request(server)
