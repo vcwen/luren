@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.5](https://github.com/vcwen/luren/compare/v0.1.4...v0.1.5) (2019-12-27)
+
+
+### Bug Fixes
+
+* **luren:** fix getControllers() ([ff3f879](https://github.com/vcwen/luren/commit/ff3f87956595e34701190775005d0809253eba30))
+
 ### [0.1.4](https://github.com/vcwen/luren/compare/v0.1.3...v0.1.4) (2019-12-27)
 
 
