@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.4](https://github.com/vcwen/luren/compare/v0.1.3...v0.1.4) (2019-12-27)
+
+
+### Features
+
+* **action:** add Hidden decorator ([0f45a87](https://github.com/vcwen/luren/commit/0f45a87425685aafefb7efe42297f7b435b45f06))
+* **authentication:** add http authentication type ([71a535e](https://github.com/vcwen/luren/commit/71a535e928618b32dbe736a19319581d182fb590))
+* **inversify:** integrate inversify ([d3c54c3](https://github.com/vcwen/luren/commit/d3c54c374c8a1988bb222c38b8869e1316b0dad7))
+
+
+### Bug Fixes
+
+* **utils.ts:** fix importModules, break -> continue , not breaking the loop ([5bed198](https://github.com/vcwen/luren/commit/5bed198b226f0d3ebc2d5c2098776fca6a994b43))
+
 ### [0.1.3](https://github.com/vcwen/luren/compare/v0.1.0...v0.1.3) (2019-12-16)
 
 
