@@ -8,7 +8,8 @@ export enum AuthenticationType {
   NONE = 'NONE',
   CUSTOM = 'CUSTOM',
   COMPOSED = 'COMPOSED',
-  API_TOKEN = 'API_TOKEN'
+  API_TOKEN = 'API_TOKEN',
+  HTTP = 'HTTP'
 }
 
 export enum Scope {

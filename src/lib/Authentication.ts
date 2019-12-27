@@ -2,6 +2,7 @@ import Boom from 'boom'
 import { Context } from 'koa'
 import uid from 'uid-safe'
 import { AuthenticationType } from '../constants'
+import { InHeader } from '../decorators/Param'
 import { getRequestParam } from './helper'
 import Processor from './Processor'
 
@@ -43,12 +44,47 @@ export class APITokenAuthentication extends AuthenticationProcessor {
 }
 
 // tslint:disable-next-line: max-classes-per-file
+export class HTTPAuthentication extends AuthenticationProcessor {
+  public type = AuthenticationType.HTTP
+  public scheme: string = 'bearer'
+  public bearerFormat: string
+  private _validate: (key: string) => Promise<boolean>
+  constructor(options: {
+    name?: string
+    bearerFormat?: string
+    validate: (key: string) => Promise<boolean>
+    description?: string
+  }) {
+    // tslint:disable-next-line: no-magic-numbers
+    super(options.name || 'HTTP_' + uid.sync(5))
+    this.bearerFormat = options.bearerFormat || 'JWT'
+    this._validate = options.validate
+    this.description = options.description
+  }
+  public async process(@InHeader('authorization', 'string') token: string) {
+    if (this.scheme === 'bearer') {
+      const regex = /bearer\s+(\S+)/i
+      const match = regex.exec(token)
+      if (match) {
+        token = match[1]
+      } else {
+        throw Boom.badRequest(`Invalid bearer token:${token}`)
+      }
+    }
+
+    if (!(await this._validate(token))) {
+      throw Boom.unauthorized(`Token:${token} is invalid`)
+    }
+  }
+}
+
+// tslint:disable-next-line: max-classes-per-file
 export class NoneAuthentication extends AuthenticationProcessor {
   public type = AuthenticationType.NONE
   constructor() {
     super('NO_AUTHENTICATION')
   }
   public async process() {
-    return false
+    return
   }
 }

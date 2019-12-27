@@ -83,8 +83,7 @@ export const parseFormData = async (ctx: Context) => {
 
 export const toMiddleware = (processor: IProcessor) => {
   return async function middleware(ctx: Context, next: INext) {
-    const paramsMetadata: List<ParamMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.PARAMS, middleware, 'process') || List()
+    const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, processor, 'process') || List()
 
     let nextCalled = false
     const wrappedNext = async () => {
