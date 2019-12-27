@@ -12,10 +12,8 @@ import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
 import { Server } from 'net'
 import Path from 'path'
-import { MetadataKey } from './constants/MetadataKey'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
 import { IDataSource } from './datasource/LurenDataSource'
-import { Injectable } from './decorators/Inject'
 import AuthenticationProcessor from './lib/Authentication'
 import { container } from './lib/container'
 import './lib/DataTypes'
@@ -207,6 +205,7 @@ export class Luren implements IKoa {
   }
 
   private async _initialize() {
+    debug('Initializing...')
     if (this._defaultBodyParser) {
       this._koa.use(this._defaultBodyParser)
     }
@@ -216,6 +215,7 @@ export class Luren implements IKoa {
     await this._loadControllerModules()
     this._loadControllers()
     this._koa.use(router.routes()).use(router.allowedMethods())
+    debug('Initialization completed...')
   }
   private async _loadMiddleware() {
     const config = this._middlewareConfig
@@ -273,7 +273,7 @@ export class Luren implements IKoa {
       return
     }
     try {
-      const modules = await importModules(this._workDir, config)
+      await importModules(this._workDir, config)
     } catch (err) {
       if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
         // tslint:disable-next-line:no-console
