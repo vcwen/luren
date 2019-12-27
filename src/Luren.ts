@@ -22,7 +22,6 @@ import { getFileLoaderConfig, importModules, toMiddleware } from './lib/utils'
 import BodyParser from './middleware/BodyParser'
 import ErrorProcessor from './middleware/ErrorProcessor'
 import { ISecuritySettings } from './types'
-import { Constructor } from './types/Constructor'
 
 const debug = Debug('luren')
 
@@ -55,7 +54,7 @@ export class Luren implements IKoa {
   private _koa: Koa
   private _router: Router
   private _bootConfig?: IModuleLoaderConfig
-  private _controllers: List<Constructor<any>> = List()
+  private _controllers: List<object> = List()
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
@@ -126,10 +125,14 @@ export class Luren implements IKoa {
     this._workDir = dir
   }
 
+  public async bootUp() {
+    await this._initialize()
+    await this._loadBootModules()
+  }
+
   public async listen(port: number, hostname?: string) {
     try {
-      await this._initialize()
-      await this._loadBootModules()
+      await this.bootUp()
       return await new Promise<Server>((resolve) => {
         const server = this._koa.listen(port, hostname, () => {
           resolve(server)
@@ -310,6 +313,7 @@ export class Luren implements IKoa {
   }
   private _loadControllers() {
     const controllers = container.getAll<object>(ServiceIdentifier.CONTROLLER)
+    this._controllers = List.of(...controllers)
     const ctrls = controllers.map((ctrl) => {
       return createController(this, ctrl)
     })
