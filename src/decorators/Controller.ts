@@ -47,7 +47,7 @@ export const getCtrlMetadata = (options: ICtrlOptions, constructor: Constructor<
 
 export function Controller(options: ICtrlOptions = {}) {
   return <T>(constructor: Constructor<T>) => {
-    Injectable(ServiceIdentifier.CONTROLLER, { scope: Scope.SINGLETON })(constructor)
+    Injectable({ serviceIdentifier: ServiceIdentifier.CONTROLLER, scope: Scope.SINGLETON })(constructor)
     const target = constructor.prototype
     const metadata = getCtrlMetadata(options, constructor)
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, target)
