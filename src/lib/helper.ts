@@ -1,5 +1,4 @@
 import Ajv from 'ajv'
-import Boom from 'boom'
 import safeStringify from 'fast-safe-stringify'
 import { List, Map } from 'immutable'
 import { Context, Middleware, Request } from 'koa'
@@ -19,6 +18,7 @@ import Action from './Action'
 import AuthenticationProcessor from './Authentication'
 import AuthorizationProcessor from './Authorization'
 import Controller from './Controller'
+import { HttpError } from './HttpError'
 import { HttpResponse } from './HttpResponse'
 import IncomingFile from './IncomingFile'
 
@@ -91,7 +91,7 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
     }
     if (value === undefined) {
       if (metadata.required) {
-        throw Boom.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
+        throw HttpError.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
       } else {
         return
       }
@@ -106,17 +106,17 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
       try {
         value = JSON.parse(value)
       } catch (err) {
-        throw Boom.badRequest(`invalid value for argument '${metadata.name}'`)
+        throw HttpError.badRequest(`invalid value for argument '${metadata.name}'`)
       }
     }
     const valid = ajv.validate(jsonSchema, value)
     if (!valid) {
-      throw Boom.badRequest(ajv.errorsText())
+      throw HttpError.badRequest(ajv.errorsText())
     }
     try {
       value = JsTypes.deserialize(value, schema, { include: ['virtual'], exclude: ['private'] })
     } catch (err) {
-      throw Boom.badRequest(err)
+      throw HttpError.badRequest(err)
     }
     return value
   })
@@ -132,17 +132,27 @@ export function createUserProcess(controller: any, propKey: string) {
       return
     }
     if (response instanceof HttpResponse) {
-      ctx.status = response.status
-      if (response.headers) {
-        ctx.set(response.headers)
+      const header = response.getRawHeader()
+      if (header) {
+        ctx.set(header)
       }
       switch (response.status) {
         case HttpStatusCode.MOVED_PERMANENTLY:
         case HttpStatusCode.FOUND:
-          return ctx.redirect(response.body)
+          ctx.redirect(response.body)
+          break
         default:
           ctx.body = response.body
       }
+      // set status at last, since set body might change the status
+      ctx.status = response.status
+    } else if (HttpError.isHttpError(response)) {
+      const header = response.getRawHeader()
+      if (header) {
+        ctx.set(header)
+      }
+      ctx.body = response.getBody()
+      ctx.status = response.status
     } else {
       const resultMetadataMap: Map<number, ResponseMetadata> =
         Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
@@ -168,35 +178,9 @@ export function createUserProcess(controller: any, propKey: string) {
   }
 }
 
-export function createProcess(controller: object, propKey: string) {
-  const userProcess = createUserProcess(controller, propKey)
-  const process = async (ctx: Context, next: INext) => {
-    try {
-      await userProcess(ctx, next)
-    } catch (err) {
-      if (Boom.isBoom(err)) {
-        const errorData = err.data
-        const errorMessage = err.message
-        const resultMetadataMap: Map<number, ResponseMetadata> =
-          Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
-        const resMetadata = resultMetadataMap.get(err.output.statusCode)
-        if (resMetadata && errorData) {
-          ctx.body = JsTypes.serialize(errorData, resMetadata.schema, { exclude: ['private'] })
-        } else {
-          ctx.body = errorData || errorMessage
-        }
-        ctx.status = err.output.statusCode
-      } else {
-        throw err
-      }
-    }
-  }
-  return process
-}
-
 export function createAction(luren: Luren, controller: object, propKey: string, actionMetadata: ActionMetadata) {
   let middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
-  const process = createProcess(controller, propKey)
+  const process = createUserProcess(controller, propKey)
   const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
 
   const authentication: AuthenticationProcessor | undefined =

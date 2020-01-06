@@ -1,13 +1,24 @@
 import { HttpStatusCode } from '../constants/HttpStatusCode'
+import IHttpHeader from '../types/HttpHeader'
+import { toRawHeader } from './utils'
 
-export class HttpResponse {
+export interface IHttpResponse {
+  status: number
+  headers?: IHttpHeader
+  body?: any
+  getRawHeader(): { [key: string]: string } | undefined
+}
+export class HttpResponse implements IHttpResponse {
   public status: number = 200
-  public headers?: { [key: string]: string }
+  public headers?: IHttpHeader
   public body?: any
-  constructor(statusCode: number, body?: any, headers?: { [key: string]: string }) {
+  constructor(statusCode: number, body?: any, headers?: IHttpHeader) {
     this.status = statusCode
     this.body = body
     this.headers = headers
+  }
+  public getRawHeader(): { [key: string]: string } | undefined {
+    return toRawHeader(this)
   }
 }
 

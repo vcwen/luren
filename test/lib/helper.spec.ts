@@ -1,11 +1,11 @@
-import { badRequest } from 'boom'
 import 'reflect-metadata'
 import { HttpMethod, Luren } from '../../src'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Delete, Get, Post, Put } from '../../src/decorators/Action'
 import { Controller } from '../../src/decorators/Controller'
 import { Param } from '../../src/decorators/Param'
-import { createAction, createActions, createController, createProcess } from '../../src/lib/helper'
+import { HttpError } from '../../src/lib'
+import { createAction, createActions, createController, createUserProcess } from '../../src/lib/helper'
 import { OK, redirect } from '../../src/lib/HttpResponse'
 jest.disableAutomock()
 @Controller()
@@ -66,11 +66,12 @@ class TestController {
   }
   @Get()
   public async redirectResponse() {
-    return redirect('http://test.com')
+    const res = await redirect('http://test.com')
+    return res
   }
   @Get()
   public async boomErrorResponse() {
-    throw badRequest('bad query data')
+    throw HttpError.badRequest('bad query data')
   }
   @Get()
   public async errorResponse() {
@@ -84,7 +85,7 @@ describe('helper', () => {
   describe('createAction', () => {
     const next = async () => {}
     it('should create the action', async () => {
-      const action = createProcess(controller, 'sayHello')
+      const action = createUserProcess(controller, 'sayHello')
       const ctx: any = {
         query: { to: 'vincent' },
         is() {
@@ -95,7 +96,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('hello vincent')
     })
     it('action should inject param from query', async () => {
-      const action = createProcess(controller, 'queryParam')
+      const action = createUserProcess(controller, 'queryParam')
       const ctx: any = {
         query: { name: 'vincent' },
         is() {
@@ -106,7 +107,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from path', async () => {
-      const action = createProcess(controller, 'pathParam')
+      const action = createUserProcess(controller, 'pathParam')
       const ctx: any = {
         params: { name: 'vincent' },
         is() {
@@ -117,7 +118,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from body', async () => {
-      const action = createProcess(controller, 'bodyParam')
+      const action = createUserProcess(controller, 'bodyParam')
       const ctx: any = {
         request: { body: { name: 'vincent' } },
         is() {
@@ -128,7 +129,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject param from header', async () => {
-      const action = createProcess(controller, 'headerParam')
+      const action = createUserProcess(controller, 'headerParam')
       const ctx: any = {
         header: { name: 'vincent' },
         is() {
@@ -139,7 +140,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject context param', async () => {
-      const action = createProcess(controller, 'contextParam')
+      const action = createUserProcess(controller, 'contextParam')
       const ctx: any = {
         name: 'vincent',
         is() {
@@ -150,7 +151,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('vincent')
     })
     it('action should inject undefined if param is not present', async () => {
-      const action = createProcess(controller, 'sayHello')
+      const action = createUserProcess(controller, 'sayHello')
       const ctx: any = {
         query: {},
         request: { body: {} },
@@ -164,7 +165,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('hello undefined')
     })
     it('action should throw error if a required param is not present', async () => {
-      const action = createProcess(controller, 'requiredParam')
+      const action = createUserProcess(controller, 'requiredParam')
       const ctx: any = {
         query: {},
         request: { body: {} },
@@ -179,10 +180,10 @@ describe('helper', () => {
           return false
         }
       }
-      await action(ctx, next)
+      await expect(action(ctx, next)).rejects.toThrow('name is required in query')
     })
     it('action should inject number param', async () => {
-      const action = createProcess(controller, 'numberParam')
+      const action = createUserProcess(controller, 'numberParam')
       const ctx: any = {
         query: { rank: '2' },
         request: { body: {} },
@@ -195,25 +196,20 @@ describe('helper', () => {
       await action(ctx, next)
     })
     it('action should throw error when param has invalid data', async () => {
-      const action = createProcess(controller, 'numberParam')
+      const action = createUserProcess(controller, 'numberParam')
       const ctx: any = {
         query: { rank: '2}' },
         request: { body: {} },
         params: {},
         header: {},
-        throw(code: number, desc: string) {
-          // tslint:disable-next-line:no-magic-numbers
-          expect(code).toBe(401)
-          expect(desc).not.toBeUndefined()
-        },
         is() {
           return false
         }
       }
-      await action(ctx, next)
+      expect(action(ctx, next)).rejects.toThrow(`invalid value for argument 'rank'`)
     })
     it('action should valid param throw superstruct it type is object', async () => {
-      const action = createProcess(controller, 'superstructParam')
+      const action = createUserProcess(controller, 'superstructParam')
       const ctx: any = {
         query: { filter: JSON.stringify({ where: { name: 'vincent' }, order: 'desc', limit: 10 }) },
         request: { body: {} },
@@ -230,8 +226,8 @@ describe('helper', () => {
       }
       await action(ctx, next)
     })
-    it('action should throw error if param can not pass the superstruct validation', async () => {
-      const action = createProcess(controller, 'superstructParam')
+    it('action should throw error if param can not pass the  validation', async () => {
+      const action = createUserProcess(controller, 'superstructParam')
       const ctx: any = {
         query: { filter: JSON.stringify({ where: { name: 'vincent' }, order: 'desc', limit: 'vincent' }) },
         request: { body: {} },
@@ -244,11 +240,12 @@ describe('helper', () => {
       try {
         await action(ctx, next)
       } catch (ex) {
-        expect(ex).toBeInstanceOf(TypeError)
+        expect(ex).toBeInstanceOf(HttpError)
+        expect(ex.status).toEqual(400)
       }
     })
     it('action should deal with HttpStatus response', async () => {
-      const action = createProcess(controller, 'httpStatusResponse')
+      const action = createUserProcess(controller, 'httpStatusResponse')
       const ctx: any = {
         is() {
           return false
@@ -259,7 +256,7 @@ describe('helper', () => {
       expect(ctx.body).toEqual('hello')
     })
     it('action should deal with redirect response', async () => {
-      const action = createProcess(controller, 'redirectResponse')
+      const action = createUserProcess(controller, 'redirectResponse')
       const ctx = {
         status: 0,
         redirect(url: string) {
@@ -274,21 +271,12 @@ describe('helper', () => {
       expect(ctx.status).toBe(302)
     })
     it('action should deal with boom error', async () => {
-      const action = createProcess(controller, 'boomErrorResponse')
-      const ctx = {
-        throw(code: number, desc: string) {
-          // tslint:disable-next-line:no-magic-numbers
-          expect(code).toBe(400)
-          expect(desc).toEqual('bad query data')
-        },
-        is() {
-          return false
-        }
-      } as any
-      await action(ctx, next)
+      const action = createUserProcess(controller, 'boomErrorResponse')
+      const ctx = {} as any
+      await expect(action(ctx, next)).rejects.toThrow('bad query data')
     })
     it("action should re-throw the error if it's not a boom error", async () => {
-      const action = createProcess(controller, 'errorResponse')
+      const action = createUserProcess(controller, 'errorResponse')
       const ctx = {
         is() {
           return false

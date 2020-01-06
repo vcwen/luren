@@ -2,7 +2,8 @@ export { HttpStatusCode } from './HttpStatusCode'
 export { HttpMethod } from './HttpMethod'
 export { Phase } from './Middleware'
 export { MetadataKey } from './MetadataKey'
-export * from './ServiceIdentifier'
+export { ServiceIdentifier } from './ServiceIdentifier'
+export { HttpHeader } from './HttpHeader'
 
 export enum AuthenticationType {
   NONE = 'NONE',

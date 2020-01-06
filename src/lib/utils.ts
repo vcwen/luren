@@ -11,6 +11,7 @@ import { ParamMetadata } from '../decorators'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
 import { INext } from '../types'
 import { getParams } from './helper'
+import { IHttpResponse } from './HttpResponse'
 import { IProcessor } from './Processor'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
@@ -133,4 +134,20 @@ export const normalizeHeaderCase = (headers: { [name: string]: string }) => {
     normalizedHeaders[header] = headers[prop]
   }
   return normalizedHeaders
+}
+
+export const toRawHeader = (response: IHttpResponse): { [key: string]: string } | undefined => {
+  if (response.headers) {
+    const header: any = {}
+    for (const prop of Object.keys(response.headers)) {
+      if (response.headers[prop] !== undefined && response.headers[prop] !== null) {
+        if (typeof response.headers[prop] === 'string') {
+          Reflect.set(header, prop, response.headers[prop])
+        } else {
+          Reflect.set(header, prop, JSON.stringify(response.headers[prop]))
+        }
+      }
+    }
+    return header
+  }
 }

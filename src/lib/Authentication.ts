@@ -1,9 +1,10 @@
-import Boom from 'boom'
 import { Context } from 'koa'
 import uid from 'uid-safe'
 import { AuthenticationType } from '../constants'
+import { HttpHeader } from '../constants/HttpHeader'
 import { InHeader } from '../decorators/Param'
 import { getRequestParam } from './helper'
+import { HttpError } from './HttpError'
 import Processor from './Processor'
 
 export default abstract class AuthenticationProcessor extends Processor {
@@ -38,7 +39,7 @@ export class APITokenAuthentication extends AuthenticationProcessor {
   public async process(context: Context) {
     const token = getRequestParam(context.request, this.key, this.source)
     if (!token || !(await this.validate(token))) {
-      throw Boom.unauthorized(`${this.key} is invalid in ${this.source}`)
+      throw HttpError.unauthorized(`${this.key} is invalid in ${this.source}`)
     }
   }
 }
@@ -68,12 +69,16 @@ export class HTTPAuthentication extends AuthenticationProcessor {
       if (match) {
         token = match[1]
       } else {
-        throw Boom.badRequest(`Invalid bearer token:${token}`)
+        throw HttpError.unauthorized(`Invalid bearer token:${token}`, {
+          headers: { [HttpHeader.WWW_Authenticate]: this.scheme }
+        })
       }
     }
 
     if (!(await this._validate(token))) {
-      throw Boom.unauthorized(`Token:${token} is invalid`)
+      throw HttpError.unauthorized(`Token:${token} is invalid`, {
+        headers: { [HttpHeader.WWW_Authenticate]: this.scheme }
+      })
     }
   }
 }

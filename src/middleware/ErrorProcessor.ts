@@ -2,6 +2,7 @@ import { isBoom } from 'boom'
 import { EventEmitter } from 'events'
 import { Context } from 'koa'
 import { HttpStatusCode } from '../constants'
+import { HttpError } from '../lib/HttpError'
 import Processor from '../lib/Processor'
 import { INext } from '../types'
 
@@ -19,14 +20,20 @@ export default class ErrorProcessor extends Processor {
         error = ctx.body
       }
     } catch (err) {
-      if (isBoom(err)) {
-        ctx.status = err.output.statusCode
+      if (HttpError.isHttpError(err)) {
+        ctx.body = err.getBody()
+        if (err.headers) {
+          ctx.set(err.headers as any)
+        }
+        ctx.status = err.status
+      } else if (isBoom(err)) {
         ctx.body = err.output.payload
+        ctx.set(err.output.headers)
+        ctx.status = err.output.statusCode
       } else {
         error = 'Internal Server Error'
-        ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
         ctx.body = error
-
+        ctx.status = HttpStatusCode.INTERNAL_SERVER_ERROR
         if (this._errorEmitter) {
           this._errorEmitter.emit('error', err, ctx)
         }

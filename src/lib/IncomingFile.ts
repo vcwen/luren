@@ -1,4 +1,4 @@
-class IncomingFile {
+export class IncomingFile {
   public size: number
   public path: string
   public name: string

@@ -96,7 +96,6 @@ describe('Luren', () => {
         }
       })
     )
-    const ctrl = new PersonController()
     const server = await luren.listen(3001)
     try {
       await request(server)

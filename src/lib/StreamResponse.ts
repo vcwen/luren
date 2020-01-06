@@ -1,5 +1,5 @@
 import { Stream } from 'stream'
-import { HttpStatusCode } from '../constants'
+import { HttpHeader, HttpStatusCode } from '../constants'
 import { HttpResponse } from './HttpResponse'
 
 export default class StreamResponse extends HttpResponse {
@@ -23,9 +23,9 @@ export default class StreamResponse extends HttpResponse {
       this.filename = options.filename
       if (this.download) {
         if (this.filename) {
-          this.setHeader('Content-Disposition', `attachment; filename="${this.filename}"`)
+          this.setHeader(HttpHeader.Content_Disposition, `attachment; filename="${this.filename}"`)
         } else {
-          this.setHeader('Content-Disposition', 'attachment')
+          this.setHeader(HttpHeader.Content_Disposition, 'attachment')
         }
       }
       if (this.mime) {
