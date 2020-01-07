@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.8](https://github.com/vcwen/luren/compare/v0.1.7...v0.1.8) (2020-01-07)
+
+
+### Features
+
+* **http_error:** create HttpError to replace boom ([2a0a20f](https://github.com/vcwen/luren/commit/2a0a20fbfed2b3e40b706b5979e5db9eb097013e))
+
 ### [0.1.7](https://github.com/vcwen/luren/compare/v0.1.6...v0.1.7) (2019-12-31)
 
 ### [0.1.6](https://github.com/vcwen/luren/compare/v0.1.5...v0.1.6) (2019-12-30)
