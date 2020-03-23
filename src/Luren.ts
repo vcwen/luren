@@ -13,7 +13,6 @@ import _ from 'lodash'
 import { Server } from 'net'
 import Path from 'path'
 import { ServiceIdentifier } from './constants/ServiceIdentifier'
-import { IDataSource } from './datasource/LurenDataSource'
 import AuthenticationProcessor from './lib/Authentication'
 import { container } from './lib/container'
 import './lib/DataTypes'
@@ -58,7 +57,6 @@ export class Luren implements IKoa {
   private _middlewareConfig?: IModuleLoaderConfig
   private _controllerConfig?: IModuleLoaderConfig
   private _modelConfig?: IModuleLoaderConfig
-  private _dataSource: Map<string, IDataSource> = Map()
   private _httpServer?: Server
   private _securitySettings: ISecuritySettings = {}
   private _defaultBodyParser?: Middleware = toMiddleware(new BodyParser())
@@ -152,14 +150,6 @@ export class Luren implements IKoa {
 
   public getControllers() {
     return this._controllers
-  }
-
-  public addDataSource(name: string, dataSource: IDataSource) {
-    this._dataSource = this._dataSource.set(name, dataSource)
-  }
-
-  public setDefaultDataSource(dataSource: IDataSource) {
-    this._dataSource = this._dataSource.set('default', dataSource)
   }
 
   public setBootConfig(config: IModuleLoaderOptions) {
@@ -297,9 +287,6 @@ export class Luren implements IKoa {
         const model = module.default
         if (!model) {
           continue
-        }
-        for (const ds of this._dataSource.values()) {
-          ds.loadSchema(model)
         }
       }
     } catch (err) {
