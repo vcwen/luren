@@ -1,6 +1,6 @@
 import { List } from 'immutable'
 import _ from 'lodash'
-import { IJsSchema, SimpleType, utils } from 'luren-schema'
+import { IJsSchema, JsTypes, SimpleType, utils } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
@@ -72,7 +72,12 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
     metadata.schema.default = options.default
   }
   if (options.example) {
-    metadata.example = options.example
+    const vr = JsTypes.validate(options.example, paramSchema)
+    if (!vr.valid) {
+      throw vr.error!
+    } else {
+      metadata.example = options.example
+    }
   }
 
   const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()

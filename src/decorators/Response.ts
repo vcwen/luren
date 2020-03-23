@@ -1,11 +1,12 @@
 import { Map } from 'immutable'
-import { IJsSchema, SimpleType, utils } from 'luren-schema'
+import { IJsSchema, JsType, JsTypes, SimpleType, utils } from 'luren-schema'
 import mime from 'mime'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
 import { normalizeHeaderCase } from '../lib/utils'
 import { PropertyDecorator } from '../types/PropertyDecorator'
+
 export interface IResponseOptions {
   status?: number
   type?: SimpleType
@@ -43,7 +44,12 @@ export function Response(options: IResponseOptions = {}): PropertyDecorator {
     metadata.headers = normalizeHeaderCase(options.headers || {})
 
     if (options.example) {
-      metadata.example = options.example
+      const vr = JsTypes.validate(options.example, schema)
+      if (!vr.valid) {
+        throw vr.error!
+      } else {
+        metadata.example = options.example
+      }
     }
 
     if (options.mime) {
