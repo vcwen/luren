@@ -106,7 +106,7 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
       try {
         value = JSON.parse(value)
       } catch (err) {
-        throw HttpError.badRequest(`invalid value:${value} for argument '${metadata.name}'`)
+        throw HttpError.badRequest(`invalid value: '${value}' for argument '${metadata.name}'`)
       }
     }
     const valid = ajv.validate(jsonSchema, value)

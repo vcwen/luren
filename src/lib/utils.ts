@@ -1,5 +1,6 @@
 import { Fields, Files, IncomingForm } from 'formidable'
 import { promises as fs } from 'fs'
+import glob from 'globby'
 import headerCase from 'header-case'
 import { List } from 'immutable'
 import { Context } from 'koa'
@@ -16,29 +17,18 @@ import { IProcessor } from './Processor'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
   const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
-  const files = await fs.readdir(dir)
-  const pattern = config.pattern
-  const filter = config.filter
-  const defaultExcludePattern = /(^\.)|(\.d\.ts$)/
-  const defaultIncludePattern = /\.[t|j]s$/
+  // tslint:disable-next-line: prettier
+  const pattern = config.pattern ?? '*'
+  const ignore = config.ignore || []
+  const files = await glob(pattern, {
+    cwd: dir,
+    ignore: ['*.d.ts', ...ignore],
+    expandDirectories: { extensions: ['png'] }
+  })
   const modules = [] as any[]
   for (const file of files) {
-    const stat = await fs.lstat(Path.resolve(dir, file))
-    if (stat.isDirectory()) {
-      await importModules(workDir, { path: Path.resolve(dir, file), pattern })
-    } else {
-      if ((pattern && pattern.exclude && pattern.exclude.test(file)) || defaultExcludePattern.test(file)) {
-        continue
-      }
-      if (
-        defaultIncludePattern.test(file) &&
-        (!pattern || !pattern.include || pattern.include.test(file)) &&
-        (!filter || filter(dir, file))
-      ) {
-        const module = await import(Path.resolve(dir, file))
-        modules.push(module)
-      }
-    }
+    const module = await import(Path.resolve(dir, file))
+    modules.push(module)
   }
   return modules
 }
@@ -49,23 +39,11 @@ export const getFileLoaderConfig = (options: IModuleLoaderOptions = {}, defaultP
   }
   const path = options.path || defaultPath
   const conf: IModuleLoaderConfig = {
-    path
+    path,
+    pattern: options.pattern ?? '*'
   }
-  if (options.pattern) {
-    conf.pattern = {}
-    if (options.pattern instanceof RegExp) {
-      conf.pattern.include = options.pattern
-    } else {
-      if (options.pattern.include) {
-        conf.pattern.include = options.pattern.include
-      }
-      if (options.pattern.exclude) {
-        conf.pattern.include = options.pattern.include
-      }
-    }
-  }
-  if (options.filter) {
-    conf.filter = options.filter
+  if (options.ignore) {
+    conf.ignore = Array.isArray(options.ignore) ? options.ignore : [options.ignore]
   }
   return conf
 }

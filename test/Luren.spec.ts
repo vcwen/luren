@@ -77,9 +77,7 @@ describe('Luren', () => {
     const luren = new Luren()
     const server = await luren.listen(3001)
     try {
-      const res = await request(server)
-        .get('/api/people/hello?name=vincent')
-        .expect(200)
+      const res = await request(server).get('/api/people/hello?name=vincent').expect(200)
       expect(res.body).toEqual({ name: 'vincent', age: 15 })
     } finally {
       server.close()
@@ -98,10 +96,7 @@ describe('Luren', () => {
     )
     const server = await luren.listen(3001)
     try {
-      await request(server)
-        .get('/api/people/hello?name=vincent')
-        .set('Authorization', 'my_toke')
-        .expect(401)
+      await request(server).get('/api/people/hello?name=vincent').set('Authorization', 'my_toke').expect(401)
     } finally {
       server.close()
     }
@@ -112,10 +107,7 @@ describe('Luren', () => {
     const ctrl = new PersonController()
     const server = await luren.listen(3001)
     try {
-      const res = await request(server)
-        .post('/api/people/something')
-        .send({ name: 'Red' })
-        .expect(200)
+      const res = await request(server).post('/api/people/something').send({ name: 'Red' }).expect(200)
       expect(res.body).toEqual(['ok', 'Red'])
     } finally {
       server.close()
@@ -127,9 +119,7 @@ describe('Luren', () => {
 
     const server = await luren.listen(3001)
     try {
-      await request(server)
-        .get('/api/people/redirect')
-        .expect(HttpStatusCode.MOVED_PERMANENTLY)
+      await request(server).get('/api/people/redirect').expect(HttpStatusCode.MOVED_PERMANENTLY)
     } finally {
       server.close()
     }
@@ -163,9 +153,7 @@ describe('Luren', () => {
     })
     const server = await luren.listen(3001)
     try {
-      await request(server)
-        .get('/api/people/wrong')
-        .expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      await request(server).get('/api/people/wrong').expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
     } finally {
       server.close()
     }

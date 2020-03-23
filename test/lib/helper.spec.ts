@@ -180,7 +180,7 @@ describe('helper', () => {
           return false
         }
       }
-      await expect(action(ctx, next)).rejects.toThrow('name is required in query')
+      expect(action(ctx, next)).rejects.toThrow('name is required in query')
     })
     it('action should inject number param', async () => {
       const action = createUserProcess(controller, 'numberParam')
@@ -206,7 +206,7 @@ describe('helper', () => {
           return false
         }
       }
-      expect(action(ctx, next)).rejects.toThrow(`invalid value for argument 'rank'`)
+      expect(action(ctx, next)).rejects.toThrow(`invalid value: '2}' for argument 'rank'`)
     })
     it('action should valid param throw superstruct it type is object', async () => {
       const action = createUserProcess(controller, 'superstructParam')
@@ -273,7 +273,7 @@ describe('helper', () => {
     it('action should deal with boom error', async () => {
       const action = createUserProcess(controller, 'boomErrorResponse')
       const ctx = {} as any
-      await expect(action(ctx, next)).rejects.toThrow('bad query data')
+      expect(action(ctx, next)).rejects.toThrow('bad query data')
     })
     it("action should re-throw the error if it's not a boom error", async () => {
       const action = createUserProcess(controller, 'errorResponse')
@@ -282,9 +282,7 @@ describe('helper', () => {
           return false
         }
       } as any
-      action(ctx, next).catch((ex) => {
-        expect(ex).toBeInstanceOf(Error)
-      })
+      expect(action(ctx, next)).rejects.toThrowError()
     })
   })
   describe('createAction', () => {

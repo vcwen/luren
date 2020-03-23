@@ -34,15 +34,14 @@ export interface IKoa {
 
 export interface IModuleLoaderConfig {
   path: string
-  pattern?: { include?: RegExp; exclude?: RegExp }
-  filter?: (dir: string, filename: string) => boolean
+  pattern: string | string[]
+  ignore?: string[]
 }
 export interface IModuleLoaderOptions {
   disabled?: boolean
   path?: string
-  base?: string
-  pattern?: RegExp | { include?: RegExp; exclude?: RegExp }
-  filter?: (dir: string, filename: string) => boolean
+  pattern?: string | string[]
+  ignore?: string | string[]
 }
 
 export type IPlugin = (luren: Luren) => void
