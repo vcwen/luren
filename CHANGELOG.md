@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.10](https://github.com/vcwen/luren/compare/v0.1.9...v0.1.10) (2020-04-15)
+
+
+### Bug Fixes
+
+* **utils.ts:** fix glob extensions ([81f5fef](https://github.com/vcwen/luren/commit/81f5fef7a5083a8b21f391611b9a73f3be9ceed4))
+
 ### [0.1.9](https://github.com/vcwen/luren/compare/v0.1.8...v0.1.9) (2020-04-15)
 
 
