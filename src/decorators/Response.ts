@@ -1,5 +1,5 @@
 import { Map } from 'immutable'
-import { IJsSchema, JsType, JsTypes, SimpleType, utils } from 'luren-schema'
+import { IJsSchema, JsTypes, SimpleType, utils } from 'luren-schema'
 import mime from 'mime'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'

@@ -1,5 +1,4 @@
 import { Fields, Files, IncomingForm } from 'formidable'
-import { promises as fs } from 'fs'
 import glob from 'globby'
 import headerCase from 'header-case'
 import { List } from 'immutable'
