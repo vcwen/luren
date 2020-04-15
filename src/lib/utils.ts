@@ -22,7 +22,7 @@ export const importModules = async (workDir: string, config: IModuleLoaderConfig
   const files = await glob(pattern, {
     cwd: dir,
     ignore: ['*.d.ts', ...ignore],
-    expandDirectories: { extensions: ['png'] }
+    expandDirectories: { extensions: ['js', 'ts', 'json'] }
   })
   const modules = [] as any[]
   for (const file of files) {
