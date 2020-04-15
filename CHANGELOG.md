@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.9](https://github.com/vcwen/luren/compare/v0.1.8...v0.1.9) (2020-04-15)
+
+
+### Features
+
+* **example:** validate example in js schema ([3f4e4f5](https://github.com/vcwen/luren/commit/3f4e4f577aa513d1ddb4b846db654f3db1f1054c))
+
+
+### Bug Fixes
+
+* **luren:** remove unused imports ([4edfa04](https://github.com/vcwen/luren/commit/4edfa040f057754132b39fda7c84c0498ebe488e))
+
 ### [0.1.8](https://github.com/vcwen/luren/compare/v0.1.7...v0.1.8) (2020-01-07)
 
 
