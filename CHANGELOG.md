@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.2.0](https://github.com/vcwen/luren/compare/v0.1.10...v0.2.0) (2020-06-28)
+
+
+### Features
+
+* **app:** rewrite controller & action & middleware ([0000004](https://github.com/vcwen/luren/commit/000000490a9a141ae3f6f6989b7b100b7e01f9d4))
+
 ### [0.1.10](https://github.com/vcwen/luren/compare/v0.1.9...v0.1.10) (2020-04-15)
 
 
