@@ -1,9 +1,10 @@
 export { HttpStatusCode } from './HttpStatusCode'
 export { HttpMethod } from './HttpMethod'
-export { Phase } from './Middleware'
 export { MetadataKey } from './MetadataKey'
-export { ServiceIdentifier } from './ServiceIdentifier'
 export { HttpHeader } from './HttpHeader'
+export { AuthenticationScope } from './AuthenticationScope'
+export { ExecutionLevel } from './ExecutionLevel'
+export { ParamSource } from './ParamSource'
 
 export enum AuthenticationType {
   NONE = 'NONE',

@@ -1,8 +1,8 @@
 import _ from 'lodash'
-import { IJsSchema, IValidationResult, JsType, JsTypes, ValidationError, ValidationResult } from 'luren-schema'
+import { IJsSchema, IValidationResult, JsType, JsTypes, ValidationResult } from 'luren-schema'
 import { defineJsSchema } from 'luren-schema/dist/lib/utils'
 import { Stream } from 'stream'
-import IncomingFile from './IncomingFile'
+import { IncomingFile } from './IncomingFile'
 
 defineJsSchema(IncomingFile, { type: 'file' })
 defineJsSchema(Stream, { type: 'stream' })
@@ -11,12 +11,12 @@ class FileType extends JsType {
   public type: string = 'file'
   public validate(value: any): IValidationResult {
     if (_.isNil(value)) {
-      return ValidationResult.OK
+      return ValidationResult.ok()
     }
     if (value instanceof IncomingFile) {
-      return ValidationResult.OK
+      return ValidationResult.ok()
     } else {
-      return new ValidationResult(false, new ValidationError(`invalid file type:${value}`))
+      return ValidationResult.error(`invalid file type:${value}`)
     }
   }
   public deserialize(value: any, schema: IJsSchema) {
@@ -37,19 +37,27 @@ class FileType extends JsType {
     }
   }
 }
-JsTypes.register('file', new FileType(JsTypes))
+JsTypes.register('file', new FileType())
 
 // tslint:disable-next-line: max-classes-per-file
 class StreamType extends JsType {
   public type: string = 'stream'
   public validate(value: any): IValidationResult {
     if (_.isNil(value)) {
-      return ValidationResult.OK
+      return ValidationResult.ok()
     }
     if (value instanceof Stream) {
-      return ValidationResult.OK
+      return ValidationResult.ok()
     } else {
-      return new ValidationResult(false, new ValidationError(`invalid stream type:${value}`))
+      return ValidationResult.error(`invalid stream type:${value}`)
+    }
+  }
+  public serialize(value: any) {
+    const res = this.validate(value)
+    if (res.valid) {
+      return value
+    } else {
+      throw res.error
     }
   }
   public deserialize(value: any, schema: IJsSchema) {
@@ -70,4 +78,4 @@ class StreamType extends JsType {
     }
   }
 }
-JsTypes.register('stream', new StreamType(JsTypes))
+JsTypes.register('stream', new StreamType())

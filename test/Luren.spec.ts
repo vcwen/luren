@@ -3,11 +3,11 @@ import bodyParser = require('koa-bodyparser')
 import { Prop, Schema } from 'luren-schema'
 import Path from 'path'
 import request from 'supertest'
-import { APITokenAuthentication, HttpMethod, HttpStatusCode, redirect } from '../src'
+import { HttpMethod, HttpStatusCode, redirect } from '../src'
 import { ParamSource } from '../src/constants/ParamSource'
-import { Action, Controller, Middleware, Param, Response } from '../src/decorators'
-import IncomingFile from '../src/lib/IncomingFile'
-import StreamResponse from '../src/lib/StreamResponse'
+import { Action, Controller, Param, Response, UseMiddleware } from '../src/decorators'
+import { IncomingFile } from '../src/lib/IncomingFile'
+import { StreamResponse } from '../src/lib/StreamResponse'
 import { Luren } from '../src/Luren'
 
 @Schema()
@@ -38,7 +38,7 @@ export default class PersonController {
   }
   @Action({ method: HttpMethod.PUT })
   @Response({ type: { criteria: 'object', skip: 'number?' } })
-  @Middleware(bodyParser() as any)
+  @UseMiddleware(bodyParser() as any)
   public hog(
     @Param({ name: 'filter', in: 'body', type: { criteria: 'object', skip: 'number?', limit: 'number?' }, root: true })
     filter: object
@@ -48,7 +48,6 @@ export default class PersonController {
   }
   @Action()
   @Response({ type: { criteria: 'object', skip: 'number?' } })
-  @Middleware(bodyParser() as any)
   public wrong() {
     // tslint:disable-next-line: no-magic-numbers
     return { name: 'vc' }
@@ -64,18 +63,19 @@ export default class PersonController {
     }
   }
   @Action()
-  @Response({ type: { status: 'stream' } })
+  @Response({ type: 'stream' })
   public download() {
     const rs = fs.createReadStream(Path.resolve(__dirname, './files/avatar.jpg'))
     return new StreamResponse(rs, { filename: 'image.jpg', mime: 'image/jpg' })
   }
 }
 
-jest.unmock('koa-router')
+jest.unmock('@koa/router')
 describe('Luren', () => {
   it('should deal the request', async () => {
     const luren = new Luren()
-    const server = await luren.listen(3001)
+    luren.register(PersonController)
+    const server = luren.listen(3001)
     try {
       const res = await request(server).get('/api/people/hello?name=vincent').expect(200)
       expect(res.body).toEqual({ name: 'vincent', age: 15 })
@@ -83,29 +83,11 @@ describe('Luren', () => {
       server.close()
     }
   })
-  it('should authenticate the request', async () => {
-    const luren = new Luren()
-    luren.setDefaultAuthentication(
-      new APITokenAuthentication({
-        key: 'Authorization',
-        source: 'header',
-        validate: async (token) => {
-          return token === 'my_token'
-        }
-      })
-    )
-    const server = await luren.listen(3001)
-    try {
-      await request(server).get('/api/people/hello?name=vincent').set('Authorization', 'my_toke').expect(401)
-    } finally {
-      server.close()
-    }
-  })
   it('should able handle array', async () => {
     const luren = new Luren()
-    luren.setWorkDirectory(Path.resolve(__dirname, 'server'))
     const ctrl = new PersonController()
-    const server = await luren.listen(3001)
+    luren.register(ctrl)
+    const server = luren.listen(3001)
     try {
       const res = await request(server).post('/api/people/something').send({ name: 'Red' }).expect(200)
       expect(res.body).toEqual(['ok', 'Red'])
@@ -116,19 +98,19 @@ describe('Luren', () => {
   it('should redirect', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
-
-    const server = await luren.listen(3001)
+    luren.register(ctrl)
+    const server = luren.listen(3001)
     try {
       await request(server).get('/api/people/redirect').expect(HttpStatusCode.MOVED_PERMANENTLY)
     } finally {
       server.close()
     }
   })
-  it("should transform the response if it's strict", async () => {
+  it('should transform the response', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
-
-    const server = await luren.listen(3001)
+    luren.register(ctrl)
+    const server = luren.listen(3001)
     try {
       const res = await request(server)
         .put('/api/people/hog')
@@ -139,11 +121,27 @@ describe('Luren', () => {
       server.close()
     }
   })
+  it('should return the original the response', async () => {
+    const luren = new Luren({ enableResponseConversion: false })
+    const ctrl = new PersonController()
+    luren.register(ctrl)
+    const server = luren.listen(3001)
+    try {
+      const res = await request(server)
+        .put('/api/people/hog')
+        .send({ criteria: { name: 'vc' }, skip: 0, limit: 10 })
+        .expect(HttpStatusCode.OK)
+      expect(res.body).toEqual({ criteria: { name: 'vc' }, skip: 0, limit: 10 })
+    } finally {
+      server.close()
+    }
+  })
   it('should error if response is wrong', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
+    luren.register(ctrl)
     const p = new Promise((resolve) => {
-      luren.onError((err, ctx) => {
+      luren.on('error', (err, ctx) => {
         expect(err).toBeInstanceOf(Error)
         if (ctx) {
           expect(ctx.url).toBe('/api/people/wrong')
@@ -153,7 +151,10 @@ describe('Luren', () => {
     })
     const server = await luren.listen(3001)
     try {
-      await request(server).get('/api/people/wrong').expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
+      await request(server)
+        .get('/api/people/wrong')
+        .expect('Content-Type', 'text/plain')
+        .expect(HttpStatusCode.INTERNAL_SERVER_ERROR)
     } finally {
       server.close()
     }
@@ -162,6 +163,7 @@ describe('Luren', () => {
   it('should parse the file param', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
+    luren.register(ctrl)
     const server = await luren.listen(3001)
     try {
       await request(server)
@@ -176,7 +178,8 @@ describe('Luren', () => {
   it('should download the file ', async () => {
     const luren = new Luren()
     const ctrl = new PersonController()
-    const server = await luren.listen(3001)
+    luren.register(ctrl)
+    const server = luren.listen(3001)
     try {
       const res = await request(server)
         .get('/api/people/download')

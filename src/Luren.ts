@@ -1,36 +1,26 @@
 import Debug from 'debug'
-import { EventEmitter } from 'events'
-import { IncomingMessage, ServerResponse } from 'http'
-import { Http2ServerRequest, Http2ServerResponse } from 'http2'
-import { List } from 'immutable'
-import Keygrip from 'keygrip'
-import Koa, { BaseContext, Context, Middleware } from 'koa'
-import helmet from 'koa-helmet'
+import Koa from 'koa'
 import mount from 'koa-mount'
-import Router from 'koa-router'
 import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
-import { Server } from 'net'
-import Path from 'path'
-import { ServiceIdentifier } from './constants/ServiceIdentifier'
-import AuthenticationProcessor from './lib/Authentication'
-import { container } from './lib/container'
+import { MetadataKey } from './constants'
+import { ControllerModule } from './lib/Controller'
 import './lib/DataTypes'
-import { createController, loadControllersRouter } from './lib/helper'
-import { getFileLoaderConfig, importModules, toMiddleware } from './lib/utils'
-import BodyParser from './middleware/BodyParser'
-import ErrorProcessor from './middleware/ErrorProcessor'
-import { ISecuritySettings } from './types'
+import { createControllerModule, createControllerRouter } from './lib/helper'
+import { Middleware } from './lib/Middleware'
+import { Constructor } from './types/Constructor'
+import { getFileLoaderConfig, importModules, getClassInstance, isLurenMiddleware } from './lib/utils'
+import { moduleContextInjection } from './middleware/ModuleContext'
+import { exceptionHandler } from './middleware/ExceptionHandler'
+import { bodyParser } from './middleware/BodyParser'
+import { Server } from 'http'
+import { ListenOptions } from 'net'
+import { ModuleContext } from './lib/ModuleContext'
+import { ExecutionLevel } from './constants/ExecutionLevel'
+import { ResponseConverter } from './processors/ResponseConverter'
+import helmet from 'koa-helmet'
 
 const debug = Debug('luren')
-
-export interface IKoa {
-  proxy: boolean
-  keys: string[] | Keygrip
-  readonly context: BaseContext
-  listen(port: number, hostname?: string): Promise<Server>
-  callback(): (req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) => void
-}
 
 export interface IModuleLoaderConfig {
   path: string
@@ -38,107 +28,61 @@ export interface IModuleLoaderConfig {
   ignore?: string[]
 }
 export interface IModuleLoaderOptions {
-  disabled?: boolean
   path?: string
   pattern?: string | string[]
   ignore?: string | string[]
 }
 
 export type IPlugin = (luren: Luren) => void
+export interface LurenOptions {
+  enableResponseConversion?: boolean
+}
 
-export class Luren implements IKoa {
-  private _prefix: string = ''
+export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
   private _workDir: string = process.cwd()
-  private _koa: Koa
-  private _router: Router
-  private _bootConfig?: IModuleLoaderConfig
-  private _controllers: List<object> = List()
-  private _middlewareConfig?: IModuleLoaderConfig
-  private _controllerConfig?: IModuleLoaderConfig
-  private _modelConfig?: IModuleLoaderConfig
+  private _controllerModules: Map<Constructor, ControllerModule> = new Map()
   private _httpServer?: Server
-  private _securitySettings: ISecuritySettings = {}
-  private _defaultBodyParser?: Middleware = toMiddleware(new BodyParser())
-  private _eventEmitter: EventEmitter = new EventEmitter()
 
-  constructor(options?: {
-    bootOptions?: IModuleLoaderOptions
-    middlewareOptions?: IModuleLoaderOptions
-    controllerOptions?: IModuleLoaderOptions
-    modelOptions?: IModuleLoaderOptions
-  }) {
-    this._koa = new Koa()
-    this._koa.use(helmet())
-    this._koa.use(new ErrorProcessor(this._eventEmitter).toMiddleware())
-    this._router = new Router()
-    options = options || {}
-    this._bootConfig = getFileLoaderConfig(options.bootOptions, 'boot')
-    this._middlewareConfig = getFileLoaderConfig(options.middlewareOptions, 'middleware')
-    this._modelConfig = getFileLoaderConfig(options.modelOptions, 'models')
-    this._controllerConfig = getFileLoaderConfig(options.controllerOptions, 'controllers')
-  }
-
-  public get proxy() {
-    return this._koa.proxy
-  }
-  public set proxy(enabled: boolean) {
-    this._koa.proxy = enabled
-  }
-
-  public get keys() {
-    return this._koa.keys as string[]
-  }
-  public set keys(keys: string[] | Keygrip) {
-    this._koa.keys = keys
-  }
-
-  public get context() {
-    return this._koa.context
-  }
-
-  public callback() {
-    return this._koa.callback()
-  }
-
-  public setPrefix(value: string) {
-    this._prefix = value
-    this._router.prefix(this._prefix)
-  }
-  public getPrefix() {
-    return this._prefix
-  }
-  public onError(onError: (err: any, ctx?: Context) => any) {
-    this._eventEmitter.on('error', onError)
-  }
-
-  public setDefaultAuthentication(auth: AuthenticationProcessor) {
-    this._securitySettings.authentication = auth
-  }
-  public setDefaultBodyParser(bodyParser?: Middleware) {
-    this._defaultBodyParser = bodyParser
+  constructor(options?: LurenOptions) {
+    super()
+    this.use(...[helmet(), exceptionHandler, moduleContextInjection, bodyParser])
+    if (!(options?.enableResponseConversion === false)) {
+      this.use(new ResponseConverter().toRawMiddleware())
+    }
   }
 
   public setWorkDirectory(dir: string) {
     this._workDir = dir
   }
 
-  public async bootUp() {
-    await this._initialize()
-    await this._loadBootModules()
-  }
-
-  public async listen(port: number, hostname?: string) {
-    try {
-      await this.bootUp()
-      return await new Promise<Server>((resolve) => {
-        const server = this._koa.listen(port, hostname, () => {
-          resolve(server)
-        })
-        this._httpServer = server
+  // tslint:disable-next-line: unified-signatures
+  public async start(port?: number, hostname?: string, backlog?: number): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(port: number, hostname?: string): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(port: number, backlog?: number): Promise<Server>
+  public async start(port: number): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(path: string, backlog?: number): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(path: string): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(options: ListenOptions): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(handle: any, backlog?: number): Promise<Server>
+  // tslint:disable-next-line: unified-signatures
+  public async start(handle: any): Promise<Server>
+  async start(...args: any[]): Promise<Server> {
+    return new Promise((resolve, reject) => {
+      args.push(() => {
+        resolve(this._httpServer)
       })
-    } catch (err) {
-      throw err
-    }
+      try {
+        this._httpServer = super.listen(...[...args])
+      } catch (err) {
+        reject(err)
+      }
+    })
   }
 
   public close() {
@@ -147,33 +91,72 @@ export class Luren implements IKoa {
     }
   }
 
-  public getControllers() {
-    return this._controllers
+  public register(...controllers: (Constructor | object)[]) {
+    for (const item of controllers) {
+      const ctrl = typeof item === 'object' ? item : getClassInstance(item)
+      const ctrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, ctrl)
+      if (!ctrlMetadata) {
+        throw new TypeError(`invalid controller instance:${ctrl?.constructor?.name}`)
+      }
+      debug(`register controller ${ctrl.constructor.name}`)
+      if (!this._controllerModules.has(ctrl.constructor)) {
+        const ctrlModule = createControllerModule(ctrl)
+        this._notifyMiddlewareMount(ctrlModule)
+        this._controllerModules.set(ctrl.constructor, ctrlModule)
+        const ctrlRouter = createControllerRouter(ctrlModule)
+        this.use(ctrlRouter.routes()).use(ctrlRouter.allowedMethods())
+      }
+    }
   }
 
-  public setBootConfig(config: IModuleLoaderOptions) {
-    this._bootConfig = getFileLoaderConfig(config, 'boot')
+  public getControllerModules() {
+    return this._controllerModules
   }
-  public setControllerConfig(config: IModuleLoaderOptions) {
-    this._controllerConfig = getFileLoaderConfig(config, 'controllers')
-  }
-  public getSecuritySettings() {
-    return this._securitySettings
-  }
+
   public plugin(...plugins: IPlugin[]) {
     for (const p of plugins) {
-      p(this)
+      p(this as any)
     }
   }
 
-  public use(middleware: Koa.Middleware): Luren
-  public use(path: string, middleware: Koa.Middleware): Luren
+  public use<NewStateT = {}, NewCustomT = {}>(
+    ...middleware: (Constructor<Middleware> | Middleware | Koa.Middleware<StateT & NewStateT, CustomT & NewCustomT>)[]
+  ): Luren<StateT & NewStateT, CustomT & NewCustomT>
+  public use<NewStateT = {}, NewCustomT = {}>(
+    path: string,
+    ...middleware: Koa.Middleware<StateT & NewStateT, CustomT & NewCustomT>[]
+  ): Luren<StateT & NewStateT, CustomT & NewCustomT>
   public use(...args: any[]) {
-    if (args.length === 1) {
-      this._koa.use(args[0])
+    let middleware: any[] = []
+    let path: any
+    if (typeof args[0] === 'string') {
+      path = args[0]
+      middleware = _.tail(args)
     } else {
-      this._koa.use(mount(args[0], args[1]))
+      middleware = args
     }
+    const moduleCtx = new ModuleContext(this as any)
+    const ms = middleware.map((item) => {
+      if (item instanceof Middleware) {
+        item.onMount(ExecutionLevel.APP, moduleCtx)
+        return item.toRawMiddleware()
+      } else {
+        if (Middleware.isPrototypeOf(item)) {
+          const instance = getClassInstance<Middleware>(item)
+          instance.onMount(ExecutionLevel.APP, moduleCtx)
+          return instance.toRawMiddleware()
+        } else {
+          return item
+        }
+      }
+    })
+    ms.forEach((m) => {
+      if (path) {
+        super.use(mount(path, m))
+      } else {
+        super.use(m)
+      }
+    })
     return this
   }
 
@@ -189,121 +172,66 @@ export class Luren implements IKoa {
     } else {
       throw new Error('Invalid arguments')
     }
-    this._koa.use(
-      mount(path, async (ctx) => {
-        await send(ctx, ctx.path, options)
+    this.use(mount(path, async (ctx) => send(ctx, ctx.path, options)))
+  }
+
+  public async loadMiddleware(options?: IModuleLoaderOptions) {
+    const config = getFileLoaderConfig(options, 'middleware')
+    const modules = await importModules(this._workDir, config)
+    for (const module of modules) {
+      let middleware = module.default
+      if (!middleware) {
+        continue
+      }
+      if (!Array.isArray(middleware)) {
+        middleware = [middleware]
+      }
+      for (const m of middleware) {
+        if (typeof m === 'function') {
+          if (Middleware.isPrototypeOf(m)) {
+            const instance = getClassInstance<Middleware>(m)
+            this.use(instance.toRawMiddleware())
+          } else {
+            this.use(m)
+          }
+        } else if (m instanceof Middleware) {
+          this.use(m.toRawMiddleware())
+        } else {
+          throw TypeError('Invalid middleware type')
+        }
+      }
+    }
+  }
+  public async loadBootModules(options?: IModuleLoaderOptions) {
+    const config = getFileLoaderConfig(options, 'boot')
+    importModules(this._workDir, config)
+  }
+  public async loadControllerModules(options?: IModuleLoaderOptions) {
+    const config = getFileLoaderConfig(options, 'controllers')
+    const ctrlMods = await importModules(this._workDir, config)
+    ctrlMods
+      .map((mod) => mod && mod.default)
+      .filter((ctrl) => {
+        if (typeof ctrl === 'function') {
+          return Reflect.hasOwnMetadata(MetadataKey.CONTROLLER, ctrl.prototype)
+        } else {
+          return false
+        }
       })
-    )
+      .forEach((ctrl) => this.register(ctrl))
   }
-
-  private async _initialize() {
-    debug('Initializing...')
-    if (this._defaultBodyParser) {
-      this._koa.use(this._defaultBodyParser)
+  private _notifyMiddlewareMount(controllerModule: ControllerModule) {
+    for (const m of controllerModule.middleware) {
+      if (isLurenMiddleware(m)) {
+        m.onMount(ExecutionLevel.CONTROLLER, new ModuleContext(this, controllerModule))
+      }
     }
-    await this._loadModelModules()
-    await this._loadMiddleware()
-    const router = this._router
-    await this._loadControllerModules()
-    this._loadControllers()
-    this._koa.use(router.routes()).use(router.allowedMethods())
-    debug('Initialization completed...')
-  }
-  private async _loadMiddleware() {
-    const config = this._middlewareConfig
-    if (!config) {
-      return
-    }
-    try {
-      const modules = await importModules(this._workDir, config)
-      for (const module of modules) {
-        let middleware = module.default
-        if (!middleware) {
-          continue
-        }
-        if (!Array.isArray(middleware)) {
-          middleware = [middleware]
-        }
-        for (let m of middleware) {
-          if (m && typeof m.toMiddleware === 'function') {
-            m = m.toMiddleware()
-          }
-          if (typeof m === 'function') {
-            this._koa.use(m)
-          }
+    for (const actionModule of controllerModule.actionModules) {
+      for (const m of actionModule.middleware) {
+        if (isLurenMiddleware(m)) {
+          m.onMount(ExecutionLevel.ACTION, new ModuleContext(this, controllerModule, actionModule))
         }
       }
-    } catch (err) {
-      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
-        // tslint:disable-next-line:no-console
-        console.warn('No default middleware directory, skip loading middleware')
-      } else {
-        throw err
-      }
     }
-  }
-
-  private async _loadBootModules() {
-    const config = this._bootConfig
-    if (!config) {
-      return
-    }
-    try {
-      await importModules(this._workDir, config)
-    } catch (err) {
-      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
-        // tslint:disable-next-line:no-console
-        console.warn('No boot directory, skip loading boot modules')
-      } else {
-        throw err
-      }
-    }
-  }
-  private async _loadControllerModules() {
-    const config = this._controllerConfig
-    if (!config) {
-      return
-    }
-    try {
-      await importModules(this._workDir, config)
-    } catch (err) {
-      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
-        // tslint:disable-next-line:no-console
-        console.warn('No controllers directory, skip loading controller modules')
-      } else {
-        throw err
-      }
-    }
-  }
-  private async _loadModelModules() {
-    const config = this._modelConfig
-    if (!config) {
-      return
-    }
-    try {
-      const modules = await importModules(this._workDir, config)
-      for (const module of modules) {
-        const model = module.default
-        if (!model) {
-          continue
-        }
-      }
-    } catch (err) {
-      if (err.code === 'ENOENT' && err.syscall === 'scandir' && err.path === Path.resolve(this._workDir, config.path)) {
-        // tslint:disable-next-line:no-console
-        console.warn('No models directory, skip loading model modules')
-      } else {
-        throw err
-      }
-    }
-  }
-  private _loadControllers() {
-    const controllers = container.getAll<object>(ServiceIdentifier.CONTROLLER)
-    this._controllers = List.of(...controllers)
-    const ctrls = controllers.map((ctrl) => {
-      return createController(this, ctrl)
-    })
-    const router = loadControllersRouter(List(ctrls))
-    this._router.use(router.routes())
   }
 }

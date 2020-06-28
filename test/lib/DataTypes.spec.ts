@@ -3,7 +3,7 @@ import { JsTypes, MetadataKey } from 'luren-schema'
 import Path from 'path'
 import { Stream } from 'stream'
 import '../../src/lib/DataTypes'
-import IncomingFile from '../../src/lib/IncomingFile'
+import { IncomingFile } from '../../src/lib/IncomingFile'
 
 describe('DataTypes', () => {
   it('should define schema in IncomingFile class', () => {

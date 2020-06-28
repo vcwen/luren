@@ -1,9 +1,11 @@
 {
     "cSpell.words": [
       "Luren",
+      "Postprocessor",
       "deserialize",
       "injectable",
       "inversify",
+      "postprocess",
       "struct"
     ]
 }

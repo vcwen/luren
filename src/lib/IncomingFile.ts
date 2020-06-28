@@ -11,5 +11,3 @@ export class IncomingFile {
     this.size = size
   }
 }
-
-export default IncomingFile

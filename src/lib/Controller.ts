@@ -1,21 +1,19 @@
 import { List } from 'immutable'
-import { Middleware } from 'koa'
-import { Luren } from '../Luren'
-import { ISecuritySettings } from '../types'
-import Action from './Action'
+import { ActionModule } from './Action'
+import { Middleware } from './Middleware'
+import { Middleware as KoaMiddleware } from 'koa'
 
-export default class Controller {
-  public actions: List<Action> = List()
-  public middleware: List<Middleware> = List()
-  public luren: Luren
+export class ControllerModule {
+  public controller!: object
+  public actionModules: List<ActionModule> = List()
+  public middleware: List<Middleware | KoaMiddleware> = List()
   public name!: string
   public plural?: string
   public prefix: string = ''
   public path!: string
   public version?: string
-  public securitySettings: ISecuritySettings = {}
   public desc?: string
-  constructor(luren: Luren) {
-    this.luren = luren
+  constructor(ctrl: object) {
+    this.controller = ctrl
   }
 }

@@ -1,28 +1,19 @@
-import Ajv from 'ajv'
-import safeStringify from 'fast-safe-stringify'
 import { List, Map } from 'immutable'
-import { Context, Middleware, Request } from 'koa'
-import Router from 'koa-router'
+import { Context, Middleware as KoaMiddleware, Request } from 'koa'
+import Router from '@koa/router'
 import _ from 'lodash'
 import { JsTypes } from 'luren-schema'
-import { IJsonSchema } from 'luren-schema/dist/types'
 import Path from 'path'
 import 'reflect-metadata'
-import { AuthenticationType, MetadataKey } from '../constants'
-import { HttpStatusCode } from '../constants/HttpStatusCode'
-import { ActionMetadata, CtrlMetadata, ResponseMetadata } from '../decorators'
+import { MetadataKey } from '../constants'
+import { ActionMetadata, CtrlMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
-import { Luren } from '../Luren'
 import { INext } from '../types'
-import Action from './Action'
-import AuthenticationProcessor from './Authentication'
-import AuthorizationProcessor from './Authorization'
-import Controller from './Controller'
-import { HttpError } from './HttpError'
-import { HttpResponse } from './HttpResponse'
-import IncomingFile from './IncomingFile'
-
-const ajv = new Ajv({ useDefaults: true })
+import { ActionExecutor, ActionModule } from './Action'
+import { ControllerModule } from './Controller'
+import { HttpException } from './HttpException'
+import { IncomingFile } from './IncomingFile'
+import { Middleware } from './Middleware'
 
 const getParam = (source: any, metadata: ParamMetadata) => {
   if (metadata.root) {
@@ -91,7 +82,9 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
     }
     if (value === undefined) {
       if (metadata.required) {
-        throw HttpError.badRequest(metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : ''))
+        throw HttpException.badRequest(
+          metadata.name + ' is required' + (metadata.source ? ' in ' + metadata.source : '')
+        )
       } else {
         return
       }
@@ -101,161 +94,79 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
       return value
     }
     const schema = metadata.schema
-    const jsonSchema: IJsonSchema = JsTypes.toJsonSchema(schema)
-    if (jsonSchema.type && jsonSchema.type !== 'string' && typeof value === 'string') {
+    if (schema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
-        throw HttpError.badRequest(`invalid value: '${value}' for argument '${metadata.name}'`)
+        throw HttpException.badRequest(`invalid value: '${value}' for argument '${metadata.name}'`)
       }
     }
-    const valid = ajv.validate(jsonSchema, value)
-    if (!valid) {
-      throw HttpError.badRequest(ajv.errorsText())
-    }
-
     try {
-      value = JsTypes.deserialize(value, schema, { include: ['virtual'], exclude: ['private'] })
+      value = JsTypes.deserialize(value, schema)
     } catch (err) {
-      throw HttpError.badRequest(err)
+      throw HttpException.badRequest(err)
     }
     return value
   })
 }
 
-export function createUserProcess(controller: any, propKey: string) {
-  return async function userProcess(ctx: Context, next: INext): Promise<any> {
-    const paramsMetadata: List<ParamMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(controller), propKey) || List()
-    const args = getParams(ctx, next, paramsMetadata)
-    const response = await controller[propKey].apply(controller, args.toArray())
-    if (response === undefined || response === null) {
-      return
-    }
-    if (response instanceof HttpResponse) {
-      const header = response.getRawHeader()
-      if (header) {
-        ctx.set(header)
-      }
-      switch (response.status) {
-        case HttpStatusCode.MOVED_PERMANENTLY:
-        case HttpStatusCode.FOUND:
-          ctx.redirect(response.body)
-          break
-        default:
-          ctx.body = response.body
-      }
-      // set status at last, since set body might change the status
-      ctx.status = response.status
-    } else if (HttpError.isHttpError(response)) {
-      const header = response.getRawHeader()
-      if (header) {
-        ctx.set(header)
-      }
-      ctx.body = response.getBody()
-      ctx.status = response.status
-    } else {
-      const resultMetadataMap: Map<number, ResponseMetadata> =
-        Reflect.getMetadata(MetadataKey.RESPONSE, controller, propKey) || Map()
-      const resMetadata = resultMetadataMap.get(HttpStatusCode.OK)
-
-      if (resMetadata) {
-        if (!_.isEmpty(resMetadata.headers)) {
-          Object.assign(ctx.headers, resMetadata.headers)
-        }
-        try {
-          ctx.body = JsTypes.serialize(response, resMetadata.schema, { exclude: ['private'] })
-        } catch (err) {
-          throw new Error(
-            `${ctx.method.toUpperCase()} ${ctx.path} - unexpected response: ${
-              err.message ? err.message : ''
-            } \n expected:\n ${safeStringify(resMetadata.schema)} \n actual: \n ${safeStringify(response)}`
-          )
-        }
-      } else {
-        ctx.body = response
-      }
-    }
-  }
+export function createActionModule(controller: object, propKey: string, actionMetadata: ActionMetadata) {
+  const middleware: List<Middleware | KoaMiddleware> =
+    Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
+  const action = new ActionExecutor(controller, propKey)
+  const actionModule = new ActionModule(actionMetadata.name, actionMetadata.method, actionMetadata.path, action)
+  actionModule.middleware = middleware
+  return actionModule
 }
 
-export function createAction(luren: Luren, controller: object, propKey: string, actionMetadata: ActionMetadata) {
-  let middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
-  const process = createUserProcess(controller, propKey)
-  const action = new Action(luren, actionMetadata.method, actionMetadata.path, process)
-
-  const authentication: AuthenticationProcessor | undefined =
-    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller, propKey) ||
-    Reflect.getMetadata(MetadataKey.AUTHENTICATION, controller) ||
-    luren.getSecuritySettings().authentication
-  if (authentication && authentication.type !== AuthenticationType.NONE) {
-    middleware = middleware.unshift(authentication.toMiddleware())
-  }
-  const authorization: AuthorizationProcessor | undefined =
-    Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller, propKey) ||
-    Reflect.getMetadata(MetadataKey.AUTHORIZATION, controller) ||
-    luren.getSecuritySettings().authorization
-  if (authorization) {
-    middleware = middleware.push(authorization.toMiddleware())
-  }
-  action.securitySettings.authentication = authentication
-  action.securitySettings.authorization = authorization
-  action.middleware = middleware
-  return action
-}
-
-export function createActions(luren: Luren, controller: object) {
+export function createActions(controller: object) {
   const actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, controller)
   return actionMetadataMap
     .map((actionMetadata, prop) => {
-      return createAction(luren, controller, prop, actionMetadata)
+      return createActionModule(controller, prop, actionMetadata)
     })
     .toList()
 }
-export function createController(luren: Luren, ctrl: object) {
-  const controller = new Controller(luren)
-  const ctrlMetadata: CtrlMetadata = Reflect.getMetadata(MetadataKey.CONTROLLER, ctrl)
-  controller.name = ctrlMetadata.name
-  controller.plural = ctrlMetadata.plural
-  controller.prefix = ctrlMetadata.prefix
-  controller.path = ctrlMetadata.path
-  controller.version = ctrlMetadata.version
-  controller.desc = ctrlMetadata.desc
-  controller.middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
-  const authentication =
-    Reflect.getMetadata(MetadataKey.AUTHENTICATION, ctrl) || luren.getSecuritySettings().authentication
-  if (authentication) {
-    controller.securitySettings.authentication = authentication
+export function createControllerModule(ctrl: object) {
+  const controllerModule = new ControllerModule(ctrl)
+  const ctrlMetadata: CtrlMetadata | undefined = Reflect.getMetadata(MetadataKey.CONTROLLER, ctrl)
+  if (!ctrlMetadata) {
+    throw new TypeError('invalid controller instance')
   }
-
-  const authorization: AuthorizationProcessor | undefined =
-    Reflect.getMetadata(MetadataKey.AUTHORIZATION, ctrl) || luren.getSecuritySettings().authorization
-  if (authorization) {
-    controller.securitySettings.authorization = authorization
-  }
-
-  controller.actions = createActions(luren, ctrl)
-  return controller
+  controllerModule.name = ctrlMetadata.name
+  controllerModule.plural = ctrlMetadata.plural
+  controllerModule.prefix = ctrlMetadata.prefix
+  controllerModule.path = ctrlMetadata.path
+  controllerModule.version = ctrlMetadata.version
+  controllerModule.desc = ctrlMetadata.desc
+  const middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
+  controllerModule.middleware = middleware
+  controllerModule.actionModules = createActions(ctrl)
+  return controllerModule
 }
 
-export function createControllerRouter(controller: Controller) {
-  const router = new Router({ prefix: controller.prefix })
-  router.use(...controller.middleware)
-  const pathRegex = /(.+)\/$/
-  for (const action of controller.actions) {
-    const version = action.version || controller.version || ''
-    let path = Path.join('/', version, controller.path, action.path)
+export function createControllerRouter(controllerModule: ControllerModule) {
+  const router: any = new Router({ prefix: controllerModule.prefix })
+  const middleware = controllerModule.middleware.map((m) => (m instanceof Middleware ? m.toRawMiddleware() : m))
+
+  router.use(...(middleware as List<any>))
+  for (const actionModule of controllerModule.actionModules) {
+    const version = actionModule.version || controllerModule.version || ''
+    let path = Path.join('/', version, controllerModule.path, actionModule.path)
     // strip the ending '/'
-    const match = pathRegex.exec(path)
-    if (match) {
-      path = match[1]
+    if (path.endsWith('/')) {
+      path = path.substr(0, path.length - 1)
     }
-    ;(router as any)[action.method.toLowerCase()](path, ...action.middleware, action.process)
+    router[actionModule.method.toLowerCase()](
+      path,
+      ...actionModule.middleware,
+      actionModule.action.execute.bind(actionModule.action)
+    )
   }
   return router
 }
 
-export function loadControllersRouter(controllers: List<Controller>) {
+export function loadControllersRouter(controllers: List<ControllerModule>) {
   const router = new Router()
   controllers.forEach((ctrl) => {
     const ctrlRouter = createControllerRouter(ctrl)

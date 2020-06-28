@@ -1,5 +1,5 @@
 import { List } from 'immutable'
-import { IRouterContext } from 'koa-router'
+import { RouterContext } from '@koa/router'
 import 'reflect-metadata'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { ParamSource } from '../../src/constants/ParamSource'
@@ -224,7 +224,7 @@ describe('Context', () => {
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
-      public test(@Context() ctx: IRouterContext) {
+      public test(@Context() ctx: RouterContext) {
         return ctx.url
       }
     }

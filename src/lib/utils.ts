@@ -1,28 +1,31 @@
 import { Fields, Files, IncomingForm } from 'formidable'
 import glob from 'globby'
-import headerCase from 'header-case'
-import { List } from 'immutable'
+import { headerCase } from 'header-case'
 import { Context } from 'koa'
 import _ from 'lodash'
 import Path from 'path'
 import 'reflect-metadata'
-import { MetadataKey } from '../constants'
-import { ParamMetadata } from '../decorators'
 import { IModuleLoaderConfig, IModuleLoaderOptions } from '../Luren'
-import { INext } from '../types'
-import { getParams } from './helper'
 import { IHttpResponse } from './HttpResponse'
-import { IProcessor } from './Processor'
+import { Constructor } from '../types/Constructor'
+import { METADATA_KEY } from 'inversify'
+import { getContainer } from './container'
+import { Injectable } from '../decorators'
+import { Scope, MetadataKey } from '../constants'
+import { Middleware } from './Middleware'
+import { ExecutionContext } from './ExecutionContext'
+import { AuthenticationScope } from '../constants/AuthenticationScope'
+import { List } from 'immutable'
+import { IAuthenticatorDescriptor } from '../processors/Authenticator'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
   const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
-  // tslint:disable-next-line: prettier
   const pattern = config.pattern ?? '*'
   const ignore = config.ignore || []
   const files = await glob(pattern, {
     cwd: dir,
     ignore: ['*.d.ts', ...ignore],
-    expandDirectories: { extensions: ['js', 'ts', 'json'] }
+    expandDirectories: { extensions: ['js', 'ts'] }
   })
   const modules = [] as any[]
   for (const file of files) {
@@ -33,9 +36,6 @@ export const importModules = async (workDir: string, config: IModuleLoaderConfig
 }
 
 export const getFileLoaderConfig = (options: IModuleLoaderOptions = {}, defaultPath: string) => {
-  if (options.disabled) {
-    return
-  }
   const path = options.path || defaultPath
   const conf: IModuleLoaderConfig = {
     path,
@@ -57,28 +57,6 @@ export const parseFormData = async (ctx: Context) => {
       resolve({ fields, files })
     })
   })
-}
-
-export const toMiddleware = (processor: IProcessor) => {
-  return async function middleware(ctx: Context, next: INext) {
-    const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, processor, 'process') || List()
-
-    let nextCalled = false
-    const wrappedNext = async () => {
-      nextCalled = true
-      return next()
-    }
-    let res = false
-    if (paramsMetadata.isEmpty()) {
-      res = await processor.process(ctx, wrappedNext)
-    } else {
-      const args = getParams(ctx, wrappedNext, paramsMetadata)
-      res = await processor.process(...args)
-    }
-    if (!res && !nextCalled) {
-      return next()
-    }
-  }
 }
 
 export const normalizeHeaderCase = (headers: { [name: string]: string }) => {
@@ -126,5 +104,61 @@ export const toRawHeader = (response: IHttpResponse): { [key: string]: string } 
       }
     }
     return header
+  }
+}
+
+export const isInjectable = (constructor: Constructor) => {
+  return Reflect.hasOwnMetadata(METADATA_KEY.PARAM_TYPES, constructor)
+}
+
+export const getClassInstance = <T = any>(constructor: Constructor) => {
+  if (!isInjectable(constructor)) {
+    Injectable({ scope: Scope.SINGLETON })(constructor)
+  }
+  return getContainer().get<T>(constructor)
+}
+
+export const isLurenMiddleware = (val: any): val is Middleware => {
+  return val instanceof Middleware
+}
+
+export const isExpectedAuthenticator = (authId: string, execCtx: ExecutionContext) => {
+  let authScope: AuthenticationScope = AuthenticationScope.ALL
+  let descriptors: List<IAuthenticatorDescriptor> = List()
+  if (execCtx.moduleContext) {
+    if (execCtx.moduleContext.actionModule) {
+      authScope =
+        Reflect.getOwnMetadata(
+          MetadataKey.AUTHENTICATION_SCOPE,
+          execCtx.moduleContext.controllerModule!.controller,
+          execCtx.moduleContext.actionModule.name
+        ) || AuthenticationScope.ALL
+      descriptors =
+        Reflect.getOwnMetadata(
+          MetadataKey.AUTHENTICATORS,
+          execCtx.moduleContext.controllerModule!.controller,
+          execCtx.moduleContext.actionModule.name
+        ) || List()
+    } else if (execCtx.moduleContext.controllerModule) {
+      authScope =
+        Reflect.getOwnMetadata(MetadataKey.AUTHENTICATION_SCOPE, execCtx.moduleContext.controllerModule!.controller) ||
+        AuthenticationScope.ALL
+      descriptors =
+        Reflect.getOwnMetadata(MetadataKey.AUTHENTICATORS, execCtx.moduleContext.controllerModule.controller) || List()
+    }
+  }
+  switch (authScope) {
+    case AuthenticationScope.ALL:
+      return true
+    case AuthenticationScope.NONE:
+      return false
+    case AuthenticationScope.ONLY: {
+      for (const descriptor of descriptors) {
+        if (descriptor.id === authId) {
+          return true
+        }
+      }
+      return false
+    }
   }
 }

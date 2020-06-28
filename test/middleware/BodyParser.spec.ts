@@ -1,5 +1,4 @@
-import '../../src/lib/utils'
-import BodyParser from '../../src/middleware/BodyParser'
+import { bodyParser } from '../../src/middleware/BodyParser'
 
 jest.mock('koa-bodyparser', () => {
   return () => {
@@ -19,10 +18,9 @@ jest.mock('../../src/lib/utils', () => {
 })
 
 describe('BodyParser', () => {
-  const bodyParser = new BodyParser()
   it('should parse body to json by default', async () => {
     const ctx: any = { request: { body: { foo: 'bar' } } }
-    await bodyParser.process(ctx, async () => {
+    await bodyParser(ctx, async () => {
       expect(ctx.request.body).toEqual({ foo: 'bar' })
     })
   })
@@ -33,7 +31,7 @@ describe('BodyParser', () => {
         return content === 'multipart/form-data'
       }
     }
-    await bodyParser.process(ctx, async () => {
+    await bodyParser(ctx, async () => {
       expect(ctx.request.body).toEqual({ bar: 'foo' })
     })
   })
@@ -44,7 +42,7 @@ describe('BodyParser', () => {
         return false
       }
     }
-    await bodyParser.process(ctx, async () => {
+    await bodyParser(ctx, async () => {
       expect(ctx.request.body).toEqual({ foo: 'raw' })
     })
   })

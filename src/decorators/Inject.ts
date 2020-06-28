@@ -1,6 +1,6 @@
 import { inject, injectable, interfaces } from 'inversify'
 import { Scope } from '../constants'
-import { container } from '../lib/container'
+import { getContainer } from '../lib/container'
 
 export interface IInjectableOptions {
   serviceIdentifier?: any
@@ -33,7 +33,7 @@ export function Injectable(options: IInjectableOptions = { scope: Scope.TRANSIEN
     injectable()(target)
     if (autoBind) {
       const serviceId = options.serviceIdentifier || target
-      const bindingInWhenOn = container.bind(serviceId).to(target)
+      const bindingInWhenOn = getContainer().bind(serviceId).to(target)
       const bindingWhenOn = bindingScope(bindingInWhenOn, options.scope)
       if (options.name) {
         bindingInWhenOn.whenTargetNamed(name)
