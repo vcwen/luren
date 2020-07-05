@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.1](https://github.com/vcwen/luren/compare/v0.2.0...v0.2.1) (2020-07-05)
+
+
+### Features
+
+* **guard:** guard instead of authenticator ([3018ea9](https://github.com/vcwen/luren/commit/3018ea9aa7609f43d0ff05898103c83fbc1e3795))
+
 ## [0.2.0](https://github.com/vcwen/luren/compare/v0.1.10...v0.2.0) (2020-06-28)
 
 
