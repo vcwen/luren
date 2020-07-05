@@ -64,15 +64,66 @@ export const isExpectedGuard = (guard: Guard, execCtx: ExecutionContext) => {
   }
 }
 
+export interface IGuardOptions {
+  include?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)
+  exclude?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)
+}
+
 export abstract class Guard extends Processor {
   public id: string
   public abstract type: string
-  public constructor() {
+  private _include?: (execContext: ExecutionContext) => Promise<boolean>
+  private _exclude?: (execContext: ExecutionContext) => Promise<boolean>
+  public constructor(options?: IGuardOptions) {
     super()
     this.id = uuid()
+    if (options?.include) {
+      if (typeof options.include === 'function') {
+        this._include = options.include
+      } else {
+        let pathRegex: RegExp
+        if (typeof options.include === 'string') {
+          pathRegex = new RegExp(options.include)
+        } else if (options.include instanceof RegExp) {
+          pathRegex = options.include
+        } else {
+          throw new TypeError(`Invalid include value:${options.include}`)
+        }
+        this._include = async (execContext: ExecutionContext) => {
+          return pathRegex.test(execContext.httpContext.path)
+        }
+      }
+    }
+    if (options?.exclude) {
+      if (typeof options.exclude === 'function') {
+        this._exclude = options.exclude
+      } else {
+        let pathRegex: RegExp
+        if (typeof options.exclude === 'string') {
+          pathRegex = new RegExp(options.exclude)
+        } else if (options.exclude instanceof RegExp) {
+          pathRegex = options.exclude
+        } else {
+          throw new TypeError(`Invalid exclude value:${options.exclude}`)
+        }
+        this._exclude = async (execContext: ExecutionContext) => {
+          return pathRegex.test(execContext.httpContext.path)
+        }
+      }
+    }
   }
   public async process(execCtx: ExecutionContext, next: INext) {
-    const shouldRun = isExpectedGuard(this, execCtx)
+    let shouldRun = true
+    if (this._include) {
+      shouldRun = await this._include(execCtx)
+    }
+    if (shouldRun && this._exclude) {
+      shouldRun = !(await this._exclude(execCtx))
+    }
+    if (shouldRun) {
+      shouldRun = isExpectedGuard(this, execCtx)
+    }
+
     if (shouldRun) {
       const valid = await this.validate(execCtx)
       if (valid) {

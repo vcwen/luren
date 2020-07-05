@@ -4,7 +4,7 @@ import { HttpException } from '../lib'
 import { ExecutionContext } from '../lib/ExecutionContext'
 import { getRequestParam } from '../lib/helper'
 import { IProcessor } from './Processor'
-import { Guard } from './Guard'
+import { Guard, IGuardOptions } from './Guard'
 
 export interface IAuthenticatorDescriptor {
   id: string
@@ -22,8 +22,8 @@ export abstract class Authenticator extends Guard implements IAuthenticator {
   public abstract authenticationType: string
   public description?: string
   public id: string
-  public constructor(public name: string) {
-    super()
+  public constructor(public name: string, options?: IGuardOptions) {
+    super(options)
     this.id = uuid()
   }
   public async validate(execCtx: ExecutionContext) {
@@ -46,9 +46,9 @@ export class APITokenAuthenticator extends Authenticator {
       key?: string
       source?: 'query' | 'header' | 'body'
       description?: string
-    } = {}
+    } & IGuardOptions = {}
   ) {
-    super(options?.name || AuthenticationType.API_TOKEN)
+    super(options?.name || AuthenticationType.API_TOKEN, options)
     this.key = options.key ?? 'access_token'
     this._validate = validate
     this.source = options.source ?? 'query'
@@ -86,10 +86,10 @@ export class HttpAuthenticator extends Authenticator {
       name?: string
       format?: string
       description?: string
-    } = {}
+    } & IGuardOptions = {}
   ) {
     // tslint:disable-next-line: no-magic-numbers
-    super(options.name || 'HTTP')
+    super(options.name || 'HTTP', options)
     this.format = options.format || 'JWT'
     this._validate = validate
     this.description = options.description
