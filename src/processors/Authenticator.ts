@@ -9,7 +9,7 @@ import { Guard, IGuardOptions } from './Guard'
 export interface IAuthenticatorDescriptor {
   id: string
   name: string
-  type: string
+  authenticationType: string
   description?: string
 }
 
@@ -66,7 +66,7 @@ export class APITokenAuthenticator extends Authenticator {
     return {
       id: this.id,
       name: this.name,
-      type: this.type,
+      authenticationType: this.authenticationType,
       key: this.key,
       source: this.source,
       description: this.description
@@ -119,7 +119,7 @@ export class HttpAuthenticator extends Authenticator {
     return {
       id: this.id,
       name: this.name,
-      type: this.type,
+      authenticationType: this.authenticationType,
       scheme: this.scheme,
       format: this.format,
       description: this.description
