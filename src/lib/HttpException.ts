@@ -1,5 +1,5 @@
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import IHttpHeader from '../types/HttpHeader'
+import { IHttpHeader } from '../types/HttpHeader'
 import { IHttpResponse } from './HttpResponse'
 import { toRawHeader } from './utils'
 
@@ -133,5 +133,8 @@ export class HttpException extends Error implements IHttpResponse {
       body.message = this.message
     }
     return body
+  }
+  public isSeverException() {
+    return this.status >= HttpStatusCode.INTERNAL_SERVER_ERROR
   }
 }

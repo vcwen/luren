@@ -1,4 +1,4 @@
-import { List } from 'immutable'
+import { List, Map } from 'immutable'
 import { Context, Middleware as KoaMiddleware } from 'koa'
 import { HttpMethod, HttpStatusCode, MetadataKey } from '../constants'
 import { ParamMetadata } from '../decorators'
@@ -6,6 +6,7 @@ import { INext } from '../types'
 import { getParams } from './helper'
 import { HttpResponse } from './HttpResponse'
 import { Middleware } from './Middleware'
+import { GuardGroup } from '../processors/Guard'
 
 export class ActionExecutor {
   public controller: object
@@ -18,8 +19,9 @@ export class ActionExecutor {
     const ctrl: any = this.controller
     const paramsMetadata: List<ParamMetadata> =
       Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(ctrl), this.name) || List()
-    const args = getParams(ctx, next, paramsMetadata)
-    const response = await ctrl[this.name].apply(ctrl, args.toArray())
+    const expectedArgs = getParams(ctx, next, paramsMetadata)
+    const args = expectedArgs.size > 0 ? expectedArgs.toArray() : [ctx, next]
+    const response = await ctrl[this.name].apply(ctrl, args)
     if (response instanceof HttpResponse) {
       const headers = response.getRawHeader()
       if (headers) {
@@ -38,7 +40,10 @@ export class ActionExecutor {
       // set status at last, since set body might change the status
       ctx.status = response.status
     } else {
-      ctx.body = response
+      // set response only if return value is not undefined/void
+      if (response !== undefined) {
+        ctx.body = response
+      }
     }
   }
 }
@@ -50,9 +55,11 @@ export class ActionModule {
   public path: string
   public method: HttpMethod
   public middleware: List<Middleware | KoaMiddleware> = List()
+  public guards: Map<string, GuardGroup> = Map()
   public deprecated: boolean = false
   public version?: string
   public desc?: string
+  public summary?: string
   constructor(name: string, method: HttpMethod, path: string, action: ActionExecutor) {
     this.name = name
     this.action = action

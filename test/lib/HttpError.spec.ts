@@ -1,5 +1,5 @@
 import { HttpHeader, HttpStatusCode } from '../../src'
-import { HttpException } from '../../src/lib/HttpException'
+import { HttpException } from '../../src'
 describe('HttpError', () => {
   describe('constructor', () => {
     it('should create the HttpError instance', () => {

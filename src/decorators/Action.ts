@@ -33,7 +33,8 @@ export class ActionMetadata {
 const getActionMetadata = (options: IActionOptions, _: object, propertyKey: string) => {
   const name = options.name || propertyKey
   const method = options.method || HttpMethod.GET
-  const path = options.path || '/' + propertyKey
+  // tslint:disable-next-line: prettier
+  const path = options.path ?? '/' + propertyKey
   const metadata = new ActionMetadata(name, method, path)
   if (options.version) {
     metadata.version = options.version

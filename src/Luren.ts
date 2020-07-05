@@ -3,7 +3,7 @@ import Koa from 'koa'
 import mount from 'koa-mount'
 import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
-import { MetadataKey } from './constants'
+import { MetadataKey, MountType } from './constants'
 import { ControllerModule } from './lib/Controller'
 import './lib/DataTypes'
 import { createControllerModule, createControllerRouter } from './lib/helper'
@@ -19,6 +19,8 @@ import { ModuleContext } from './lib/ModuleContext'
 import { ExecutionLevel } from './constants/ExecutionLevel'
 import { ResponseConverter } from './processors/ResponseConverter'
 import helmet from 'koa-helmet'
+import { AppModule } from './lib/AppModule'
+import { GuardGroup, Guard } from './processors/Guard'
 
 const debug = Debug('luren')
 
@@ -40,11 +42,12 @@ export interface LurenOptions {
 
 export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
   private _workDir: string = process.cwd()
-  private _controllerModules: Map<Constructor, ControllerModule> = new Map()
+  private _appModule: AppModule
   private _httpServer?: Server
 
   constructor(options?: LurenOptions) {
     super()
+    this._appModule = new AppModule(this)
     this.use(...[helmet(), exceptionHandler, moduleContextInjection, bodyParser])
     if (!(options?.enableResponseConversion === false)) {
       this.use(new ResponseConverter().toRawMiddleware())
@@ -99,18 +102,18 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
         throw new TypeError(`invalid controller instance:${ctrl?.constructor?.name}`)
       }
       debug(`register controller ${ctrl.constructor.name}`)
-      if (!this._controllerModules.has(ctrl.constructor)) {
+      if (!this._appModule.controllerModules.some((m) => m.controller.constructor === ctrl.constructor)) {
         const ctrlModule = createControllerModule(ctrl)
+        this._appModule.controllerModules = this._appModule.controllerModules.push(ctrlModule)
         this._notifyMiddlewareMount(ctrlModule)
-        this._controllerModules.set(ctrl.constructor, ctrlModule)
         const ctrlRouter = createControllerRouter(ctrlModule)
         this.use(ctrlRouter.routes()).use(ctrlRouter.allowedMethods())
       }
     }
   }
 
-  public getControllerModules() {
-    return this._controllerModules
+  public getAppModule() {
+    return this._appModule
   }
 
   public plugin(...plugins: IPlugin[]) {
@@ -158,6 +161,31 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
       }
     })
     return this
+  }
+
+  public useGuard(...guards: Guard[]) {
+    if (guards.length === 0) {
+      return
+    }
+    const guardInstances = guards.map((a) => {
+      if (typeof a === 'function') {
+        if (Guard.isPrototypeOf(a)) {
+          return getClassInstance<Guard>(a as any)
+        } else {
+          return a
+        }
+      } else if (a instanceof Guard) {
+        return a
+      } else {
+        throw TypeError('Invalid authenticator type')
+      }
+    })
+    this.use(...guardInstances)
+    for (const guard of guardInstances) {
+      const guardGroup: GuardGroup = this._appModule.guards.get(guard.type) ?? new GuardGroup(MountType.INTEGRATE, [])
+      guardGroup.addGuards(guard)
+      this._appModule.guards = this._appModule.guards.set(guard.type, guardGroup)
+    }
   }
 
   public serve(path: string, options: SendOptions): void
@@ -223,13 +251,13 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
   private _notifyMiddlewareMount(controllerModule: ControllerModule) {
     for (const m of controllerModule.middleware) {
       if (isLurenMiddleware(m)) {
-        m.onMount(ExecutionLevel.CONTROLLER, new ModuleContext(this, controllerModule))
+        m.onMount(ExecutionLevel.CONTROLLER, new ModuleContext(this._appModule, controllerModule))
       }
     }
     for (const actionModule of controllerModule.actionModules) {
       for (const m of actionModule.middleware) {
         if (isLurenMiddleware(m)) {
-          m.onMount(ExecutionLevel.ACTION, new ModuleContext(this, controllerModule, actionModule))
+          m.onMount(ExecutionLevel.ACTION, new ModuleContext(this._appModule, controllerModule, actionModule))
         }
       }
     }

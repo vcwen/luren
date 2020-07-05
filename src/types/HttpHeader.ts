@@ -1,4 +1,4 @@
-export default interface IHttpHeader {
+export interface IHttpHeader {
   // Authentication
   'WWW-Authenticate'?: string
   Authorization?: string

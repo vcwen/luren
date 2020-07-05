@@ -1,5 +1,6 @@
 import { Stream } from 'stream'
-import { HttpHeader, HttpStatusCode } from '../constants'
+import { HttpHeader } from '../constants/HttpHeader'
+import { HttpStatusCode } from '../constants/HttpStatusCode'
 import { HttpResponse } from './HttpResponse'
 
 export class StreamResponse extends HttpResponse {

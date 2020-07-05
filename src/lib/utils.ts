@@ -10,13 +10,9 @@ import { IHttpResponse } from './HttpResponse'
 import { Constructor } from '../types/Constructor'
 import { METADATA_KEY } from 'inversify'
 import { getContainer } from './container'
-import { Injectable } from '../decorators'
-import { Scope, MetadataKey } from '../constants'
+import { Injectable } from '../decorators/Inject'
+import { Scope } from '../constants'
 import { Middleware } from './Middleware'
-import { ExecutionContext } from './ExecutionContext'
-import { AuthenticationScope } from '../constants/AuthenticationScope'
-import { List } from 'immutable'
-import { IAuthenticatorDescriptor } from '../processors/Authenticator'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
   const dir = Path.isAbsolute(config.path) ? config.path : Path.resolve(workDir, config.path)
@@ -120,45 +116,4 @@ export const getClassInstance = <T = any>(constructor: Constructor) => {
 
 export const isLurenMiddleware = (val: any): val is Middleware => {
   return val instanceof Middleware
-}
-
-export const isExpectedAuthenticator = (authId: string, execCtx: ExecutionContext) => {
-  let authScope: AuthenticationScope = AuthenticationScope.ALL
-  let descriptors: List<IAuthenticatorDescriptor> = List()
-  if (execCtx.moduleContext) {
-    if (execCtx.moduleContext.actionModule) {
-      authScope =
-        Reflect.getOwnMetadata(
-          MetadataKey.AUTHENTICATION_SCOPE,
-          execCtx.moduleContext.controllerModule!.controller,
-          execCtx.moduleContext.actionModule.name
-        ) || AuthenticationScope.ALL
-      descriptors =
-        Reflect.getOwnMetadata(
-          MetadataKey.AUTHENTICATORS,
-          execCtx.moduleContext.controllerModule!.controller,
-          execCtx.moduleContext.actionModule.name
-        ) || List()
-    } else if (execCtx.moduleContext.controllerModule) {
-      authScope =
-        Reflect.getOwnMetadata(MetadataKey.AUTHENTICATION_SCOPE, execCtx.moduleContext.controllerModule!.controller) ||
-        AuthenticationScope.ALL
-      descriptors =
-        Reflect.getOwnMetadata(MetadataKey.AUTHENTICATORS, execCtx.moduleContext.controllerModule.controller) || List()
-    }
-  }
-  switch (authScope) {
-    case AuthenticationScope.ALL:
-      return true
-    case AuthenticationScope.NONE:
-      return false
-    case AuthenticationScope.ONLY: {
-      for (const descriptor of descriptors) {
-        if (descriptor.id === authId) {
-          return true
-        }
-      }
-      return false
-    }
-  }
 }

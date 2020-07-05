@@ -1,15 +1,38 @@
+/* tslint:disable: max-classes-per-file */
 import fs from 'fs'
 import bodyParser = require('koa-bodyparser')
 import { Prop, Schema } from 'luren-schema'
 import Path from 'path'
 import request from 'supertest'
-import { HttpMethod, HttpStatusCode, redirect } from '../src'
-import { ParamSource } from '../src/constants/ParamSource'
-import { Action, Controller, Param, Response, UseMiddleware } from '../src/decorators'
-import { IncomingFile } from '../src/lib/IncomingFile'
-import { StreamResponse } from '../src/lib/StreamResponse'
-import { Luren } from '../src/Luren'
+import {
+  HttpMethod,
+  HttpStatusCode,
+  redirect,
+  ok,
+  ParamSource,
+  Action,
+  Controller,
+  Param,
+  Response,
+  UseMiddleware,
+  Get,
+  IncomingFile,
+  StreamResponse,
+  Luren,
+  APITokenAuthenticator,
+  HttpAuthenticator,
+  UseGuard,
+  DisableGuards,
+  PresetGuardType
+} from '../src'
 
+const apiTokenAuth = new APITokenAuthenticator(async (token) => {
+  return token === 'test_token'
+})
+
+// const httpAuth = new HttpAuthenticator(async (token) => {
+//   return token === 'test_token'
+// })
 @Schema()
 class Person {
   @Prop({ required: true })
@@ -67,6 +90,11 @@ export default class PersonController {
   public download() {
     const rs = fs.createReadStream(Path.resolve(__dirname, './files/avatar.jpg'))
     return new StreamResponse(rs, { filename: 'image.jpg', mime: 'image/jpg' })
+  }
+  @Get()
+  @UseGuard(apiTokenAuth)
+  public auth() {
+    return ok()
   }
 }
 
@@ -190,5 +218,163 @@ describe('Luren', () => {
     } finally {
       server.close()
     }
+  })
+  it('should return 401 unauthorized ', async () => {
+    const luren = new Luren()
+    const ctrl = new PersonController()
+    luren.register(ctrl)
+    const server = luren.listen(3001)
+    try {
+      await request(server).get('/api/people/auth').expect(HttpStatusCode.UNAUTHORIZED)
+    } finally {
+      server.close()
+    }
+  })
+  it('should return 200 OK ', async () => {
+    const luren = new Luren()
+    const ctrl = new PersonController()
+    luren.register(ctrl)
+    const server = luren.listen(3001)
+    try {
+      await request(server).get('/api/people/auth?access_token=test_token').expect(HttpStatusCode.OK)
+    } finally {
+      server.close()
+    }
+  })
+  it('should return 401', async () => {
+    const apiTokenAuth = new APITokenAuthenticator(
+      async (token) => {
+        return token === 'test_token'
+      },
+      {
+        name: 'api_key',
+        key: 'authorization',
+        source: 'header'
+      }
+    )
+    // tslint:disable-next-line: max-classes-per-file
+    @Controller()
+    class TestController {
+      @Action()
+      public foo() {
+        return 'ok'
+      }
+      @Action()
+      public bar() {
+        return 'ok'
+      }
+    }
+    const ctrl = new TestController()
+    const app = new Luren()
+    app.useGuard(apiTokenAuth)
+    app.register(ctrl)
+    await request(app.callback()).get('/tests/foo').expect(401)
+    await request(app.callback()).get('/tests/bar').expect(401)
+  })
+  it('should integrate authenticators', async () => {
+    const apiTokenAuth = new APITokenAuthenticator(
+      async (token) => {
+        return token === 'test_token'
+      },
+      {
+        name: 'api_key',
+        key: 'access_token',
+        source: 'header'
+      }
+    )
+    const httpAuth = new HttpAuthenticator(async (token) => {
+      return token === 'http_token'
+    })
+    @Controller()
+    class TestController {
+      @Action()
+      public foo() {
+        return 'ok'
+      }
+      @UseGuard(httpAuth)
+      @Action()
+      public bar() {
+        return 'ok'
+      }
+    }
+    const ctrl = new TestController()
+    const app = new Luren()
+    app.useGuard(apiTokenAuth)
+    app.register(ctrl)
+    // tslint:disable-next-line: max-classes-per-file
+    @Controller()
+    class AnotherController {
+      @Action()
+      public foo() {
+        return 'ok'
+      }
+      @Action()
+      public bar() {
+        return 'ok'
+      }
+    }
+    const anotherCtl = new AnotherController()
+    app.register(anotherCtl)
+    await request(app.callback()).get('/tests/foo').expect(401)
+    // await request(app.callback()).get('/tests/bar').expect(401)
+    // await request(app.callback()).get('/tests/bar').set('Authorization', 'Bearer http_token').expect(401)
+    // await request(app.callback()).get('/tests/bar').set('access_token', 'test_token').expect(401)
+    // await request(app.callback())
+    //   .get('/tests/bar')
+    //   .set('access_token', 'test_token')
+    //   .set('Authorization', 'Bearer http_token')
+    //   .expect(200)
+    // await request(app.callback()).get('/anothers/bar').set('access_token', 'test_token').expect(200)
+  })
+  it('should override authenticators', async () => {
+    const apiTokenAuth = new APITokenAuthenticator(
+      async (token) => {
+        return token === 'test_token'
+      },
+      {
+        name: 'api_key',
+        key: 'authorization',
+        source: 'header'
+      }
+    )
+    const httpAuth = new HttpAuthenticator(async (token) => {
+      return token === 'http_token'
+    })
+    // tslint:disable-next-line: max-classes-per-file
+    @DisableGuards(PresetGuardType.Authenticator)
+    @Controller()
+    class TestController {
+      @Action()
+      public foo() {
+        return 'ok'
+      }
+      @UseGuard(httpAuth)
+      @Action()
+      public bar() {
+        return 'ok'
+      }
+    }
+    const ctrl = new TestController()
+    const app = new Luren()
+    app.useGuard(apiTokenAuth)
+    app.register(ctrl)
+    // tslint:disable-next-line: max-classes-per-file
+    @Controller()
+    class AnotherController {
+      @Action()
+      public foo() {
+        return 'ok'
+      }
+      @Action()
+      public bar() {
+        return 'ok'
+      }
+    }
+    const anotherCtl = new AnotherController()
+    app.register(anotherCtl)
+    await request(app.callback()).get('/tests/foo').expect(200)
+    await request(app.callback()).get('/tests/bar').expect(401)
+    await request(app.callback()).get('/tests/bar').set('Authorization', 'Bearer http_token').expect(200)
+    await request(app.callback()).get('/anothers/bar').set('authorization', 'test_token').expect(200)
   })
 })

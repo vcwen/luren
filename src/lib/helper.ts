@@ -14,6 +14,7 @@ import { ControllerModule } from './Controller'
 import { HttpException } from './HttpException'
 import { IncomingFile } from './IncomingFile'
 import { Middleware } from './Middleware'
+import { GuardGroup } from '../processors/Guard'
 
 const getParam = (source: any, metadata: ParamMetadata) => {
   if (metadata.root) {
@@ -115,7 +116,13 @@ export function createActionModule(controller: object, propKey: string, actionMe
     Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
   const action = new ActionExecutor(controller, propKey)
   const actionModule = new ActionModule(actionMetadata.name, actionMetadata.method, actionMetadata.path, action)
+  actionModule.summary = actionMetadata.summary
   actionModule.middleware = middleware
+  const guards: Map<string, GuardGroup> = Reflect.getMetadata(MetadataKey.GUARDS, controller, propKey)
+  if (guards) {
+    actionModule.guards = guards
+  }
+  Reflect.defineMetadata(MetadataKey.ACTION_MODULE, actionModule, controller, propKey)
   return actionModule
 }
 
@@ -141,12 +148,17 @@ export function createControllerModule(ctrl: object) {
   controllerModule.desc = ctrlMetadata.desc
   const middleware = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
   controllerModule.middleware = middleware
+  const guards: Map<string, GuardGroup> = Reflect.getMetadata(MetadataKey.GUARDS, ctrl)
+  if (guards) {
+    controllerModule.guards = guards
+  }
   controllerModule.actionModules = createActions(ctrl)
+  Reflect.defineMetadata(MetadataKey.CONTROLLER_MODULE, controllerModule, ctrl)
   return controllerModule
 }
 
 export function createControllerRouter(controllerModule: ControllerModule) {
-  const router: any = new Router({ prefix: controllerModule.prefix })
+  const router = new Router({ prefix: controllerModule.prefix })
   const middleware = controllerModule.middleware.map((m) => (m instanceof Middleware ? m.toRawMiddleware() : m))
 
   router.use(...(middleware as List<any>))
@@ -157,9 +169,10 @@ export function createControllerRouter(controllerModule: ControllerModule) {
     if (path.endsWith('/')) {
       path = path.substr(0, path.length - 1)
     }
-    router[actionModule.method.toLowerCase()](
+    const actionMiddleware = actionModule.middleware.map((m) => (m instanceof Middleware ? m.toRawMiddleware() : m))
+    ;(router as any)[actionModule.method.toLowerCase()](
       path,
-      ...actionModule.middleware,
+      ...actionMiddleware,
       actionModule.action.execute.bind(actionModule.action)
     )
   }

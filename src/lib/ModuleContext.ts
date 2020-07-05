@@ -1,6 +1,10 @@
-import { Luren } from '../Luren'
 import { ActionModule } from './Action'
 import { ControllerModule } from './Controller'
+import { AppModule } from './AppModule'
 export class ModuleContext {
-  constructor(public app: Luren, public controllerModule?: ControllerModule, public actionModule?: ActionModule) {}
+  constructor(
+    public appModule: AppModule,
+    public controllerModule?: ControllerModule,
+    public actionModule?: ActionModule
+  ) {}
 }

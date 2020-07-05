@@ -1,5 +1,5 @@
 import { HttpStatusCode } from '../constants/HttpStatusCode'
-import IHttpHeader from '../types/HttpHeader'
+import { IHttpHeader } from '../types/HttpHeader'
 import { toRawHeader } from './utils'
 
 export interface IHttpResponse {

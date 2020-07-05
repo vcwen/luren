@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { IJsSchema, IValidationResult, JsType, JsTypes, ValidationResult } from 'luren-schema'
+import { IJsSchema, JsType, JsTypes, ValidationResult } from 'luren-schema'
 import { defineJsSchema } from 'luren-schema/dist/lib/utils'
 import { Stream } from 'stream'
 import { IncomingFile } from './IncomingFile'
@@ -9,7 +9,7 @@ defineJsSchema(Stream, { type: 'stream' })
 
 class FileType extends JsType {
   public type: string = 'file'
-  public validate(value: any): IValidationResult {
+  public validate(value: any): ValidationResult {
     if (_.isNil(value)) {
       return ValidationResult.ok()
     }
@@ -42,7 +42,7 @@ JsTypes.register('file', new FileType())
 // tslint:disable-next-line: max-classes-per-file
 class StreamType extends JsType {
   public type: string = 'stream'
-  public validate(value: any): IValidationResult {
+  public validate(value: any): ValidationResult {
     if (_.isNil(value)) {
       return ValidationResult.ok()
     }

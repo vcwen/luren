@@ -3432,10 +3432,10 @@ lower-case@^2.0.1:
   dependencies:
     tslib "^1.10.0"
 
-luren-schema@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.2.2.tgz#ed98afb8d9dc1e95871ada286f85f47b933c29b1"
-  integrity sha1-7ZivuNncHpWHGtoob4X0e5M8KbE=
+luren-schema@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.2.4.tgz?cache=0&sync_timestamp=1593789566305&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.2.4.tgz#24ef8749b9fef6df9acdcf2d1f4ceb6dbeb03f84"
+  integrity sha1-JO+HSbn+9t+azc8tH0zrbb6wP4Q=
   dependencies:
     ajv "^6.10.2"
     coveralls "^3.0.7"
@@ -3924,7 +3924,7 @@ prelude-ls@~1.1.2:
 
 prettier@^2.0.5:
   version "2.0.5"
-  resolved "https://registry.npm.taobao.org/prettier/download/prettier-2.0.5.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fprettier%2Fdownload%2Fprettier-2.0.5.tgz#d6d56282455243f2f92cc1716692c08aa31522d4"
+  resolved "https://registry.npm.taobao.org/prettier/download/prettier-2.0.5.tgz#d6d56282455243f2f92cc1716692c08aa31522d4"
   integrity sha1-1tVigkVSQ/L5LMFxZpLAiqMVItQ=
 
 pretty-format@^25.2.1, pretty-format@^25.4.0:
@@ -4789,7 +4789,7 @@ tslint-config-prettier@^1.18.0:
 
 tslint-plugin-prettier@^2.3.0:
   version "2.3.0"
-  resolved "https://registry.npm.taobao.org/tslint-plugin-prettier/download/tslint-plugin-prettier-2.3.0.tgz#73fe71bf9f03842ac48c104122ca9b1de012ecf4"
+  resolved "https://registry.npm.taobao.org/tslint-plugin-prettier/download/tslint-plugin-prettier-2.3.0.tgz?cache=0&sync_timestamp=1587472748685&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Ftslint-plugin-prettier%2Fdownload%2Ftslint-plugin-prettier-2.3.0.tgz#73fe71bf9f03842ac48c104122ca9b1de012ecf4"
   integrity sha1-c/5xv58DhCrEjBBBIsqbHeAS7PQ=
   dependencies:
     eslint-plugin-prettier "^2.2.0"

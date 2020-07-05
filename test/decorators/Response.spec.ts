@@ -1,8 +1,8 @@
 import 'reflect-metadata'
 import { HttpStatusCode } from '../../src'
-import { MetadataKey } from '../../src/constants/MetadataKey'
-import { ErrorResponse, Response } from '../../src/decorators/Response'
-import { IncomingFile } from '../../src/lib/IncomingFile'
+import { MetadataKey } from '../../src'
+import { ErrorResponse, Response } from '../../src'
+import { IncomingFile } from '../../src'
 describe('Response', () => {
   it('should return decorator function when options is set', () => {
     class TestController {
