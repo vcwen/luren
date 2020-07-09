@@ -162,7 +162,10 @@ export function createControllerRouter(controllerModule: ControllerModule) {
   const middleware = controllerModule.middleware.map((m) => (m instanceof Middleware ? m.toRawMiddleware() : m))
 
   router.use(...(middleware as List<any>))
-  for (const actionModule of controllerModule.actionModules) {
+  const actionModules = controllerModule.actionModules.sort((a, b) => {
+    return a.path < b.path ? 1 : -1
+  })
+  for (const actionModule of actionModules) {
     const version = actionModule.version || controllerModule.version || ''
     let path = Path.join('/', version, controllerModule.path, actionModule.path)
     // strip the ending '/'

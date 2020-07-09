@@ -34,7 +34,8 @@ const getActionMetadata = (options: IActionOptions, _: object, propertyKey: stri
   const name = options.name || propertyKey
   const method = options.method || HttpMethod.GET
   // tslint:disable-next-line: prettier
-  const path = options.path ?? '/' + propertyKey
+  // remove the leading /, since it's actually relative path
+  const path = (options.path ?? propertyKey).replace(/^\//, '')
   const metadata = new ActionMetadata(name, method, path)
   if (options.version) {
     metadata.version = options.version
