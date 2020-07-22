@@ -79,23 +79,23 @@ function methodifyActionDecorator(method: HttpMethod) {
   }
 }
 
-export function Get(options?: IActionOptions): PropertyDecorator {
+export function Get(options?: Omit<IActionOptions, 'method'>): PropertyDecorator {
   return methodifyActionDecorator(HttpMethod.GET)(options)
 }
 
-export function Post(options?: IActionOptions) {
+export function Post(options?: Omit<IActionOptions, 'method'>) {
   return methodifyActionDecorator(HttpMethod.POST)(options)
 }
 
-export function Put(options?: IActionOptions): PropertyDecorator {
+export function Put(options?: Omit<IActionOptions, 'method'>): PropertyDecorator {
   return methodifyActionDecorator(HttpMethod.PUT)(options)
 }
 
-export function Patch(options?: IActionOptions): PropertyDecorator {
+export function Patch(options?: Omit<IActionOptions, 'method'>): PropertyDecorator {
   return methodifyActionDecorator(HttpMethod.PATCH)(options)
 }
 
-export function Delete(options?: IActionOptions): PropertyDecorator {
+export function Delete(options?: Omit<IActionOptions, 'method'>): PropertyDecorator {
   return methodifyActionDecorator(HttpMethod.DELETE)(options)
 }
 
