@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.3](https://github.com/vcwen/luren/compare/v0.2.2...v0.2.3) (2020-07-22)
+
+
+### Features
+
+* **basic-controller:** add basic controller & tempalte params ([532b6a8](https://github.com/vcwen/luren/commit/532b6a8da00dde3d39ee25869c35486c395ba433))
+
+
+### Bug Fixes
+
+* **action:** fix the order of actions, it will affect the router ([014173d](https://github.com/vcwen/luren/commit/014173dc59b259b471721b086dc69de6012b72f9))
+
 ### [0.2.2](https://github.com/vcwen/luren/compare/v0.2.1...v0.2.2) (2020-07-05)
 
 
