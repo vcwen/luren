@@ -18,7 +18,7 @@ export class ActionExecutor {
   public async execute(ctx: Context, next: INext) {
     const ctrl: any = this.controller
     const paramsMetadata: List<ParamMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(ctrl), this.name) || List()
+      Reflect.getMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(ctrl), this.name) || List()
     const expectedArgs = getParams(ctx, next, paramsMetadata)
     const args = expectedArgs.size > 0 ? expectedArgs.toArray() : [ctx, next]
     const response = await ctrl[this.name].apply(ctrl, args)

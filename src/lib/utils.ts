@@ -11,7 +11,7 @@ import { Constructor } from '../types/Constructor'
 import { METADATA_KEY } from 'inversify'
 import { getContainer } from './container'
 import { Injectable } from '../decorators/Inject'
-import { Scope } from '../constants'
+import { Scope, HttpStatusCode } from '../constants'
 import { Middleware } from './Middleware'
 
 export const importModules = async (workDir: string, config: IModuleLoaderConfig) => {
@@ -116,4 +116,9 @@ export const getClassInstance = <T = any>(constructor: Constructor) => {
 
 export const isLurenMiddleware = (val: any): val is Middleware => {
   return val instanceof Middleware
+}
+
+export const shouldHaveResponseBody = (statusCode: number) => {
+  const statusWithoutBody = [HttpStatusCode.NO_CONTENT]
+  return !statusWithoutBody.includes(statusCode)
 }

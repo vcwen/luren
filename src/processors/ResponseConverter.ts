@@ -8,6 +8,7 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { ResponseMetadata } from '../decorators'
 import { ExecutionContext } from '../lib/ExecutionContext'
 import { Postprocessor } from './Postprocessor'
+import { shouldHaveResponseBody } from '../lib/utils'
 
 export class ResponseConverter extends Postprocessor {
   public level: ExecutionLevel = ExecutionLevel.ACTION
@@ -21,21 +22,26 @@ export class ResponseConverter extends Postprocessor {
     const actionKey = execCtx.moduleContext.actionModule?.action.name as string
     const resultMetadataMap: Map<number, ResponseMetadata> =
       Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, actionKey) || Map()
-    const resMetadata = resultMetadataMap.get(execCtx.httpContext.status)
-    if (resMetadata) {
-      try {
-        ctx.body = JsTypes.serialize(ctx.body, resMetadata.schema)
-        return res
-      } catch (err) {
-        throw new ValidationError(
-          `${execCtx.httpContext.method.toUpperCase()} ${execCtx.httpContext.path}
+    const statusCode = execCtx.httpContext.status
+    if (shouldHaveResponseBody(statusCode)) {
+      const resMetadata = resultMetadataMap.get(statusCode)
+      if (resMetadata) {
+        try {
+          ctx.body = JsTypes.serialize(ctx.body, resMetadata.schema)
+          return res
+        } catch (err) {
+          throw new ValidationError(
+            `${execCtx.httpContext.method.toUpperCase()} ${execCtx.httpContext.path}
           unexpected response: ${err.message ? err.message : ''}
           expected:
           ${safeStringify(resMetadata.schema)}
           actual:
           ${safeStringify(ctx.body)}`
-        )
+          )
+        }
       }
+    } else {
+      ctx.body = ''
     }
   }
 }
