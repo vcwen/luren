@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.4](https://github.com/vcwen/luren/compare/v0.2.3...v0.2.4) (2020-08-02)
+
+
+### Features
+
+* **controller:** add basic controller ([6260d8f](https://github.com/vcwen/luren/commit/6260d8f52f70ca69798bb578f5291f9e3120a694))
+
+
+### Bug Fixes
+
+* **exportation:** export class ([c423b39](https://github.com/vcwen/luren/commit/c423b3989abdd708d22ac82f4832f93af42581af))
+
 ### [0.2.3](https://github.com/vcwen/luren/compare/v0.2.2...v0.2.3) (2020-07-22)
 
 
