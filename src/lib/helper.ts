@@ -9,7 +9,7 @@ import { MetadataKey } from '../constants'
 import { ActionMetadata, CtrlMetadata } from '../decorators'
 import { ParamMetadata } from '../decorators/Param'
 import { INext } from '../types'
-import { ActionExecutor, ActionModule } from './Action'
+import { ActionModule } from './Action'
 import { ControllerModule } from './Controller'
 import { HttpException } from './HttpException'
 import { IncomingFile } from './IncomingFile'
@@ -66,15 +66,9 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
         break
       case 'session':
         value = getParam(_.get(ctx, 'session'), metadata)
-        if (metadata.root) {
-          return value
-        }
         break
       case 'request':
         value = getParam(ctx.request, metadata)
-        if (metadata.root) {
-          return value
-        }
         break
       case 'next':
         return next
@@ -92,10 +86,40 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
     }
     // not do type validation when it's built-in object
     if (metadata.root && ['query', 'header', 'context', 'request', 'session', 'next'].includes(metadata.source)) {
-      return value
+      if (metadata.schema.type === 'object' && !_.isEmpty(value)) {
+        const properties = metadata.schema.properties
+        if (properties) {
+          const obj = {} as any
+          const props = Object.keys(properties)
+          for (const prop of props) {
+            if (
+              properties[prop].type !== 'any' &&
+              properties[prop].type !== 'string' &&
+              typeof value[prop] === 'string'
+            ) {
+              try {
+                obj[prop] = JSON.parse(value[prop])
+              } catch (err) {
+                throw HttpException.badRequest(
+                  `invalid value: '${value[prop]}' for argument '${metadata.name}.${prop}'`
+                )
+              }
+            }
+          }
+          if (_.isEmpty(obj)) {
+            value = null
+          } else {
+            value = obj
+          }
+        } else {
+          return value
+        }
+      } else {
+        throw new TypeError(`schema type must be object if it's root type`)
+      }
     }
     const schema = metadata.schema
-    if (schema.type !== 'string' && typeof value === 'string') {
+    if (schema.type !== 'any' && schema.type !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
@@ -114,8 +138,15 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamM
 export function createActionModule(controller: object, propKey: string, actionMetadata: ActionMetadata) {
   const middleware: List<Middleware | KoaMiddleware> =
     Reflect.getMetadata(MetadataKey.MIDDLEWARE, controller, propKey) || List()
-  const action = new ActionExecutor(controller, propKey)
-  const actionModule = new ActionModule(actionMetadata.name, actionMetadata.method, actionMetadata.path, action)
+
+  const actionModule = new ActionModule(
+    controller,
+    propKey,
+    actionMetadata.name,
+    actionMetadata.method,
+    actionMetadata.path,
+    actionMetadata.params
+  )
   actionModule.summary = actionMetadata.summary
   actionModule.middleware = middleware
   const guards: Map<string, GuardGroup> = Reflect.getMetadata(MetadataKey.GUARDS, controller, propKey)
@@ -176,7 +207,7 @@ export function createControllerRouter(controllerModule: ControllerModule) {
     ;(router as any)[actionModule.method.toLowerCase()](
       path,
       ...actionMiddleware,
-      actionModule.action.execute.bind(actionModule.action)
+      actionModule.actionExecutor.execute.bind(actionModule.actionExecutor)
     )
   }
   return router

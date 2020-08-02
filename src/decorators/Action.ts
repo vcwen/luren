@@ -23,6 +23,7 @@ export class ActionMetadata {
   public version?: string
   public summary?: string
   public desc?: string
+  public params: List<ParamMetadata> = List()
   constructor(name: string, method: HttpMethod, path: string) {
     this.name = name
     this.method = method
@@ -30,12 +31,12 @@ export class ActionMetadata {
   }
 }
 
-const getActionMetadata = (options: IActionOptions, _: object, propertyKey: string) => {
-  const name = options.name || propertyKey
+const getActionMetadata = (options: IActionOptions, target: object, property: string) => {
+  const name = options.name || property
   const method = options.method || HttpMethod.GET
   // tslint:disable-next-line: prettier
   // remove the leading /, since it's actually relative path
-  const path = (options.path ?? propertyKey).replace(/^\//, '')
+  const path = (options.path ?? property).replace(/^\//, '')
   const metadata = new ActionMetadata(name, method, path)
   if (options.version) {
     metadata.version = options.version
@@ -46,6 +47,8 @@ const getActionMetadata = (options: IActionOptions, _: object, propertyKey: stri
   if (options.desc) {
     metadata.desc = options.desc
   }
+  const params = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, property) ?? List()
+  metadata.params = params
   return metadata
 }
 

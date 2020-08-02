@@ -19,7 +19,7 @@ export class ResponseConverter extends Postprocessor {
     }
     const ctx = execCtx.httpContext
     const ctrl = execCtx.moduleContext.controllerModule?.controller as object
-    const actionKey = execCtx.moduleContext.actionModule?.action.name as string
+    const actionKey = execCtx.moduleContext.actionModule?.name as string
     const resultMetadataMap: Map<number, ResponseMetadata> =
       Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, actionKey) || Map()
     const statusCode = execCtx.httpContext.status

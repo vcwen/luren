@@ -1,9 +1,10 @@
-import { List } from 'immutable'
+import { List, Map } from 'immutable'
 import _ from 'lodash'
 import { IJsSchema, JsTypes, SimpleType, utils } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
+import { ActionMetadata } from './Action'
 
 export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context' | 'next'
 
@@ -33,7 +34,7 @@ export class ParamMetadata {
   public desc?: string
   public default: any
   public example?: any
-  constructor(name: string = '', source: Source, schema: IJsSchema, required: boolean) {
+  constructor(name: string, source: Source, schema: IJsSchema, required: boolean) {
     this.name = name
     this.source = source
     this.schema = schema
@@ -56,7 +57,7 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
       paramRequired = required
     }
   }
-  const metadata = new ParamMetadata(options.name, options.in || ParamSource.QUERY, paramSchema, paramRequired)
+  const metadata = new ParamMetadata(options.name ?? '', options.in || ParamSource.QUERY, paramSchema, paramRequired)
   metadata.root = options.root || false
   if (options.format) {
     metadata.format = options.format
@@ -91,8 +92,17 @@ const getParamMetadata = (options: IParamOptions, index: number, target: object,
 
 const defineParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
   const paramMetadata = getParamMetadata(options, index, target, propertyKey)
-  const paramsMetadata: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
-  Reflect.defineMetadata(MetadataKey.PARAMS, paramsMetadata.set(index, paramMetadata), target, propertyKey)
+  let paramsMetadata: List<ParamMetadata> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
+  paramsMetadata = paramsMetadata.set(index, paramMetadata)
+  Reflect.defineMetadata(MetadataKey.PARAMS, paramsMetadata, target, propertyKey)
+  // if owned action metadata is set firstly, then set the params to action metadata, this will happen in some occasions, like template params
+  const actions: Map<string, ActionMetadata> = Reflect.getOwnMetadata(MetadataKey.ACTIONS, target) ?? Map()
+  if (actions.has(propertyKey)) {
+    const actionMetadata = actions.get(propertyKey)
+    if (actionMetadata) {
+      actionMetadata.params = paramsMetadata
+    }
+  }
 }
 
 export function Param(options: IParamOptions) {

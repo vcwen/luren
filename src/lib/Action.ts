@@ -1,6 +1,6 @@
 import { List, Map } from 'immutable'
 import { Context, Middleware as KoaMiddleware } from 'koa'
-import { HttpMethod, HttpStatusCode, MetadataKey } from '../constants'
+import { HttpMethod, HttpStatusCode } from '../constants'
 import { ParamMetadata } from '../decorators'
 import { INext } from '../types'
 import { getParams } from './helper'
@@ -11,15 +11,17 @@ import { GuardGroup } from '../processors/Guard'
 export class ActionExecutor {
   public controller: object
   public name: string
-  public constructor(controller: object, method: string) {
+  public params: List<ParamMetadata> = List()
+  public constructor(controller: object, method: string, params?: List<ParamMetadata>) {
     this.controller = controller
     this.name = method
+    if (params) {
+      this.params = params
+    }
   }
   public async execute(ctx: Context, next: INext) {
     const ctrl: any = this.controller
-    const paramsMetadata: List<ParamMetadata> =
-      Reflect.getMetadata(MetadataKey.PARAMS, Reflect.getPrototypeOf(ctrl), this.name) || List()
-    const expectedArgs = getParams(ctx, next, paramsMetadata)
+    const expectedArgs = getParams(ctx, next, this.params)
     const args = expectedArgs.size > 0 ? expectedArgs.toArray() : [ctx, next]
     const response = await ctrl[this.name].apply(ctrl, args)
     if (response instanceof HttpResponse) {
@@ -50,8 +52,11 @@ export class ActionExecutor {
 
 // tslint:disable-next-line: max-classes-per-file
 export class ActionModule {
+  public targetController: object
+  public targetFunction: string
   public name: string
-  public action: ActionExecutor
+  public actionExecutor: ActionExecutor
+  public params: List<ParamMetadata> = List()
   public path: string
   public method: HttpMethod
   public middleware: List<Middleware | KoaMiddleware> = List()
@@ -60,10 +65,20 @@ export class ActionModule {
   public version?: string
   public desc?: string
   public summary?: string
-  constructor(name: string, method: HttpMethod, path: string, action: ActionExecutor) {
+  constructor(
+    targetController: object,
+    targetFunction: string,
+    name: string,
+    method: HttpMethod,
+    path: string,
+    params: List<ParamMetadata>
+  ) {
+    this.targetController = targetController
+    this.targetFunction = targetFunction
     this.name = name
-    this.action = action
     this.method = method
     this.path = path
+    this.params = params
+    this.actionExecutor = new ActionExecutor(targetController, targetFunction, params)
   }
 }

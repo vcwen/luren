@@ -1,6 +1,6 @@
 import { MetadataKey } from '../constants'
 import { List, Map } from 'immutable'
-import _ from 'lodash'
+// import _ from 'lodash'
 
 class ParameterizedDecoratorModule {
   // tslint:disable-next-line: ban-types
@@ -50,19 +50,11 @@ export function SetTemplateParams(params: { [key: string]: any } = {}) {
           if (module.paramNames.length > 0) {
             expectedParams = module.paramNames.map((name) => {
               const p = availableParams[name]
-              if (!p) {
-                throw new Error(
-                  `[${constructor.name}${
-                    prop === '__default__' ? '' : '.' + prop
-                  }]:Template parameter ${name} is required`
-                )
-              } else {
-                return p
-              }
+              return p
             })
-            module.executable(...expectedParams)(constructor.prototype, ..._.tail(module.context))
+            module.executable(...expectedParams)(...module.context)
           } else {
-            module.executable(availableParams)(constructor.prototype, ..._.tail(module.context))
+            module.executable(availableParams)(...module.context)
           }
         }
       }

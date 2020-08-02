@@ -1,10 +1,11 @@
-import { Map } from 'immutable'
+import { Map, List } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../../src/constants/HttpMethod'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { Action, ActionMetadata, Delete, Get, Patch, Post, Put } from '../../src/decorators/Action'
+import { InQuery, ParamMetadata } from '../../src'
 
-describe('ACtion', () => {
+describe('Action', () => {
   it('should invoke directly when param is constructor', () => {
     class TestController {
       @Action()
@@ -14,7 +15,13 @@ describe('ACtion', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'GET', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'GET',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
 
   it('should return decorator function when schema options is set', () => {
@@ -36,7 +43,40 @@ describe('ACtion', () => {
       path: 'testPath',
       method: 'POST',
       desc: 'get the name of app',
-      deprecated: false
+      deprecated: false,
+      params: List()
+    })
+  })
+  it('should have params if params is set', () => {
+    // tslint:disable-next-line:max-classes-per-file
+    class TestController {
+      @Action({
+        name: 'MyTest',
+        path: '/testPath',
+        method: HttpMethod.POST,
+        desc: 'get the name of app'
+      })
+      public getName(@InQuery('name') name: string): string {
+        return name
+      }
+    }
+    const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions.get('getName')).toEqual({
+      name: 'MyTest',
+      path: 'testPath',
+      method: 'POST',
+      desc: 'get the name of app',
+      deprecated: false,
+      params: List([
+        new ParamMetadata(
+          'name',
+          'query',
+          {
+            type: 'string'
+          },
+          true
+        )
+      ])
     })
   })
 })
@@ -51,7 +91,13 @@ describe('Get', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'GET', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'GET',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -71,7 +117,8 @@ describe('Get', () => {
       name: 'MyTest',
       path: 'testPath',
       method: 'GET',
-      desc: 'get the name of app'
+      desc: 'get the name of app',
+      params: List()
     })
   })
 })
@@ -87,7 +134,13 @@ describe('POST', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'POST', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'POST',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -107,7 +160,8 @@ describe('POST', () => {
       path: 'create',
       method: 'POST',
       desc: 'create a mock of app',
-      deprecated: false
+      deprecated: false,
+      params: List()
     })
   })
 })
@@ -123,7 +177,13 @@ describe('PUT', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'PUT', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'PUT',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -143,7 +203,8 @@ describe('PUT', () => {
       path: 'test',
       method: 'PUT',
       desc: 'update',
-      deprecated: false
+      deprecated: false,
+      params: List()
     })
   })
 })
@@ -159,7 +220,13 @@ describe('PATCH', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'PATCH', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'PATCH',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -179,7 +246,8 @@ describe('PATCH', () => {
       path: 'test',
       method: 'PATCH',
       desc: 'partial update test',
-      deprecated: false
+      deprecated: false,
+      params: List()
     })
   })
 })
@@ -195,7 +263,13 @@ describe('DELETE', () => {
     }
     const ctrl = new TestController()
     const actions: Map<string, any> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions.get('getName')).toEqual({ method: 'DELETE', name: 'getName', path: 'getName', deprecated: false })
+    expect(actions.get('getName')).toEqual({
+      method: 'DELETE',
+      name: 'getName',
+      path: 'getName',
+      deprecated: false,
+      params: List()
+    })
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -213,7 +287,8 @@ describe('DELETE', () => {
       name: 'DeleteTest',
       path: 'test',
       method: 'DELETE',
-      deprecated: false
+      deprecated: false,
+      params: List()
     })
   })
 })
