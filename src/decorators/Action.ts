@@ -1,4 +1,4 @@
-import { List, Map } from 'immutable'
+import { List, Set } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../constants/HttpMethod'
 import { MetadataKey } from '../constants/MetadataKey'
@@ -15,6 +15,7 @@ export interface IActionOptions {
   desc?: string
 }
 
+// tslint:disable-next-line: max-classes-per-file
 export class ActionMetadata {
   public name: string
   public path: string
@@ -23,7 +24,6 @@ export class ActionMetadata {
   public version?: string
   public summary?: string
   public desc?: string
-  public params: List<ParamMetadata> = List()
   constructor(name: string, method: HttpMethod, path: string) {
     this.name = name
     this.method = method
@@ -31,10 +31,9 @@ export class ActionMetadata {
   }
 }
 
-const getActionMetadata = (options: IActionOptions, target: object, property: string) => {
+const getActionMetadata = (options: IActionOptions, property: string) => {
   const name = options.name || property
   const method = options.method || HttpMethod.GET
-  // tslint:disable-next-line: prettier
   // remove the leading /, since it's actually relative path
   const path = (options.path ?? property).replace(/^\//, '')
   const metadata = new ActionMetadata(name, method, path)
@@ -47,38 +46,32 @@ const getActionMetadata = (options: IActionOptions, target: object, property: st
   if (options.desc) {
     metadata.desc = options.desc
   }
-  const params = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, property) ?? List()
-  metadata.params = params
   return metadata
 }
 
 export function Action(options: IActionOptions = {}): PropertyDecorator {
   return (target: object, propertyKey: string) => {
-    const metadata = getActionMetadata(options, target, propertyKey)
+    const metadata = getActionMetadata(options, propertyKey)
     if (metadata.method === HttpMethod.GET) {
       const paramsMetadata: List<ParamMetadata> =
         Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
       for (const paramMetadata of paramsMetadata) {
         if (paramMetadata.source === 'body') {
-          throw new Error(`Cannot put params in body for ${HttpMethod.GET} request`)
+          throw new Error(`Can not put params in body for ${HttpMethod.GET} request`)
         }
       }
     }
-    let actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
-    actionMetadataMap = actionMetadataMap.set(propertyKey, metadata)
-    Reflect.defineMetadata(MetadataKey.ACTIONS, actionMetadataMap, target)
+    let actions: List<string> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || List()
+    actions = actions.push(propertyKey)
+    Reflect.defineMetadata(MetadataKey.ACTIONS, actions, target)
+    Reflect.defineMetadata(MetadataKey.ACTION, metadata, target, propertyKey)
   }
 }
 
 function methodifyActionDecorator(method: HttpMethod) {
   return (options: IActionOptions = {}): PropertyDecorator => {
-    return (target: object, propertyKey: string) => {
-      options.method = method
-      const metadata = getActionMetadata(options, target, propertyKey)
-      let actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
-      actionMetadataMap = actionMetadataMap.set(propertyKey, metadata)
-      Reflect.defineMetadata(MetadataKey.ACTIONS, actionMetadataMap, target)
-    }
+    options.method = method
+    return Action(options)
   }
 }
 
@@ -102,10 +95,20 @@ export function Delete(options?: Omit<IActionOptions, 'method'>): PropertyDecora
   return methodifyActionDecorator(HttpMethod.DELETE)(options)
 }
 
-export function Hidden() {
+export function DisableAction() {
   return (target: object, propertyKey: string) => {
-    let hiddenActions: List<string> = Reflect.getMetadata(MetadataKey.HIDDEN_ACTIONS, target) || List()
-    hiddenActions = hiddenActions.push(propertyKey)
-    Reflect.defineMetadata(MetadataKey.HIDDEN_ACTIONS, hiddenActions, target, propertyKey)
+    let disabledActions: List<string> = Reflect.getOwnMetadata(MetadataKey.DISABLED_ACTIONS, target) || List()
+    if (!disabledActions.contains(propertyKey)) {
+      disabledActions = disabledActions.push(propertyKey)
+      Reflect.defineMetadata(MetadataKey.DISABLED_ACTIONS, disabledActions, target, propertyKey)
+    }
+  }
+}
+
+export function DisableActions<T>(...actions: (keyof T & string)[]) {
+  return (target: object) => {
+    let disabledActions: List<string> = Reflect.getOwnMetadata(MetadataKey.DISABLED_ACTIONS, target) || List()
+    disabledActions = Set(disabledActions.concat(actions)).toList()
+    Reflect.defineMetadata(MetadataKey.DISABLED_ACTIONS, disabledActions, target)
   }
 }

@@ -15,7 +15,7 @@ describe('Response', () => {
       public file() {
         return new IncomingFile('name', 'path', 'type', 1)
       }
-      @Response({ type: 'stream', mime: 'image/png' })
+      @Response({ type: 'stream', contentType: 'image/png' })
       public stream() {
         return new IncomingFile('name', 'path', 'type', 1)
       }
@@ -40,33 +40,25 @@ describe('Response', () => {
     expect(resMap1.get(HttpStatusCode.OK)).toEqual(
       expect.objectContaining({
         status: 200,
-        schema: expect.objectContaining({ type: 'string' })
+        type: 'string'
       })
     )
     expect(resMap1.get(HttpStatusCode.NOT_FOUND)).toEqual(
       expect.objectContaining({
         status: 404,
-        schema: {
-          type: 'object',
-          properties: { code: { type: 'number' }, message: { type: 'string' } },
-          required: ['code']
-        },
+        type: { code: 'number', message: 'string?' },
         desc: 'when the thing is not found'
       })
     )
     const fooResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'foo')
     expect(fooResMap.get(HttpStatusCode.OK)).toEqual(
       expect.objectContaining({
-        status: 200,
-        schema: expect.objectContaining({ type: 'string' })
+        status: 200
       })
     )
     expect(fooResMap.get(HttpStatusCode.NOT_FOUND)).toEqual(
       expect.objectContaining({
         status: 404,
-        schema: {
-          type: 'string'
-        },
         desc: 'when the thing is not found'
       })
     )
@@ -92,18 +84,16 @@ describe('Response', () => {
     expect(fileResMap.get(HttpStatusCode.OK)).toEqual({
       status: 200,
       headers: {
-        'Content-Type': 'application/octet-stream',
         'Cache-Control': 'max-age=10000'
       },
-      schema: expect.objectContaining({ type: 'file' })
+      type: 'file'
     })
     const streamResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'stream')
     expect(streamResMap.get(HttpStatusCode.OK)).toEqual({
       status: 200,
-      headers: {
-        'Content-Type': 'image/png'
-      },
-      schema: { type: 'stream' }
+      contentType: 'image/png',
+      type: 'stream',
+      headers: {}
     })
   })
 })

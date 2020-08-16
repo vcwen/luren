@@ -1,10 +1,10 @@
-import { List, Map } from 'immutable'
+import { List } from 'immutable'
 import _ from 'lodash'
-import { IJsSchema, JsTypes, SimpleType, utils } from 'luren-schema'
+import { IJsSchema, SimpleType } from 'luren-schema'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { ParamSource } from '../constants/ParamSource'
-import { ActionMetadata } from './Action'
+import { GenericType } from '../lib/GenericType'
 
 export type Source = 'query' | 'path' | 'header' | 'body' | 'session' | 'request' | 'context' | 'next'
 
@@ -12,7 +12,7 @@ type ParamDecorator = (target: object, propertyKey: string, index: number) => vo
 export interface IParamOptions {
   name?: string
   in?: Source
-  type?: SimpleType
+  type?: SimpleType | GenericType
   schema?: IJsSchema
   required?: boolean
   desc?: string
@@ -26,134 +26,81 @@ export interface IParamOptions {
 export class ParamMetadata {
   public name: string
   public source: Source
-  public schema: IJsSchema
-  public required: boolean = false
+  public type?: SimpleType | GenericType
+  public schema?: IJsSchema
+  public required?: boolean
   public root: boolean = false
   public format?: string
   public mime?: string
   public desc?: string
   public default: any
   public example?: any
-  constructor(name: string, source: Source, schema: IJsSchema, required: boolean) {
+  constructor(name: string, source: Source, required?: boolean) {
     this.name = name
     this.source = source
-    this.schema = schema
     this.required = required
-  }
-}
-
-const getParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
-  let paramSchema: IJsSchema
-  let paramRequired = options.required
-  if (options.schema) {
-    paramSchema = options.schema
-    if (paramRequired === undefined) {
-      paramRequired = true
-    }
-  } else {
-    const [schema, required] = utils.convertSimpleSchemaToJsSchema(options.type || 'string')
-    paramSchema = schema
-    if (paramRequired === undefined) {
-      paramRequired = required
-    }
-  }
-  const metadata = new ParamMetadata(options.name ?? '', options.in || ParamSource.QUERY, paramSchema, paramRequired)
-  metadata.root = options.root || false
-  if (options.format) {
-    metadata.format = options.format
-  }
-  if (options.desc) {
-    metadata.desc = options.desc
-  }
-  if (options.mime) {
-    metadata.mime = options.mime
-  }
-  if (options.default) {
-    metadata.default = options.default
-    metadata.schema.default = options.default
-  }
-  if (options.example) {
-    const vr = JsTypes.validate(options.example, paramSchema)
-    if (!vr.valid) {
-      throw vr.error!
-    } else {
-      metadata.example = options.example
-    }
-  }
-
-  const paramsMetadata: List<any> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
-  if (paramsMetadata.has(index)) {
-    const existingMetadata = paramsMetadata.get(index) || {}
-    return Object.assign({}, existingMetadata, metadata)
-  } else {
-    return metadata
-  }
-}
-
-const defineParamMetadata = (options: IParamOptions, index: number, target: object, propertyKey: string) => {
-  const paramMetadata = getParamMetadata(options, index, target, propertyKey)
-  let paramsMetadata: List<ParamMetadata> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) || List()
-  paramsMetadata = paramsMetadata.set(index, paramMetadata)
-  Reflect.defineMetadata(MetadataKey.PARAMS, paramsMetadata, target, propertyKey)
-  // if owned action metadata is set firstly, then set the params to action metadata, this will happen in some occasions, like template params
-  const actions: Map<string, ActionMetadata> = Reflect.getOwnMetadata(MetadataKey.ACTIONS, target) ?? Map()
-  if (actions.has(propertyKey)) {
-    const actionMetadata = actions.get(propertyKey)
-    if (actionMetadata) {
-      actionMetadata.params = paramsMetadata
-    }
   }
 }
 
 export function Param(options: IParamOptions) {
   return (target: object, propertyKey: string, index: number) => {
-    defineParamMetadata(options, index, target, propertyKey)
-  }
-}
-export function Required(name: string): (target: object, propertyKey: string, index: number) => void
-// tslint:disable-next-line: unified-signatures
-export function Required(options: IParamOptions): (target: object, propertyKey: string, index: number) => void
-export function Required(options: any) {
-  if (typeof options === 'string') {
-    options = { name: options }
-  }
-  return (target: object, propertyKey: string, index: number) => {
-    defineParamMetadata(Object.assign({}, options, { required: true }), index, target, propertyKey)
+    const paramMetadata = new ParamMetadata(options.name ?? '', options.in || ParamSource.QUERY, options.required)
+    paramMetadata.type = options.type
+    paramMetadata.schema = options.schema
+    paramMetadata.root = options.root || false
+    if (options.format) {
+      paramMetadata.format = options.format
+    }
+    if (options.desc) {
+      paramMetadata.desc = options.desc
+    }
+    if (options.mime) {
+      paramMetadata.mime = options.mime
+    }
+    if (options.default) {
+      paramMetadata.default = options.default
+    }
+    if (options.example) {
+      paramMetadata.example = options.example
+    }
+    let paramsMetadata: List<ParamMetadata> = Reflect.getOwnMetadata(MetadataKey.PARAMS, target, propertyKey) ?? List()
+    paramsMetadata = paramsMetadata.set(index, paramMetadata)
+    Reflect.defineMetadata(MetadataKey.PARAMS, paramsMetadata, target, propertyKey)
   }
 }
 
-export function InQuery(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InQuery(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InQuery(name: string, required?: boolean): ParamDecorator
 export function InQuery() {
   return inSource(ParamSource.QUERY).apply(null, [...arguments])
 }
 
-export function InPath(name: string, type?: SimpleType) {
+export function InPath(name: string, type?: SimpleType | GenericType) {
   return inSource(ParamSource.PATH).apply(null, [name, type, true])
 }
 
-export function InHeader(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InHeader(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InHeader(name: string, required?: boolean): ParamDecorator
 export function InHeader() {
   return inSource(ParamSource.HEADER).apply(null, [...arguments])
 }
 
-export function InBody(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InBody(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InBody(name: string, required?: boolean): ParamDecorator
 export function InBody() {
   return inSource(ParamSource.BODY).apply(null, [...arguments])
 }
-export function InRequest(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InRequest(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InRequest(name: string, required?: boolean): ParamDecorator
 export function InRequest() {
   return inSource(ParamSource.REQUEST).apply(null, [...arguments])
 }
-export function InSession(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InSession(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InSession(name: string, required?: boolean): ParamDecorator
 export function InSession() {
   return inSource(ParamSource.SESSION).apply(null, [...arguments])
 }
-export function InContext(name: string, type: SimpleType, required?: boolean): ParamDecorator
+export function InContext(name: string, type: SimpleType | GenericType, required?: boolean): ParamDecorator
 export function InContext(name: string, required?: boolean): ParamDecorator
 export function InContext() {
   return inSource(ParamSource.CONTEXT).apply(null, [...arguments])

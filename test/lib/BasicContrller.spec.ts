@@ -6,7 +6,7 @@ import {
   IConditions,
   Luren,
   Controller,
-  SetTemplateParams,
+  GenericParams,
   Get,
   Response,
   InPath
@@ -200,11 +200,11 @@ class QueryExecutor implements IQueryExecutor<Foo> {
 }
 
 @Controller({ path: 'foo' })
-@SetTemplateParams({
+@GenericParams({
   ID: 'number',
   MODEL: { id: 'number', name: 'string', city: 'string?' },
-  CREATE_TYPE: { name: 'string', city: 'string?' },
-  REPLACE_TYPE: { name: 'string', city: 'string?' },
+  CREATE_MODEL: { name: 'string', city: 'string?' },
+  REPLACE_MODEL: { name: 'string', city: 'string?' },
   ATTRIBUTES: { name: 'string?', city: 'string?' }
 })
 class SimpleController extends BasicController<Foo> {
@@ -220,7 +220,7 @@ class SimpleController extends BasicController<Foo> {
 }
 
 @Controller({ path: 'bar' })
-@SetTemplateParams({
+@GenericParams({
   ID: 'number',
   MODEL: { id: 'number', name: 'string', city: 'string?' },
   CREATE_TYPE: { name: 'string', city: 'string?' },

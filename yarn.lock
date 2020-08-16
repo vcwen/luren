@@ -943,6 +943,11 @@
   resolved "https://registry.npm.taobao.org/@types/lodash/download/@types/lodash-4.14.144.tgz#12e57fc99064bce45e5ab3c8bc4783feb75eab8e"
   integrity sha1-EuV/yZBkvOReWrPIvEeD/rdeq44=
 
+"@types/mime-types@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.npm.taobao.org/@types/mime-types/download/@types/mime-types-2.1.0.tgz#9ca52cda363f699c69466c2a6ccdaad913ea7a73"
+  integrity sha1-nKUs2jY/aZxpRmwqbM2q2RPqenM=
+
 "@types/mime@*":
   version "2.0.1"
   resolved "https://registry.npm.taobao.org/@types/mime/download/@types/mime-2.0.1.tgz#dc488842312a7f075149312905b5e3c0b054c79d"
@@ -3432,10 +3437,10 @@ lower-case@^2.0.1:
   dependencies:
     tslib "^1.10.0"
 
-luren-schema@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.2.4.tgz?cache=0&sync_timestamp=1593789566305&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fluren-schema%2Fdownload%2Fluren-schema-0.2.4.tgz#24ef8749b9fef6df9acdcf2d1f4ceb6dbeb03f84"
-  integrity sha1-JO+HSbn+9t+azc8tH0zrbb6wP4Q=
+luren-schema@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.npm.taobao.org/luren-schema/download/luren-schema-0.2.5.tgz#6e6ebac7da31df0cd4dc2d6243a2db1321b1553b"
+  integrity sha1-bm66x9ox3wzU3C1iQ6LbEyGxVTs=
   dependencies:
     ajv "^6.10.2"
     coveralls "^3.0.7"
@@ -3532,6 +3537,11 @@ mime-db@1.40.0:
   resolved "https://registry.npm.taobao.org/mime-db/download/mime-db-1.40.0.tgz#a65057e998db090f732a68f6c276d387d4126c32"
   integrity sha1-plBX6ZjbCQ9zKmj2wnbTh9QSbDI=
 
+mime-db@1.44.0:
+  version "1.44.0"
+  resolved "https://registry.npm.taobao.org/mime-db/download/mime-db-1.44.0.tgz#fa11c5eb0aca1334b4233cb4d52f10c5a6272f92"
+  integrity sha1-+hHF6wrKEzS0Izy01S8QxaYnL5I=
+
 mime-types@^2.1.12, mime-types@^2.1.18, mime-types@~2.1.19, mime-types@~2.1.24:
   version "2.1.24"
   resolved "https://registry.npm.taobao.org/mime-types/download/mime-types-2.1.24.tgz#b6f8d0b3e951efb77dedeca194cff6d16f676f81"
@@ -3539,15 +3549,17 @@ mime-types@^2.1.12, mime-types@^2.1.18, mime-types@~2.1.19, mime-types@~2.1.24:
   dependencies:
     mime-db "1.40.0"
 
+mime-types@^2.1.27:
+  version "2.1.27"
+  resolved "https://registry.npm.taobao.org/mime-types/download/mime-types-2.1.27.tgz#47949f98e279ea53119f5722e0f34e529bec009f"
+  integrity sha1-R5SfmOJ56lMRn1ci4PNOUpvsAJ8=
+  dependencies:
+    mime-db "1.44.0"
+
 mime@^1.4.1:
   version "1.6.0"
   resolved "https://registry.npm.taobao.org/mime/download/mime-1.6.0.tgz?cache=0&sync_timestamp=1560034758817&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fmime%2Fdownload%2Fmime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"
   integrity sha1-Ms2eXGRVO9WNGaVor0Uqz/BJgbE=
-
-mime@^2.4.4:
-  version "2.4.4"
-  resolved "https://registry.npm.taobao.org/mime/download/mime-2.4.4.tgz#bd7b91135fc6b01cde3e9bae33d659b63d8857e5"
-  integrity sha1-vXuRE1/GsBzePpuuM9ZZtj2IV+U=
 
 mimic-fn@^2.1.0:
   version "2.1.0"

@@ -1,23 +1,22 @@
 import { List, Map } from 'immutable'
 import { Context, Middleware as KoaMiddleware } from 'koa'
 import { HttpMethod, HttpStatusCode } from '../constants'
-import { ParamMetadata } from '../decorators'
 import { INext } from '../types'
 import { getParams } from './helper'
 import { HttpResponse } from './HttpResponse'
 import { Middleware } from './Middleware'
 import { GuardGroup } from '../processors/Guard'
+import { ParamInfo } from './ParamInfo'
+import { ResponseInfo } from './ResponseInfo'
 
 export class ActionExecutor {
   public controller: object
   public name: string
-  public params: List<ParamMetadata> = List()
-  public constructor(controller: object, method: string, params?: List<ParamMetadata>) {
+  public params: List<ParamInfo> = List()
+  public constructor(controller: object, method: string, params: List<ParamInfo> = List()) {
     this.controller = controller
     this.name = method
-    if (params) {
-      this.params = params
-    }
+    this.params = params
   }
   public async execute(ctx: Context, next: INext) {
     const ctrl: any = this.controller
@@ -56,7 +55,8 @@ export class ActionModule {
   public targetFunction: string
   public name: string
   public actionExecutor: ActionExecutor
-  public params: List<ParamMetadata> = List()
+  public params: List<ParamInfo> = List()
+  public responses: Map<number, ResponseInfo> = Map()
   public path: string
   public method: HttpMethod
   public middleware: List<Middleware | KoaMiddleware> = List()
@@ -71,7 +71,7 @@ export class ActionModule {
     name: string,
     method: HttpMethod,
     path: string,
-    params: List<ParamMetadata>
+    params: List<ParamInfo>
   ) {
     this.targetController = targetController
     this.targetFunction = targetFunction

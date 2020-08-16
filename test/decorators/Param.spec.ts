@@ -19,7 +19,6 @@ import {
   ParamMetadata,
   Query,
   Request,
-  Required,
   Session
 } from '../../src/decorators/Param'
 describe('Param', () => {
@@ -38,16 +37,13 @@ describe('Param', () => {
     const params: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
     expect(params.toArray()).toEqual([
       expect.objectContaining({
-        name: 'name',
-        source: 'path',
-        schema: { type: 'string' },
-        root: false
+        source: 'path'
       }),
-      expect.objectContaining({ name: 'age', required: false, source: 'query', schema: { type: 'string' } }),
+      expect.objectContaining({ name: 'age', required: false, root: false, source: 'query' }),
       expect.objectContaining({
         name: 'foo',
-        required: true,
         source: 'body',
+        root: false,
         schema: { type: 'number' },
         example: 1123
       }),
@@ -64,9 +60,7 @@ describe('Param', () => {
     }
     const ctrl = new TestController()
     const params: List<any> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
-    expect(params.toArray()).toEqual([
-      expect.objectContaining({ name: 'name', required: true, source: 'query', schema: { type: 'string' } })
-    ])
+    expect(params.toArray()).toEqual([expect.objectContaining({ name: 'name', source: 'query' })])
   })
 })
 
@@ -87,22 +81,19 @@ describe('InQuery', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: 'name',
-        required: true,
         source: 'query',
-        schema: { type: 'string' },
+        type: 'string',
         root: false
       }),
       expect.objectContaining({
         name: 'age',
-        required: false,
         source: 'query',
-        schema: { type: 'number' }
+        type: 'number?'
       }),
       expect.objectContaining({
         name: 'id',
-        required: true,
         source: 'query',
-        schema: { type: 'number' }
+        type: 'number'
       })
     ])
   })
@@ -125,22 +116,20 @@ describe('InHeader', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: 'name',
-        required: true,
         source: 'header',
-        schema: { type: 'string' },
+        type: 'string',
         root: false
       }),
       expect.objectContaining({
         name: 'age',
         required: false,
         source: 'header',
-        schema: { type: 'number' }
+        type: 'number'
       }),
       expect.objectContaining({
         name: 'id',
-        required: true,
         source: 'header',
-        schema: { type: 'number' }
+        type: 'number'
       })
     ])
   })
@@ -164,20 +153,20 @@ describe('InPath', () => {
         name: 'name',
         required: true,
         source: 'path',
-        schema: expect.objectContaining({ type: 'string' }),
+        type: 'string',
         root: false
       }),
       expect.objectContaining({
         name: 'age',
         required: true,
         source: 'path',
-        schema: expect.objectContaining({ type: 'number' })
+        type: 'number'
       }),
       expect.objectContaining({
         name: 'id',
         required: true,
         source: 'path',
-        schema: expect.objectContaining({ type: 'number' })
+        type: 'number'
       })
     ])
   })
@@ -200,22 +189,20 @@ describe('InBody', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: 'name',
-        required: true,
         source: 'body',
-        schema: { type: 'string' },
+        type: 'string',
         root: false
       }),
       expect.objectContaining({
         name: 'age',
-        required: false,
         source: 'body',
-        schema: { type: 'number' }
+        type: 'number?'
       }),
       expect.objectContaining({
         name: 'id',
-        required: true,
         source: 'body',
-        schema: { type: 'number' }
+        root: false,
+        type: 'number'
       })
     ])
   })
@@ -233,41 +220,41 @@ describe('Context', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'context',
-        root: true
+        root: true,
+        type: 'object'
       })
     ])
   })
 })
-describe('Required', () => {
-  it('should set param required', () => {
-    // tslint:disable-next-line: max-classes-per-file
-    class TestController {
-      public test(@Required('name') name: string, @Required({ name: 'age', type: 'number' }) age: number) {
-        return name + age
-      }
-    }
-    const ctrl = new TestController()
-    const params: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
-    expect(params.toArray()).toEqual([
-      expect.objectContaining({
-        name: 'name',
-        required: true,
-        source: 'query',
-        root: false,
-        schema: { type: 'string' }
-      }),
-      expect.objectContaining({
-        name: 'age',
-        required: true,
-        source: 'query',
-        root: false,
-        schema: { type: 'number' }
-      })
-    ])
-  })
-})
+// describe('Required', () => {
+//   it('should set param required', () => {
+//     // tslint:disable-next-line: max-classes-per-file
+//     class TestController {
+//       public test(@Required('name') name: string, @Required({ name: 'age', type: 'number' }) age: number) {
+//         return name + age
+//       }
+//     }
+//     const ctrl = new TestController()
+//     const params: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'test')
+//     expect(params.toArray()).toEqual([
+//       expect.objectContaining({
+//         name: 'name',
+//         required: true,
+//         source: 'query',
+//         root: false,
+//         schema: { type: 'string' }
+//       }),
+//       expect.objectContaining({
+//         name: 'age',
+//         required: true,
+//         source: 'query',
+//         root: false,
+//         schema: { type: 'number' }
+//       })
+//     ])
+//   })
+// })
 
 describe('InRequest', () => {
   it('should param in request metadata', () => {
@@ -285,7 +272,7 @@ describe('InRequest', () => {
         required: false,
         source: 'request',
         root: false,
-        schema: { type: 'number' }
+        type: 'number'
       })
     ])
   })
@@ -304,10 +291,9 @@ describe('InSession', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: 'foo',
-        required: true,
         source: 'session',
         root: false,
-        schema: { type: 'number' }
+        type: 'number'
       })
     ])
   })
@@ -328,14 +314,13 @@ describe('InContext', () => {
         required: false,
         source: 'context',
         root: false,
-        schema: { type: 'string' }
+        type: 'string'
       }),
       expect.objectContaining({
         name: 'age',
-        required: true,
         source: 'context',
         root: false,
-        schema: { type: 'number' }
+        type: 'number'
       })
     ])
   })
@@ -353,10 +338,9 @@ describe('Query', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'query',
         root: true,
-        schema: { type: 'object' }
+        type: 'object'
       })
     ])
   })
@@ -374,10 +358,9 @@ describe('Request', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'request',
         root: true,
-        schema: { type: 'object' }
+        type: 'object'
       })
     ])
   })
@@ -395,10 +378,9 @@ describe('Session', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'session',
         root: true,
-        schema: { type: 'object' }
+        type: 'object'
       })
     ])
   })
@@ -419,20 +401,18 @@ describe('Body', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'body',
         root: true,
-        schema: { type: 'object' }
+        type: 'object'
       })
     ])
     const fooParams: List<ParamMetadata> = Reflect.getMetadata(MetadataKey.PARAMS, ctrl, 'foo')
     expect(fooParams.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'body',
         root: true,
-        schema: { type: 'array' }
+        type: 'array'
       })
     ])
   })
@@ -450,10 +430,9 @@ describe('Next', () => {
     expect(params.toArray()).toEqual([
       expect.objectContaining({
         name: '',
-        required: true,
         source: 'next',
         root: false,
-        schema: { type: 'function' }
+        type: 'function'
       })
     ])
   })

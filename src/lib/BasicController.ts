@@ -1,9 +1,9 @@
 import { IQueryExecutor, IFilter, IConditions } from './QueryExecutor'
 import { Get, Post, Patch, Delete, Response, Param, InPath, Put, InBody } from '../decorators'
-import { TemplateParams } from '../decorators/TemplateParameter'
 import { HttpStatusCode } from '../constants'
 import _ from 'lodash'
 import { HttpException } from './HttpException'
+import { GenericParam } from './GenericType'
 
 const FindOneFilterType = {
   offset: 'number?',
@@ -18,10 +18,11 @@ const FindManyFilterType = {
   'fields?': ['string'],
   conditions: 'object?'
 }
+
 export abstract class BasicController<T, ID = any> {
   protected abstract getQueryExecutor(): Promise<IQueryExecutor<T>>
   @Get()
-  @(TemplateParams('MODEL')((model) => Response({ type: model })))
+  @Response({ type: GenericParam('MODEL') })
   public async findOne(
     @Param({ in: 'query', root: true, type: FindOneFilterType }) filter: Omit<IFilter, 'limit'>
   ): Promise<T | undefined> {
@@ -29,42 +30,39 @@ export abstract class BasicController<T, ID = any> {
     return queryExecutor.findOne(filter)
   }
   @Get({ path: '' })
-  @(TemplateParams('MODEL')((model) => Response({ type: [model] })))
+  @Response({ type: GenericParam(({ MODEL: model }) => [model]) })
   public async findMany(@Param({ in: 'query', root: true, type: FindManyFilterType }) filter: IFilter): Promise<T[]> {
     const queryExecutor = await this.getQueryExecutor()
     return queryExecutor.findMany(filter)
   }
   @Get({ path: ':id' })
-  @(TemplateParams('MODEL')((model) => Response({ type: model })))
-  public async findById(
-    @(TemplateParams('ID')((IdType) => {
-      return InPath('id', IdType)
-    }))
-    id: any
-  ): Promise<T | undefined> {
+  @Response({ type: GenericParam('MODEL') })
+  public async findById(@InPath('id', GenericParam('ID')) id: any): Promise<T | undefined> {
     const queryExecutor = await this.getQueryExecutor()
     return queryExecutor.findById(id)
   }
   @Post({ path: '' })
-  @(TemplateParams('MODEL')((model) => Response({ type: model })))
+  @Response({ type: GenericParam('MODEL') })
   public async create(
-    @(TemplateParams(
-      'MODEL',
-      'CREATE_TYPE'
-    )((model, createModelType) => Param({ root: true, type: createModelType ?? model, in: 'body' })))
+    @Param({
+      root: true,
+      type: GenericParam(({ MODEL: model, CREATE_MODEL: createModelType }) => createModelType ?? model),
+      in: 'body'
+    })
     data: Partial<T>
   ): Promise<T> {
     const queryExecutor = await this.getQueryExecutor()
     return queryExecutor.create(data)
   }
   @Put({ path: ':id' })
-  @(TemplateParams('MODEL')((model: any) => Response({ type: model })))
+  @Response({ type: GenericParam('MODEL') })
   public async replaceById(
-    @(TemplateParams('ID')((IdType = 'any') => InPath('id', IdType))) id: ID,
-    @(TemplateParams(
-      'REPLACE_TYPE',
-      'MODEL'
-    )((ReplaceType = 'object') => Param({ in: 'body', root: true, type: ReplaceType })))
+    @InPath('id', GenericParam('ID')) id: ID,
+    @Param({
+      in: 'body',
+      root: true,
+      type: GenericParam(({ REPLACE_MODEL, MODEL }) => REPLACE_MODEL ?? MODEL)
+    })
     data: Partial<T>
   ): Promise<T | undefined> {
     const queryExecutor = await this.getQueryExecutor()
@@ -73,7 +71,7 @@ export abstract class BasicController<T, ID = any> {
   @Patch({ path: '' })
   @Response({ type: 'number' })
   public async updateAttributes(
-    @(TemplateParams('ATTRIBUTES')((Attributes = 'object') => InBody('attributes', Attributes)))
+    @InBody('attributes', GenericParam('ATTRIBUTES'))
     data: Partial<T>,
     @InBody('conditions', 'object') conditions: IConditions
   ): Promise<number> {
@@ -84,10 +82,10 @@ export abstract class BasicController<T, ID = any> {
     return queryExecutor.update(data, conditions)
   }
   @Patch({ path: ':id' })
-  @(TemplateParams('MODEL')((model: any) => Response({ type: model })))
+  @Response({ type: GenericParam('MODEL') })
   public async updateAttributesById(
-    @(TemplateParams('ID')((IdType = 'any') => InPath('id', IdType))) id: ID,
-    @(TemplateParams('ATTRIBUTES')((Attributes = 'object') => Param({ in: 'body', root: true, type: Attributes })))
+    @InPath('id', GenericParam('ID')) id: ID,
+    @Param({ in: 'body', root: true, type: GenericParam('ATTRIBUTES') })
     data: Partial<T>
   ): Promise<T | undefined> {
     const queryExecutor = await this.getQueryExecutor()
@@ -107,7 +105,7 @@ export abstract class BasicController<T, ID = any> {
   }
   @Delete({ path: ':id' })
   @Response({ status: HttpStatusCode.NO_CONTENT })
-  public async deleteById(@(TemplateParams('ID')((idType: any) => InPath('id', idType))) id: any): Promise<number> {
+  public async deleteById(@InPath('id', GenericParam('ID')) id: any): Promise<number> {
     const queryExecutor = await this.getQueryExecutor()
     return queryExecutor.deleteById(id)
   }

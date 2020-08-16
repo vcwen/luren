@@ -1,89 +1,61 @@
 import { Map } from 'immutable'
-import { IJsSchema, JsTypes, SimpleType, utils } from 'luren-schema'
-import mime from 'mime'
+import { IJsSchema, SimpleType } from 'luren-schema'
 import 'reflect-metadata'
 import { HttpStatusCode } from '../constants'
 import { MetadataKey } from '../constants/MetadataKey'
 import { normalizeHeaderCase } from '../lib/utils'
 import { PropertyDecorator } from '../types/PropertyDecorator'
+import { GenericType } from '../lib/GenericType'
 
 export interface IResponseOptions {
   status?: number
-  type?: SimpleType
+  type?: SimpleType | GenericType
   schema?: IJsSchema
   desc?: string
-  mime?: string
+  contentType?: string
   headers?: { [name: string]: any }
   example?: any
 }
 
 export class ResponseMetadata {
-  public status: number = HttpStatusCode.OK
+  public status: number
+  public type?: SimpleType | GenericType
+  public required: boolean = true
+  public schema?: IJsSchema
   public desc?: string
-  public schema: IJsSchema
+  public contentType?: string
   public headers?: { [name: string]: any }
   public example?: any
-  constructor(status: number, schema: IJsSchema, desc?: string) {
+  constructor(status: number = HttpStatusCode.OK) {
     this.status = status
-    this.schema = schema
-    if (desc) {
-      this.desc = desc
-    }
   }
 }
 
-export function Response(options: IResponseOptions = {}): PropertyDecorator {
+export function Response(options: IResponseOptions = {}, mergeParentResponse: boolean = false): PropertyDecorator {
   return (target: any, propertyKey: string) => {
-    let resMetadata: Map<number, ResponseMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
+    let resMetadata: Map<number, ResponseMetadata>
+    if (mergeParentResponse) {
+      resMetadata = Reflect.getMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
+    } else {
+      resMetadata = Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
+    }
     const status = options.status || HttpStatusCode.OK
-    const schema: IJsSchema = options.schema
-      ? options.schema
-      : utils.convertSimpleSchemaToJsSchema(options.type || 'string')[0]
-    const metadata = new ResponseMetadata(status, schema, options.desc)
+    const metadata = new ResponseMetadata(status)
+    metadata.type = options.type
+    metadata.schema = options.schema
     metadata.headers = normalizeHeaderCase(options.headers || {})
-
-    if (options.example) {
-      const vr = JsTypes.validate(options.example, schema)
-      if (!vr.valid) {
-        throw vr.error!
-      } else {
-        metadata.example = options.example
-      }
-    }
-
-    if (options.mime) {
-      const mimeType = mime.getType(options.mime)
-      Reflect.set(metadata.headers, 'Content-Type', mimeType ? mimeType : options.mime)
-    }
-    if ((schema.type === 'file' || schema.type === 'stream') && !metadata.headers['Content-Type']) {
-      Reflect.set(metadata.headers, 'Content-Type', 'application/octet-stream')
-    }
+    metadata.example = options.example
+    metadata.contentType = options.contentType
+    metadata.desc = options.desc
     resMetadata = resMetadata.set(metadata.status, metadata)
     Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
   }
 }
 
-export interface IErrorOptions {
+export interface IErrorOptions extends IResponseOptions {
   status: number
-  type?: any
-  schema?: IJsSchema
-  desc?: string
-  example?: any
 }
 
 export function ErrorResponse(options: IErrorOptions): PropertyDecorator {
-  return (target: any, propertyKey: string) => {
-    let resMetadata: Map<number, ResponseMetadata> =
-      Reflect.getOwnMetadata(MetadataKey.RESPONSE, target, propertyKey) || Map()
-    const status = options.status
-    const schema = options.schema ? options.schema : utils.convertSimpleSchemaToJsSchema(options.type || 'string')[0]
-    const metadata = new ResponseMetadata(status, schema, options.desc)
-    if (options.example) {
-      metadata.example = options.example
-    }
-    resMetadata = resMetadata.set(metadata.status, metadata)
-
-    Reflect.defineMetadata(MetadataKey.RESPONSE, resMetadata, target, propertyKey)
-  }
+  return Response(options)
 }
