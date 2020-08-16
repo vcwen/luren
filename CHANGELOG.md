@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://github.com/vcwen/luren/compare/v0.2.5...v0.2.6) (2020-08-16)
+
+
+### Features
+
+* **action:** throw an error when action has the same method & path ([5ce4090](https://github.com/vcwen/luren/commit/5ce4090928802e7fd61eb3024cc98b1adb29691b))
+* **generic-type:** add default type ([4cc8d0c](https://github.com/vcwen/luren/commit/4cc8d0ccde2a9b986a8b5c5ada70da61bf6eb496))
+
 ### [0.2.5](https://github.com/vcwen/luren/compare/v0.2.4...v0.2.5) (2020-08-16)
 
 ### [0.2.4](https://github.com/vcwen/luren/compare/v0.2.3...v0.2.4) (2020-08-02)
