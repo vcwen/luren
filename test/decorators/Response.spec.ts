@@ -83,6 +83,7 @@ describe('Response', () => {
     const fileResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'file')
     expect(fileResMap.get(HttpStatusCode.OK)).toEqual({
       status: 200,
+      required: true,
       headers: {
         'Cache-Control': 'max-age=10000'
       },
@@ -91,6 +92,7 @@ describe('Response', () => {
     const streamResMap = Reflect.getMetadata(MetadataKey.RESPONSE, ctrl, 'stream')
     expect(streamResMap.get(HttpStatusCode.OK)).toEqual({
       status: 200,
+      required: true,
       contentType: 'image/png',
       type: 'stream',
       headers: {}
