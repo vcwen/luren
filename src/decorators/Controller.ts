@@ -1,12 +1,11 @@
 import decamelize from 'decamelize'
-import { List, Map } from 'immutable'
+import { List, Set } from 'immutable'
 import _ from 'lodash'
 import Path from 'path'
 import pluralize from 'pluralize'
 import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { Constructor } from '../types/Constructor'
-import { ActionMetadata } from './Action'
 
 export interface ICtrlOptions {
   version?: string
@@ -49,8 +48,8 @@ export function Controller(options: ICtrlOptions = {}) {
     Reflect.defineMetadata(MetadataKey.CONTROLLER, metadata, target)
     // filter out hidden actions
     const hiddenActions: List<string> = Reflect.getMetadata(MetadataKey.DISABLED_ACTIONS, target) || List()
-    let actionMetadataMap: Map<string, ActionMetadata> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Map()
-    actionMetadataMap = actionMetadataMap.filterNot((_val, key) => hiddenActions.contains(key))
-    Reflect.defineMetadata(MetadataKey.ACTIONS, actionMetadataMap, target)
+    let actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Set()
+    actions = actions.filterNot((_val, key) => hiddenActions.contains(key))
+    Reflect.defineMetadata(MetadataKey.ACTIONS, actions, target)
   }
 }

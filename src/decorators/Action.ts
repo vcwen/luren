@@ -61,8 +61,8 @@ export function Action(options: IActionOptions = {}): PropertyDecorator {
         }
       }
     }
-    let actions: List<string> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || List()
-    actions = actions.push(propertyKey)
+    let actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, target) || Set()
+    actions = actions.add(propertyKey)
     Reflect.defineMetadata(MetadataKey.ACTIONS, actions, target)
     Reflect.defineMetadata(MetadataKey.ACTION, metadata, target, propertyKey)
   }

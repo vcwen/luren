@@ -1,4 +1,4 @@
-import { List } from 'immutable'
+import { List, Set } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../../src/constants/HttpMethod'
 import { MetadataKey } from '../../src/constants/MetadataKey'
@@ -24,7 +24,7 @@ describe('Action', () => {
       path: 'getName',
       deprecated: false
     })
-    const actions: string[] = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl) || Set()
     expect(actions).toEqual(List(['getName', 'getAddress']))
   })
 
@@ -97,8 +97,8 @@ describe('Get', () => {
       path: 'getName',
       deprecated: false
     })
-    const actions: string[] = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions).toEqual(List(['getName', 'getAddress']))
+    const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions).toEqual(Set(['getName', 'getAddress']))
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -144,8 +144,8 @@ describe('POST', () => {
       path: 'getName',
       deprecated: false
     })
-    const actions: string[] = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions).toEqual(List(['getName', 'getAddress']))
+    const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl) || Set()
+    expect(actions).toEqual(Set(['getName', 'getAddress']))
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file
@@ -191,8 +191,8 @@ describe('PUT', () => {
       path: 'getName',
       deprecated: false
     })
-    const actions: string[] = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
-    expect(actions).toEqual(List(['getName', 'getAddress']))
+    const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl)
+    expect(actions).toEqual(Set(['getName', 'getAddress']))
   })
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line:max-classes-per-file

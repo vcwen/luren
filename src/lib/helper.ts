@@ -1,4 +1,4 @@
-import { List, Map } from 'immutable'
+import { List, Map, Set } from 'immutable'
 import { Context, Middleware as KoaMiddleware, Request } from 'koa'
 import Router from '@koa/router'
 import _ from 'lodash'
@@ -322,7 +322,7 @@ export function createActionModule(controller: object, propKey: string) {
 }
 
 export function createActions(controller: object) {
-  let actions: List<string> = Reflect.getMetadata(MetadataKey.ACTIONS, controller) ?? List()
+  let actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, controller) ?? Set()
   const disabledActions: List<string> = Reflect.getOwnMetadata(MetadataKey.DISABLED_ACTIONS, controller) ?? List()
   actions = actions.filterNot((action) => disabledActions.contains(action))
   const actionModules = actions.map((action) => {
@@ -350,7 +350,7 @@ export function createActions(controller: object) {
     }
   })
 
-  return actionModules
+  return actionModules.toList()
 }
 export function createControllerModule(ctrl: object) {
   const controllerModule = new ControllerModule(ctrl)
