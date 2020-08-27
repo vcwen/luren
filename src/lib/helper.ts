@@ -151,9 +151,9 @@ const generateParamInfo = (paramMetadata: ParamMetadata, genericParams: Map<stri
   } else {
     const [schema, required] = utils.convertSimpleSchemaToJsSchema(paramMetadata.type ?? 'string', (simpleSchema) => {
       if (simpleSchema instanceof GenericType) {
-        return simpleSchema.getActualType(genericParams.toObject())
+        return [simpleSchema.getActualType(genericParams.toObject())]
       } else {
-        return simpleSchema
+        return [simpleSchema]
       }
     })
     paramSchema = schema
@@ -222,9 +222,9 @@ const generateResponseInfo = (responseMetadata: ResponseMetadata, genericParams:
       responseMetadata.type || 'string',
       (simpleSchema) => {
         if (simpleSchema instanceof GenericType) {
-          return simpleSchema.getActualType(genericParams.toObject())
+          return [simpleSchema.getActualType(genericParams.toObject())]
         } else {
-          return simpleSchema
+          return [simpleSchema]
         }
       }
     )
@@ -332,7 +332,7 @@ export function createActions(controller: object) {
     for (const m of actionModules) {
       const reqPath = m.method + '-' + m.path
       if (mutable.has(reqPath)) {
-        mutable.set(reqPath, mutable.get(m.path)! + 1)
+        mutable.set(reqPath, mutable.get(reqPath)! + 1)
       } else {
         mutable.set(reqPath, 1)
       }
@@ -346,7 +346,7 @@ export function createActions(controller: object) {
           return item.method === method && item.path === path
         })
         .map((item) => item.targetFunction)
-      throw new Error(`Path:${key} is defined by multiple actions - ${names}`)
+      throw new Error(`[${controller.constructor.name}] Path:${key} is defined by multiple actions - ${names}`)
     }
   })
 
