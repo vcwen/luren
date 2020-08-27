@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.7](https://github.com/vcwen/luren/compare/v0.2.6...v0.2.7) (2020-08-27)
+
+
+### Bug Fixes
+
+* **action:** actions of subclass should override parent class's ([825cae3](https://github.com/vcwen/luren/commit/825cae371ffbaef42dca3e3dc4667de0e6298cda))
+
 ### [0.2.6](https://github.com/vcwen/luren/compare/v0.2.5...v0.2.6) (2020-08-16)
 
 
