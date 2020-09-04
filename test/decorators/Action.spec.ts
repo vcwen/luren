@@ -1,4 +1,4 @@
-import { List, Set } from 'immutable'
+import { Set } from 'immutable'
 import 'reflect-metadata'
 import { HttpMethod } from '../../src/constants/HttpMethod'
 import { MetadataKey } from '../../src/constants/MetadataKey'
@@ -25,7 +25,7 @@ describe('Action', () => {
       deprecated: false
     })
     const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, ctrl) || Set()
-    expect(actions).toEqual(List(['getName', 'getAddress']))
+    expect(actions).toEqual(Set(['getName', 'getAddress']))
   })
 
   it('should return decorator function when schema options is set', () => {
@@ -49,8 +49,8 @@ describe('Action', () => {
       desc: 'get the name of app',
       deprecated: false
     })
-    const actions: string[] = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
-    expect(actions).toEqual(List(['getName']))
+    const actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, TestController.prototype)
+    expect(actions).toEqual(Set(['getName']))
   })
   // it('should have params if params is set', () => {
   //   // tslint:disable-next-line:max-classes-per-file
