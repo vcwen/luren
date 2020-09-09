@@ -34,12 +34,7 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamI
     let value: any
     switch (metadata.source) {
       case 'query':
-        if (metadata.root) {
-          value = ctx.query
-        } else {
-          value = getParam(ctx.query, metadata)
-        }
-
+        value = getParam(ctx.query, metadata)
         break
       case 'path':
         value = getParam(ctx.params, metadata)
@@ -192,9 +187,6 @@ const generateParamInfo = (paramMetadata: ParamMetadata, genericParams: Map<stri
     } else {
       info.example = paramMetadata.example
     }
-  }
-  if (info.source === 'query' && info.schema.type === 'object') {
-    info.root = true
   }
   return info
 }
