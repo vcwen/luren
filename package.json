@@ -69,7 +69,7 @@
     "typescript": "^3.9.5"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.com"
+    "registry": "https://registry.npmjs.org"
   },
   "engines": {
     "node": ">= 10"
