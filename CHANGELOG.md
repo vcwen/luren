@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.8](https://github.com/vcwen/luren/compare/v0.2.7...v0.2.8) (2020-09-09)
+
+
+### Bug Fixes
+
+* **module-context:** fix controller path ([2f8690d](https://github.com/vcwen/luren/commit/2f8690df7322b3048cdd73a9a39d5816b417e03d))
+
 ### [0.2.7](https://github.com/vcwen/luren/compare/v0.2.6...v0.2.7) (2020-08-27)
 
 
