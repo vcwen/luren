@@ -91,36 +91,44 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamI
     }
     // not do type validation when it's built-in object
     if (metadata.root && ['query', 'header', 'context', 'request', 'session', 'next'].includes(metadata.source)) {
-      if (metadata.schema.type === 'object' && !_.isEmpty(value)) {
-        const properties = metadata.schema.properties
-        if (properties) {
-          const obj = {} as any
-          const props = Object.keys(properties)
-          for (const prop of props) {
-            if (
-              properties[prop].type !== 'any' &&
-              properties[prop].type !== 'string' &&
-              typeof value[prop] === 'string'
-            ) {
-              try {
-                obj[prop] = JSON.parse(value[prop])
-              } catch (err) {
-                throw HttpException.badRequest(
-                  `invalid value: '${value[prop]}' for argument '${metadata.name}.${prop}'`
-                )
-              }
-            }
-          }
-          if (_.isEmpty(obj)) {
-            value = null
-          } else {
-            value = obj
-          }
+      if (_.isNil(value)) {
+        if (metadata.required) {
+          throw new Error(`${metadata.source} is required`)
         } else {
-          return value
+          return
         }
       } else {
-        throw new TypeError(`schema type must be object if it's root type`)
+        if (metadata.schema.type === 'object') {
+          const properties = metadata.schema.properties
+          if (properties) {
+            const obj = {} as any
+            const props = Object.keys(properties)
+            for (const prop of props) {
+              if (
+                properties[prop].type !== 'any' &&
+                properties[prop].type !== 'string' &&
+                typeof value[prop] === 'string'
+              ) {
+                try {
+                  obj[prop] = JSON.parse(value[prop])
+                } catch (err) {
+                  throw HttpException.badRequest(
+                    `invalid value: '${value[prop]}' for argument '${metadata.name}.${prop}'`
+                  )
+                }
+              }
+            }
+            if (_.isEmpty(obj)) {
+              value = null
+            } else {
+              value = obj
+            }
+          } else {
+            return value
+          }
+        } else {
+          throw new TypeError(`schema type must be object if it's root type`)
+        }
       }
     }
     const schema = metadata.schema
