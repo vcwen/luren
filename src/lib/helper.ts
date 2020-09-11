@@ -333,9 +333,13 @@ export function createActions(controller: object) {
   let actions: Set<string> = Reflect.getMetadata(MetadataKey.ACTIONS, controller) ?? Set()
   const disabledActions: List<string> = Reflect.getOwnMetadata(MetadataKey.DISABLED_ACTIONS, controller) ?? List()
   actions = actions.filterNot((action) => disabledActions.contains(action))
-  const actionModules = actions.map((action) => {
-    return createActionModule(controller, action)
-  })
+  const actionModules = actions
+    .map((action) => {
+      return createActionModule(controller, action)
+    })
+    .sort((a, b) => {
+      return a.path < b.path ? 1 : -1
+    })
   const counter = Map<string, number>().withMutations((mutable) => {
     for (const m of actionModules) {
       const reqPath = m.method + '-' + m.path
@@ -357,7 +361,6 @@ export function createActions(controller: object) {
       throw new Error(`[${controller.constructor.name}] Path:${key} is defined by multiple actions - ${names}`)
     }
   })
-
   return actionModules.toList()
 }
 export function createControllerModule(ctrl: object) {
