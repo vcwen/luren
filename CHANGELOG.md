@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.10](https://github.com/vcwen/luren/compare/v0.2.9...v0.2.10) (2020-09-11)
+
+
+### Bug Fixes
+
+* **action:** action path order ([94763c1](https://github.com/vcwen/luren/commit/94763c13ab2257120ef726adb0dc0c6a8443df42))
+
 ### [0.2.9](https://github.com/vcwen/luren/compare/v0.2.8...v0.2.9) (2020-09-09)
 
 
