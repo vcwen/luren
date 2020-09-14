@@ -103,12 +103,10 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamI
           if (properties) {
             const obj = {} as any
             const props = Object.keys(properties)
+
             for (const prop of props) {
-              if (
-                properties[prop].type !== 'any' &&
-                properties[prop].type !== 'string' &&
-                typeof value[prop] === 'string'
-              ) {
+              const propJsonType = JsTypes.toJsonSchema(properties[prop]).type
+              if (propJsonType !== 'any' && propJsonType !== 'string' && typeof value[prop] === 'string') {
                 try {
                   obj[prop] = JSON.parse(value[prop])
                 } catch (err) {
@@ -132,7 +130,8 @@ export const getParams = (ctx: Context, next: INext, paramsMetadata: List<ParamI
       }
     }
     const schema = metadata.schema
-    if (schema.type !== 'any' && schema.type !== 'string' && typeof value === 'string') {
+    const jsonType = JsTypes.toJsonSchema(schema).type
+    if (jsonType !== 'any' && jsonType !== 'string' && typeof value === 'string') {
       try {
         value = JSON.parse(value)
       } catch (err) {
