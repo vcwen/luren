@@ -66,10 +66,12 @@ export function UseAuthenticator(authenticator: Authenticator) {
 }
 
 export function OnlyAuthenticator(authenticator: Authenticator) {
-  UseMiddleware(authenticator)
-  FilterMiddleware({ scope: Authenticator, include: { middleware: [authenticator] } })
+  return (...args: any[]) => {
+    UseMiddleware(authenticator)(...args)
+    FilterMiddleware({ scope: Authenticator, include: { middleware: [authenticator] } })(...args)
+  }
 }
 
 export function NoAuthenticator() {
-  FilterMiddleware({ scope: Authenticator, exclude: { type: Authenticator } })
+  return FilterMiddleware({ scope: Authenticator, exclude: { type: Authenticator } })
 }
