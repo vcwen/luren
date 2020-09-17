@@ -72,12 +72,15 @@ export class Router extends Middleware {
     return this.dispatch(ctx, next)
   }
 
-  public dispatch(ctx: Context, next: Next) {
+  public async dispatch(ctx: Context, next: Next) {
     const route = this._routes.find((r) => r.match(ctx.method as HttpMethod, ctx.path))
     if (route) {
       return route.execute(ctx, next)
     } else {
-      throw new HttpException(HttpStatusCode.NOT_FOUND)
+      await next()
+      if (ctx.status === HttpStatusCode.NOT_FOUND) {
+        throw new HttpException(HttpStatusCode.NOT_FOUND)
+      }
     }
   }
   public registerController(controllerModule: ControllerModule) {
@@ -88,5 +91,18 @@ export class Router extends Middleware {
     this._routes = this._routes.concat(routes).sort((a, b) => {
       return a.path < b.path ? 1 : -1
     })
+  }
+  public rebuildRoutes() {
+    const routes: Route[] = []
+    for (const controllerModule of this.appModule.controllerModules) {
+      for (const actionModule of controllerModule.actionModules) {
+        const route = new Route(actionModule)
+        routes.push(route)
+      }
+    }
+    routes.sort((a, b) => {
+      return a.path < b.path ? 1 : -1
+    })
+    this._routes = List(routes)
   }
 }

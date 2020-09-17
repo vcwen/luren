@@ -85,6 +85,10 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
     }
   }
 
+  public rebuildRoutes() {
+    this._router.rebuildRoutes()
+  }
+
   public useMiddleware(...middleware: (Constructor<Middleware> | Middleware)[]): this {
     const middlewareInstances = middleware.map((m) => {
       if (typeof m === 'function') {
