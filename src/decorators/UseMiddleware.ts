@@ -42,12 +42,12 @@ export function FilterMiddleware<T extends Middleware = Middleware>(options: {
     if (args.length === 1) {
       const [constructor] = args
       const filters: List<MiddlewareFilter> =
-        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || List()
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_FILTER, constructor.prototype) || List()
       Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), constructor.prototype)
     } else {
       const [target, propertyKey] = args
       const filters: List<MiddlewareFilter> =
-        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, target, propertyKey) || List()
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_FILTER, target, propertyKey) || List()
       Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), target, propertyKey)
     }
   }
