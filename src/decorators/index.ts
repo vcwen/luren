@@ -1,6 +1,5 @@
 export * from './Controller'
 export * from './UseMiddleware'
-export * from './UseGuard'
 export * from './Param'
 export * from './Response'
 export * from './Action'

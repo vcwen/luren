@@ -16,7 +16,6 @@ import { MetadataKey } from '../../src'
 import { Get, Action, Post } from '../../src'
 import { Controller } from '../../src'
 import { UseMiddleware } from '../../src'
-import { RouterContext } from '@koa/router'
 import { Context } from 'koa'
 import { Prop, Schema } from 'luren-schema'
 import fs from 'fs'
@@ -96,9 +95,9 @@ export default class PersonController {
 describe('UseMiddleware ', () => {
   describe('metadata', () => {
     it('should set middleware for controller', () => {
-      const middleware1 = (ctx: RouterContext<any, any>) => {
+      const middleware1 = Middleware.fromRawMiddleware((ctx: Context) => {
         ctx.body = 'ok'
-      }
+      })
       // tslint:disable-next-line: max-classes-per-file
       @Controller()
       @UseMiddleware(middleware1)
@@ -108,12 +107,12 @@ describe('UseMiddleware ', () => {
       expect(middleware.contains(middleware1)).toBeTruthy()
     })
     it('should set middleware before controller in order', () => {
-      const middleware1 = (ctx: RouterContext) => {
+      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
         ctx.body = 'ok'
-      }
-      const middleware2 = (ctx: RouterContext) => {
+      })
+      const middleware2 = Middleware.fromRawMiddleware((ctx) => {
         ctx.body = 'override'
-      }
+      })
       // tslint:disable-next-line:max-classes-per-file
       @Controller()
       @UseMiddleware(middleware1, middleware2)
@@ -124,9 +123,9 @@ describe('UseMiddleware ', () => {
       expect(middleware.toArray()).toEqual([middleware1, middleware2])
     })
     it('should set middleware for route', () => {
-      const middleware1 = (ctx: RouterContext) => {
+      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
         ctx.body = 'ok'
-      }
+      })
       // tslint:disable-next-line:max-classes-per-file
       @Controller()
       class TestController {
@@ -142,12 +141,12 @@ describe('UseMiddleware ', () => {
       expect(middleware.toArray()).toContain(middleware1)
     })
     it('should set middleware for route in order', () => {
-      const middleware1 = (ctx: RouterContext) => {
+      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
         ctx.body = 'ok'
-      }
-      const middleware2 = (ctx: RouterContext) => {
+      })
+      const middleware2 = Middleware.fromRawMiddleware((ctx) => {
         ctx.body = 'override'
-      }
+      })
       // tslint:disable-next-line:max-classes-per-file
       @Controller()
       class TestController {
@@ -166,17 +165,17 @@ describe('UseMiddleware ', () => {
   })
   describe('middleware', () => {
     it('should be mounted in controller', async () => {
-      const middleware1 = async (ctx: any, next) => {
+      const middleware1 = Middleware.fromRawMiddleware(async (ctx, next) => {
         ctx.m1 = new Date()
         await new Promise((resolve) => {
           setTimeout(resolve, 1000)
         })
         return next()
-      }
-      const middleware2 = async (ctx: any, next) => {
+      })
+      const middleware2 = Middleware.fromRawMiddleware(async (ctx, next) => {
         ctx.m2 = new Date()
         return next()
-      }
+      })
       // tslint:disable-next-line:max-classes-per-file
       @UseMiddleware(middleware1, middleware2)
       @Controller({ plural: 'tests' })
@@ -200,17 +199,17 @@ describe('UseMiddleware ', () => {
       expect(Number.parseInt(res2.body, 10) >= 1000).toBeTruthy()
     })
     it('should be mounted in action', async () => {
-      const middleware1 = async (ctx: any, next) => {
+      const middleware1 = Middleware.fromRawMiddleware(async (ctx: any, next) => {
         ctx.m1 = new Date()
         await new Promise((resolve) => {
           setTimeout(resolve, 1000)
         })
         return next()
-      }
-      const middleware2 = async (ctx: any, next) => {
+      })
+      const middleware2 = Middleware.fromRawMiddleware(async (ctx: any, next) => {
         ctx.m2 = new Date()
         return next()
-      }
+      })
       // tslint:disable-next-line:max-classes-per-file
       @Controller({ plural: 'tests' })
       class TestController {

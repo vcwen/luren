@@ -1,8 +1,8 @@
 import { List } from 'immutable'
-import { RouterContext } from '@koa/router'
 import 'reflect-metadata'
 import { MetadataKey } from '../../src/constants/MetadataKey'
 import { ParamSource } from '../../src/constants/ParamSource'
+import { Context as KoaContext } from 'koa'
 import {
   Body,
   Context,
@@ -211,7 +211,7 @@ describe('Context', () => {
   it('should return decorator function when schema options is set', () => {
     // tslint:disable-next-line: max-classes-per-file
     class TestController {
-      public test(@Context() ctx: RouterContext) {
+      public test(@Context() ctx: KoaContext) {
         return ctx.url
       }
     }

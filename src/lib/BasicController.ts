@@ -27,7 +27,8 @@ export abstract class BasicController<T, ID = any> {
     @Param({ in: 'query', root: true, type: FindOneFilterType }) filter: Omit<IFilter, 'limit'>
   ): Promise<T | undefined> {
     const queryExecutor = await this.getQueryExecutor()
-    return queryExecutor.findOne(filter)
+    const res = await queryExecutor.findOne(filter)
+    return res
   }
   @Get({ path: '' })
   @Response({ type: GenericParam(({ MODEL }) => [MODEL], ['object']) })

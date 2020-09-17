@@ -1,14 +1,12 @@
 import 'reflect-metadata'
-import { MountType, UseGuard, PresetGuardType, DisableGuards } from '../../src'
+import { PresetGuardType, UseGuard, FilterMiddleware, Guard, Middleware, Authenticator } from '../../src'
 import { MetadataKey } from '../../src'
 import { Action, Post } from '../../src'
 import { Controller, Luren } from '../../src'
-// import request from 'supertest'
 import { APITokenAuthenticator, HttpAuthenticator } from '../../src'
 import request from 'supertest'
-import { GuardGroup } from '../../src'
 import { List } from 'immutable'
-jest.unmock('@koa/router')
+import { MiddlewareFilter } from '../lib/MiddlewareFilter'
 
 describe('UseGuard', () => {
   it('authenticate the controller', () => {
@@ -35,56 +33,33 @@ describe('UseGuard', () => {
         return 'ok'
       }
     }
-    const ctrlGuards = Reflect.getMetadata(MetadataKey.GUARDS, TestController.prototype) as Map<string, GuardGroup>
-    expect(ctrlGuards.get(PresetGuardType.Authenticator)).toEqual({
-      mountType: MountType.INTEGRATE,
-      guards: List([apiTokenAuth])
-    })
-    const actionGuards = Reflect.getOwnMetadata(MetadataKey.GUARDS, TestController.prototype, 'foo') as Map<
-      string,
-      GuardGroup
-    >
-    expect(actionGuards.get(PresetGuardType.Authenticator)).toEqual({
-      mountType: MountType.INTEGRATE,
-      guards: List([httpAuth])
-    })
-  })
-})
-describe('DummyGuard', () => {
-  it('set dummy guard on the controller', () => {
-    // tslint:disable-next-line: max-classes-per-file
-    @Controller()
-    class TestController {
-      @DisableGuards(PresetGuardType.Authenticator)
-      @Action()
-      public foo() {
-        return 'ok'
-      }
-    }
-    const guards: Map<string, GuardGroup> = Reflect.getMetadata(MetadataKey.GUARDS, TestController.prototype, 'foo')
-    expect(guards.get(PresetGuardType.Authenticator)).toEqual({
-      mountType: MountType.OVERRIDE,
-      guards: List([expect.objectContaining({ type: PresetGuardType.Authenticator })])
-    })
+    const ctrlGuards: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController.prototype) || List()
+    const guard = ctrlGuards.find((item) => item instanceof Guard)
+    expect(guard).toEqual(apiTokenAuth)
+    const actionGuards = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, TestController.prototype, 'foo')
+    const actionGuard = actionGuards.find((item) => item instanceof Guard)
+    expect(actionGuard).toEqual(httpAuth)
   })
 })
 
 describe('DisableGuards', () => {
   it('disable guards for the controller', () => {
+    const filter = (guard) => guard.type === PresetGuardType.Authenticator
     // tslint:disable-next-line: max-classes-per-file
     @Controller()
     class TestController {
-      @DisableGuards(PresetGuardType.Authenticator)
+      @FilterMiddleware({ target: Guard, exclude: { filter } })
       @Action()
       public foo() {
         return 'ok'
       }
     }
-    const guards: Map<string, GuardGroup> = Reflect.getMetadata(MetadataKey.GUARDS, TestController.prototype, 'foo')
-    expect(guards.get(PresetGuardType.Authenticator)).toEqual({
-      mountType: MountType.OVERRIDE,
-      guards: List([expect.objectContaining({ type: 'Authenticator' })])
-    })
+    const filters: List<MiddlewareFilter> = Reflect.getMetadata(
+      MetadataKey.MIDDLEWARE_FILTER,
+      TestController.prototype,
+      'foo'
+    )
+    expect(filters.find((m) => m.target === Guard && m.exclude?.filter === filter)).not.toBeUndefined()
   })
   it('should disable  authenticator if the controller has set it', async () => {
     const apiTokenAuth = new APITokenAuthenticator(
@@ -101,8 +76,8 @@ describe('DisableGuards', () => {
     @UseGuard(apiTokenAuth)
     @Controller()
     class TestController {
-      @DisableGuards(PresetGuardType.Authenticator)
       @Action()
+      @FilterMiddleware({ target: Guard, exclude: { type: Authenticator } })
       public foo() {
         return 'ok'
       }

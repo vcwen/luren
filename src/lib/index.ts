@@ -1,5 +1,5 @@
 export * from './Action'
-export * from './Controller'
+export * from './ControllerModule'
 export * from './ExecutionContext'
 export * from './HttpResponse'
 export * from '../processors/Processor'

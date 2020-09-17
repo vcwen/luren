@@ -3,24 +3,18 @@ import Koa from 'koa'
 import mount from 'koa-mount'
 import send, { SendOptions } from 'koa-send'
 import _ from 'lodash'
-import { MetadataKey, MountType } from './constants'
-import { ControllerModule } from './lib/Controller'
+import { MetadataKey } from './constants'
 import './lib/DataTypes'
-import { createControllerModule, createControllerRouter } from './lib/helper'
+import { createControllerModule } from './lib/helper'
 import { Middleware } from './lib/Middleware'
 import { Constructor } from './types/Constructor'
-import { getFileLoaderConfig, importModules, getClassInstance, isLurenMiddleware } from './lib/utils'
-import { moduleContextInjection } from './middleware/ModuleContext'
+import { getFileLoaderConfig, importModules, getClassInstance } from './lib/utils'
 import { exceptionHandler } from './middleware/ExceptionHandler'
 import { bodyParser } from './middleware/BodyParser'
-import { Server } from 'http'
-import { ListenOptions } from 'net'
-import { ModuleContext } from './lib/ModuleContext'
-import { ExecutionLevel } from './constants/ExecutionLevel'
-import { ResponseConverter } from './processors/ResponseConverter'
 import helmet from 'koa-helmet'
 import { AppModule } from './lib/AppModule'
-import { GuardGroup, Guard } from './processors/Guard'
+import { Router } from './lib/Router'
+import { ResponseConverter } from './processors'
 
 const debug = Debug('luren')
 
@@ -37,61 +31,29 @@ export interface IModuleLoaderOptions {
 
 export type IPlugin = (luren: Luren) => void
 export interface LurenOptions {
-  enableResponseConversion?: boolean
+  disableResponseConversion?: boolean
 }
 
 export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
   private _workDir: string = process.cwd()
   private _appModule: AppModule
-  private _httpServer?: Server
+  private _router: Router
+  private _routerMounted: boolean = false
 
   constructor(options?: LurenOptions) {
     super()
     this._appModule = new AppModule(this)
-    this.use(...[helmet(), exceptionHandler, moduleContextInjection, bodyParser])
-    if (!(options?.enableResponseConversion === false)) {
-      this.use(new ResponseConverter().toRawMiddleware())
+    for (const m of [helmet(), exceptionHandler, bodyParser]) {
+      super.use(m as any)
     }
+    if (!options?.disableResponseConversion) {
+      this.useMiddleware(ResponseConverter)
+    }
+    this._router = new Router(this._appModule)
   }
 
   public setWorkDirectory(dir: string) {
     this._workDir = dir
-  }
-
-  // tslint:disable-next-line: unified-signatures
-  public async start(port?: number, hostname?: string, backlog?: number): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(port: number, hostname?: string): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(port: number, backlog?: number): Promise<Server>
-  public async start(port: number): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(path: string, backlog?: number): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(path: string): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(options: ListenOptions): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(handle: any, backlog?: number): Promise<Server>
-  // tslint:disable-next-line: unified-signatures
-  public async start(handle: any): Promise<Server>
-  async start(...args: any[]): Promise<Server> {
-    return new Promise((resolve, reject) => {
-      args.push(() => {
-        resolve(this._httpServer)
-      })
-      try {
-        this._httpServer = super.listen(...[...args])
-      } catch (err) {
-        reject(err)
-      }
-    })
-  }
-
-  public close() {
-    if (this._httpServer) {
-      this._httpServer.close()
-    }
   }
 
   public register(...controllers: (Constructor | object)[]) {
@@ -103,12 +65,13 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
       }
       debug(`register controller ${ctrl.constructor.name}`)
       if (!this._appModule.controllerModules.some((m) => m.controller.constructor === ctrl.constructor)) {
-        const ctrlModule = createControllerModule(ctrl)
+        const ctrlModule = createControllerModule(this._appModule, ctrl)
         this._appModule.controllerModules = this._appModule.controllerModules.push(ctrlModule)
-        this._notifyMiddlewareMount(ctrlModule)
-        const ctrlRouter = createControllerRouter(ctrlModule)
-        this.use(ctrlRouter.routes()).use(ctrlRouter.allowedMethods())
+        this._router.registerController(ctrlModule)
       }
+    }
+    if (!this._routerMounted) {
+      this._mountRouter()
     }
   }
 
@@ -118,74 +81,26 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
 
   public plugin(...plugins: IPlugin[]) {
     for (const p of plugins) {
-      p(this as any)
+      p(this)
     }
   }
 
-  public use<NewStateT = {}, NewCustomT = {}>(
-    ...middleware: (Constructor<Middleware> | Middleware | Koa.Middleware<StateT & NewStateT, CustomT & NewCustomT>)[]
-  ): Luren<StateT & NewStateT, CustomT & NewCustomT>
-  public use<NewStateT = {}, NewCustomT = {}>(
-    path: string,
-    ...middleware: Koa.Middleware<StateT & NewStateT, CustomT & NewCustomT>[]
-  ): Luren<StateT & NewStateT, CustomT & NewCustomT>
-  public use(...args: any[]) {
-    let middleware: any[] = []
-    let path: any
-    if (typeof args[0] === 'string') {
-      path = args[0]
-      middleware = _.tail(args)
-    } else {
-      middleware = args
-    }
-    const moduleCtx = new ModuleContext(this as any)
-    const ms = middleware.map((item) => {
-      if (item instanceof Middleware) {
-        item.onMount(ExecutionLevel.APP, moduleCtx)
-        return item.toRawMiddleware()
+  public useMiddleware(...middleware: (Constructor<Middleware> | Middleware)[]): this {
+    const middlewareInstances = middleware.map((m) => {
+      if (typeof m === 'function') {
+        return getClassInstance<Middleware>(m)
+      } else if (m instanceof Middleware) {
+        return m
       } else {
-        if (Middleware.isPrototypeOf(item)) {
-          const instance = getClassInstance<Middleware>(item)
-          instance.onMount(ExecutionLevel.APP, moduleCtx)
-          return instance.toRawMiddleware()
-        } else {
-          return item
-        }
+        throw TypeError('Invalid middleware type')
       }
     })
-    ms.forEach((m) => {
-      if (path) {
-        super.use(mount(path, m))
-      } else {
-        super.use(m)
-      }
-    })
+    this._appModule.middleware = this._appModule.middleware.concat(middlewareInstances)
     return this
   }
 
-  public useGuard(...guards: Guard[]) {
-    if (guards.length === 0) {
-      return
-    }
-    const guardInstances = guards.map((a) => {
-      if (typeof a === 'function') {
-        if (Guard.isPrototypeOf(a)) {
-          return getClassInstance<Guard>(a as any)
-        } else {
-          return a
-        }
-      } else if (a instanceof Guard) {
-        return a
-      } else {
-        throw TypeError('Invalid authenticator type')
-      }
-    })
-    this.use(...guardInstances)
-    for (const guard of guardInstances) {
-      const guardGroup: GuardGroup = this._appModule.guards.get(guard.type) ?? new GuardGroup(MountType.INTEGRATE, [])
-      guardGroup.addGuards(guard)
-      this._appModule.guards = this._appModule.guards.set(guard.type, guardGroup)
-    }
+  public useGuards(...guards: (Constructor<Middleware> | Middleware)[]) {
+    return this.useMiddleware(...guards)
   }
 
   public serve(path: string, options: SendOptions): void
@@ -200,10 +115,10 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
     } else {
       throw new Error('Invalid arguments')
     }
-    this.use(mount(path, async (ctx) => send(ctx, ctx.path, options)))
+    super.use(mount(path, async (ctx) => send(ctx, ctx.path, options)))
   }
 
-  public async loadMiddleware(options?: IModuleLoaderOptions) {
+  public async loadMiddlewareModules(options?: IModuleLoaderOptions) {
     const config = getFileLoaderConfig(options, 'middleware')
     const modules = await importModules(this._workDir, config)
     for (const module of modules) {
@@ -215,15 +130,10 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
         middleware = [middleware]
       }
       for (const m of middleware) {
-        if (typeof m === 'function') {
-          if (Middleware.isPrototypeOf(m)) {
-            const instance = getClassInstance<Middleware>(m)
-            this.use(instance.toRawMiddleware())
-          } else {
-            this.use(m)
-          }
+        if (typeof m === 'function' && Middleware.isPrototypeOf(m)) {
+          this.useMiddleware(m)
         } else if (m instanceof Middleware) {
-          this.use(m.toRawMiddleware())
+          this.useMiddleware(m)
         } else {
           throw TypeError('Invalid middleware type')
         }
@@ -248,18 +158,7 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
       })
       .forEach((ctrl) => this.register(ctrl))
   }
-  private _notifyMiddlewareMount(controllerModule: ControllerModule) {
-    for (const m of controllerModule.middleware) {
-      if (isLurenMiddleware(m)) {
-        m.onMount(ExecutionLevel.CONTROLLER, new ModuleContext(this._appModule, controllerModule))
-      }
-    }
-    for (const actionModule of controllerModule.actionModules) {
-      for (const m of actionModule.middleware) {
-        if (isLurenMiddleware(m)) {
-          m.onMount(ExecutionLevel.ACTION, new ModuleContext(this._appModule, controllerModule, actionModule))
-        }
-      }
-    }
+  private _mountRouter() {
+    this.use(this._router.toRawMiddleware())
   }
 }

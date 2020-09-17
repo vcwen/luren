@@ -1,5 +1,5 @@
+import { Next } from 'koa'
 import { ExecutionContext } from '../lib/ExecutionContext'
-import { INext } from '../types'
 import { IProcessor, Processor } from './Processor'
 
 export interface IPostprocessor extends IProcessor {
@@ -7,7 +7,7 @@ export interface IPostprocessor extends IProcessor {
 }
 
 export abstract class Postprocessor extends Processor implements IPostprocessor {
-  public async process(execCtx: ExecutionContext, next: INext) {
+  public async process(execCtx: ExecutionContext, next: Next) {
     const res = await next()
     return this.postprocess(execCtx, res)
   }

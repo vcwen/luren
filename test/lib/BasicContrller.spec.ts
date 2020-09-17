@@ -13,7 +13,6 @@ import {
 } from '../../src'
 import _ from 'lodash'
 import request from 'supertest'
-jest.unmock('@koa/router')
 
 class Foo {
   constructor(public id: number) {}
@@ -137,7 +136,8 @@ class QueryExecutor implements IQueryExecutor<Foo> {
   }
   public async findOne(filter: IFilter) {
     const data = filterData(this.data, filter)
-    return _.head(data)
+    const res = _.head(data)
+    return res
   }
   public async findMany(filter: IFilter) {
     return filterData(this.data, filter)
@@ -281,8 +281,10 @@ describe('BasicController', () => {
       const app = new Luren()
       const ctrl = new SimpleController([{ id: 1, name: 'bar' }])
       app.register(ctrl)
-      const res = await request(app.callback()).get('/foo/findOne?offset=0&fields=["name"]&conditions={"name": "bar"}')
-      expect(res.body).toEqual({ name: 'bar' })
+      const res = await request(app.callback()).get(
+        '/foo/findOne?offset=0&fields=["id", "name"]&conditions={"name": "bar"}'
+      )
+      expect(res.body).toEqual({ id: 1, name: 'bar' })
     })
     it("should return 404 if data with this ID doesn't exists", async () => {
       const app = new Luren()
@@ -302,14 +304,17 @@ describe('BasicController', () => {
         { id: 3, name: 'gee', city: 'hz' }
       ])
       app.register(ctrl)
-      const res1 = await request(app.callback()).get('/foo?offset=0&fields=["name"]&conditions={"name": "bar"}')
-      expect(res1.body).toEqual([{ name: 'bar' }])
-      const res2 = await request(app.callback()).get('/foo?offset=0&fields=["name"]&conditions={"city": "hz"}')
-      expect(res2.body).toEqual([{ name: 'bar' }, { name: 'gee' }])
+      const res1 = await request(app.callback()).get('/foo?offset=0&fields=["id", "name"]&conditions={"name": "bar"}')
+      expect(res1.body).toEqual([{ id: 1, name: 'bar' }])
+      const res2 = await request(app.callback()).get('/foo?offset=0&fields=["id", "name"]&conditions={"city": "hz"}')
+      expect(res2.body).toEqual([
+        { id: 1, name: 'bar' },
+        { id: 3, name: 'gee' }
+      ])
       const res3 = await request(app.callback()).get(
-        '/foo?offset=0&limit=1&order={"id": "desc"}&fields=["name"]&conditions={"city": "hz"}'
+        '/foo?offset=0&limit=1&order={"id": "desc"}&fields=["id", "name"]&conditions={"city": "hz"}'
       )
-      expect(res3.body).toEqual([{ name: 'gee' }])
+      expect(res3.body).toEqual([{ id: 3, name: 'gee' }])
     })
     it('should empty array if no records matched', async () => {
       const app = new Luren()

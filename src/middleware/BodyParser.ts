@@ -1,9 +1,8 @@
-import { Context } from 'koa'
+import { Context, Next } from 'koa'
 import koaBodyParser from 'koa-bodyparser'
 import { parseFormData } from '../lib/utils'
-import { INext } from '../types'
 
-export const bodyParser = async (ctx: Context, next: INext) => {
+export const bodyParser = async (ctx: Context, next: Next) => {
   if (Reflect.get(ctx.request, 'body') !== undefined) {
     return next()
   }

@@ -1,11 +1,10 @@
-import { Context } from 'koa'
+import { Context, Next } from 'koa'
 import { Luren } from '../Luren'
 import { ModuleContext } from '../lib/ModuleContext'
 import { pathToRegexp } from 'path-to-regexp'
-import { INext } from '../types'
 import Path from 'path'
 
-export const moduleContextInjection = (ctx: Context, next: INext) => {
+export const moduleContextInjection = (ctx: Context, next: Next) => {
   const url = ctx.path
   const app = ctx.app as Luren
   for (const ctrlModule of app.getAppModule().controllerModules) {

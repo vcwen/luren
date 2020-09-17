@@ -1,9 +1,8 @@
-import { Context } from 'koa'
+import { Context, Next } from 'koa'
 import { HttpStatusCode } from '../constants'
 import { HttpException } from '../lib/HttpException'
-import { INext } from '../types'
 
-export const exceptionHandler = async (ctx: Context, next: INext): Promise<any> => {
+export const exceptionHandler = async (ctx: Context, next: Next): Promise<any> => {
   try {
     await next()
   } catch (err) {

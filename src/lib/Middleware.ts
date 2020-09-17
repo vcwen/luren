@@ -1,23 +1,23 @@
-import { ParameterizedContext, Middleware as KoaMiddleware } from 'koa'
-import { ExecutionLevel } from '../constants/ExecutionLevel'
-import { INext } from '../types'
-import { ModuleContext } from './ModuleContext'
-import debug from 'debug'
+import { Context, Next } from 'koa'
 
 export interface IMiddleware {
-  run(ctx: ParameterizedContext<any, any>, next: INext): Promise<any>
-  onMount(level: ExecutionLevel, moduleContext: ModuleContext): void
-  toRawMiddleware(): (ctx: any, next: INext) => Promise<any>
+  execute(ctx: Context, next: Next): Promise<any>
+  toRawMiddleware(): (ctx: Context, next: Next) => Promise<any>
 }
 
 export abstract class Middleware implements IMiddleware {
-  public abstract async run(ctx: ParameterizedContext<any, any>, next: INext): Promise<any>
-  public onMount(level: ExecutionLevel, _moduleContext: ModuleContext): void {
-    debug(`${this.constructor.name} attached to level: ${level}`)
-  }
-  public toRawMiddleware(): KoaMiddleware {
-    return async (ctx: ParameterizedContext<any, any>, next: INext) => {
-      return this.run(ctx, next)
+  public abstract async execute(ctx: Context, next: Next): Promise<any>
+  public toRawMiddleware() {
+    return async (ctx: Context, next: Next) => {
+      return this.execute(ctx, next)
     }
+  }
+  public static fromRawMiddleware(rawMiddleware: (ctx: Context, next: Next) => any) {
+    // tslint:disable-next-line: max-classes-per-file
+    return new (class extends Middleware {
+      public execute(ctx: Context, next: Next): Promise<any> {
+        return rawMiddleware(ctx, next)
+      }
+    })()
   }
 }

@@ -4,18 +4,15 @@ import 'reflect-metadata'
 import { MetadataKey } from '../constants/MetadataKey'
 import { Middleware } from '../lib/Middleware'
 import { getClassInstance } from '../lib/utils'
-import Router from '@koa/router'
 import { Constructor } from '../types/Constructor'
+import { Guard } from '../processors'
+import { IMiddleFilterOptions, MiddlewareFilter } from '../lib/MiddlewareFilter'
 
-export function UseMiddleware(...middleware: (Middleware | Constructor<Middleware> | Router.Middleware)[]) {
+export function UseMiddleware(...middleware: (Middleware | Constructor<Middleware>)[]) {
   return (...args: any[]) => {
     middleware = middleware.map((m) => {
       if (typeof m === 'function') {
-        if (Middleware.isPrototypeOf(m)) {
-          return getClassInstance<Middleware>(m as any)
-        } else {
-          return m
-        }
+        return getClassInstance(m)
       } else if (m instanceof Middleware) {
         return m
       } else {
@@ -33,4 +30,33 @@ export function UseMiddleware(...middleware: (Middleware | Constructor<Middlewar
       Reflect.defineMetadata(MetadataKey.MIDDLEWARE, newMiddleware.concat(mw), target, propertyKey)
     }
   }
+}
+
+export function FilterMiddleware<T extends Middleware = Middleware>(options: {
+  target?: Constructor<T>
+  include?: IMiddleFilterOptions<T>
+  exclude?: IMiddleFilterOptions<T>
+}) {
+  const filter = new MiddlewareFilter(options)
+  return (...args: any[]) => {
+    if (args.length === 1) {
+      const [constructor] = args
+      const filters: List<MiddlewareFilter> =
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || List()
+      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), constructor.prototype)
+    } else {
+      const [target, propertyKey] = args
+      const filters: List<MiddlewareFilter> =
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, target, propertyKey) || List()
+      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), target, propertyKey)
+    }
+  }
+}
+
+export function UseGuards(...guards: (Guard | Constructor<Guard>)[]) {
+  return UseMiddleware(...guards)
+}
+
+export function UseGuard(guard: Guard | Constructor<Guard>) {
+  return UseMiddleware(guard)
 }

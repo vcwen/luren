@@ -1,5 +1,5 @@
 import { ActionModule } from './Action'
-import { ControllerModule } from './Controller'
+import { ControllerModule } from './ControllerModule'
 import { AppModule } from './AppModule'
 export class ModuleContext {
   constructor(
