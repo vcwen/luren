@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/vcwen/luren/compare/v0.3.2...v0.3.3) (2020-09-17)
+
+
+### Bug Fixes
+
+* **middleware:** fix auth decorators ([80739b0](https://github.com/vcwen/luren/commit/80739b0ba51f5a51b39197ad791937794bfbd0f3))
+
 ### [0.3.2](https://github.com/vcwen/luren/compare/v0.2.7...v0.3.2) (2020-09-17)
 
 
