@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/vcwen/luren/compare/v0.2.11...v0.3.0) (2020-09-17)
+
+
+### Features
+
+* **router:** remove @koa/router, define new router & middleware ([fe44240](https://github.com/vcwen/luren/commit/fe442404124b3f5ab1fe2780eb8259498013056a))
+
+
+### Bug Fixes
+
+* **param:** fix param parse ([263f842](https://github.com/vcwen/luren/commit/263f842c900daa87e6005361d7bfb5b126a0bd28))
+
 ### [0.2.11](https://github.com/vcwen/luren/compare/v0.2.10...v0.2.11) (2020-09-14)
 
 ### [0.2.10](https://github.com/vcwen/luren/compare/v0.2.9...v0.2.10) (2020-09-11)
