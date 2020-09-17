@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.1](https://github.com/vcwen/luren/compare/v0.3.0...v0.3.1) (2020-09-17)
+
+
+### Features
+
+* **router:** add rebuild routes method ([845258f](https://github.com/vcwen/luren/commit/845258fc50bb5f7d01ff9e2373bb6005a6fa4039))
+
 ## [0.3.0](https://github.com/vcwen/luren/compare/v0.2.11...v0.3.0) (2020-09-17)
 
 
