@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.4](https://github.com/vcwen/luren/compare/v0.3.3...v0.3.4) (2020-09-17)
+
+
+### Bug Fixes
+
+* **middleware:** fix FilterMiddleware decorator ([95ff85f](https://github.com/vcwen/luren/commit/95ff85f2077579d041173a50eae6597635eb9e4d))
+
 ### [0.3.3](https://github.com/vcwen/luren/compare/v0.3.2...v0.3.3) (2020-09-17)
 
 
