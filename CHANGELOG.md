@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.2](https://github.com/vcwen/luren/compare/v0.2.7...v0.3.2) (2020-09-17)
+
+
+### Features
+
+* **router:** add rebuild routes method ([845258f](https://github.com/vcwen/luren/commit/845258fc50bb5f7d01ff9e2373bb6005a6fa4039))
+* **router:** remove @koa/router, define new router & middleware ([fe44240](https://github.com/vcwen/luren/commit/fe442404124b3f5ab1fe2780eb8259498013056a))
+
+
+### Bug Fixes
+
+* **action:** action path order ([94763c1](https://github.com/vcwen/luren/commit/94763c13ab2257120ef726adb0dc0c6a8443df42))
+* **module-context:** fix controller path ([2f8690d](https://github.com/vcwen/luren/commit/2f8690df7322b3048cdd73a9a39d5816b417e03d))
+* **param:** fix nil value for root param ([0fb0b0f](https://github.com/vcwen/luren/commit/0fb0b0f694662406a1f9817feb7a3e839cf5d69e))
+* **param:** fix param parse ([263f842](https://github.com/vcwen/luren/commit/263f842c900daa87e6005361d7bfb5b126a0bd28))
+
 ### [0.3.1](https://github.com/vcwen/luren/compare/v0.3.0...v0.3.1) (2020-09-17)
 
 
