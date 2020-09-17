@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid'
-import { AuthenticationType, HttpHeader, PresetGuardType } from '../constants'
+import { AuthenticationType, HttpHeader } from '../constants'
 import { HttpException } from '../lib'
 import { ExecutionContext } from '../lib/ExecutionContext'
 import { getRequestParam } from '../lib/helper'
@@ -18,7 +18,6 @@ export interface IAuthenticator extends IProcessor {
   getDescriptor(): IAuthenticatorDescriptor
 }
 export abstract class Authenticator extends Guard implements IAuthenticator {
-  public type: string = PresetGuardType.Authenticator
   public abstract authenticationType: string
   public description?: string
   public id: string

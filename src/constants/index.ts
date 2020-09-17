@@ -2,7 +2,6 @@ export { HttpStatusCode } from './HttpStatusCode'
 export { HttpMethod } from './HttpMethod'
 export { MetadataKey } from './MetadataKey'
 export { HttpHeader } from './HttpHeader'
-export { MountType } from './MountType'
 export { ExecutionLevel } from './ExecutionLevel'
 export { ParamSource } from './ParamSource'
 
@@ -16,8 +15,4 @@ export enum Scope {
   SINGLETON = 'SINGLETON',
   TRANSIENT = 'TRANSIENT',
   REQUEST = 'REQUEST'
-}
-
-export enum PresetGuardType {
-  Authenticator = 'Authenticator'
 }

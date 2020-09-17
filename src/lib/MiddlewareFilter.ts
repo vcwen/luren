@@ -8,7 +8,7 @@ export interface IMiddleFilterOptions<T extends Middleware = Middleware> {
   filter?: (middleware: T) => boolean
 }
 export class MiddlewareFilter<T extends Middleware = Middleware> {
-  public target?: Constructor<T>
+  public scope?: Constructor<T>
   public include?: {
     type?: Constructor<T>
     middleware?: (T | Constructor<T>)[]
@@ -21,12 +21,12 @@ export class MiddlewareFilter<T extends Middleware = Middleware> {
   }
   constructor(
     options: Partial<{
-      target?: Constructor<T>
+      scope?: Constructor<T>
       include?: IMiddleFilterOptions<T>
       exclude: IMiddleFilterOptions<T>
     }>
   ) {
-    this.target = options.target
+    this.scope = options.scope
     this.include = options.include
     this.exclude = options.exclude
     if (!this.include && !this.exclude) {
@@ -35,7 +35,7 @@ export class MiddlewareFilter<T extends Middleware = Middleware> {
   }
   public filter(middleware: T[]) {
     let intactMiddleware: T[] = []
-    const target = this.target
+    const target = this.scope
     if (target) {
       intactMiddleware = middleware.filter((item) => !(item instanceof target))
       middleware = middleware.filter((item) => item instanceof target)

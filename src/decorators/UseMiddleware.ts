@@ -5,7 +5,7 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { Middleware } from '../lib/Middleware'
 import { getClassInstance } from '../lib/utils'
 import { Constructor } from '../types/Constructor'
-import { Guard } from '../processors'
+import { Authenticator, Guard } from '../processors'
 import { IMiddleFilterOptions, MiddlewareFilter } from '../lib/MiddlewareFilter'
 
 export function UseMiddleware(...middleware: (Middleware | Constructor<Middleware>)[]) {
@@ -33,7 +33,7 @@ export function UseMiddleware(...middleware: (Middleware | Constructor<Middlewar
 }
 
 export function FilterMiddleware<T extends Middleware = Middleware>(options: {
-  target?: Constructor<T>
+  scope?: Constructor<T>
   include?: IMiddleFilterOptions<T>
   exclude?: IMiddleFilterOptions<T>
 }) {
@@ -59,4 +59,17 @@ export function UseGuards(...guards: (Guard | Constructor<Guard>)[]) {
 
 export function UseGuard(guard: Guard | Constructor<Guard>) {
   return UseMiddleware(guard)
+}
+
+export function UseAuthenticator(authenticator: Authenticator) {
+  return UseMiddleware(authenticator)
+}
+
+export function OnlyAuthenticator(authenticator: Authenticator) {
+  UseMiddleware(authenticator)
+  FilterMiddleware({ scope: Authenticator, include: { middleware: [authenticator] } })
+}
+
+export function NoAuthenticator() {
+  FilterMiddleware({ scope: Authenticator, exclude: { type: Authenticator } })
 }

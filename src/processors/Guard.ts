@@ -5,7 +5,6 @@ import { Next } from 'koa'
 
 export abstract class Guard extends Processor {
   public id: string
-  public abstract type: string
   private _except?: (execContext: ExecutionContext) => Promise<boolean>
   public constructor(except?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)) {
     super()
