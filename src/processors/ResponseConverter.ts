@@ -10,6 +10,7 @@ import { shouldHaveResponseBody } from '../lib/utils'
 import { ActionModule } from '../lib'
 
 export class ResponseConverter extends Postprocessor {
+  public type: string = 'RESPONSE_CONVERTER'
   public level: ExecutionLevel = ExecutionLevel.ACTION
   public async postprocess(execCtx: ExecutionContext, res: any) {
     // convert response only for successful

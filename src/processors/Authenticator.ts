@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid'
 import { AuthenticationType, HttpHeader } from '../constants'
 import { HttpException } from '../lib'
 import { ExecutionContext } from '../lib/ExecutionContext'
@@ -18,15 +17,11 @@ export interface IAuthenticator extends IProcessor {
   getDescriptor(): IAuthenticatorDescriptor
 }
 export abstract class Authenticator extends Guard implements IAuthenticator {
+  public type: string = 'AUTHENTICATOR'
   public abstract authenticationType: string
   public description?: string
-  public id: string
-  public constructor(
-    public name: string,
-    options?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)
-  ) {
-    super(options)
-    this.id = uuid()
+  public constructor(public name: string) {
+    super()
   }
   public async validate(execCtx: ExecutionContext) {
     return this.authenticate(execCtx)
@@ -44,14 +39,13 @@ export class APITokenAuthenticator extends Authenticator {
   constructor(
     validate: (token: string) => Promise<boolean>,
     options: {
-      except?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)
       name?: string
       key?: string
       source?: 'query' | 'header' | 'body'
       description?: string
     } = {}
   ) {
-    super(options?.name || AuthenticationType.API_TOKEN, options?.except)
+    super(options?.name || AuthenticationType.API_TOKEN)
     this.key = options.key ?? 'access_token'
     this._validate = validate
     this.source = options.source ?? 'query'
@@ -89,11 +83,10 @@ export class HttpAuthenticator extends Authenticator {
       name?: string
       format?: string
       description?: string
-      except?: string | RegExp | ((execContext: ExecutionContext) => Promise<boolean>)
     } = {}
   ) {
     // tslint:disable-next-line: no-magic-numbers
-    super(options.name || 'HTTP', options?.except)
+    super(options.name || 'HTTP')
     this.format = options.format || 'JWT'
     this._validate = validate
     this.description = options.description
@@ -127,6 +120,21 @@ export class HttpAuthenticator extends Authenticator {
       scheme: this.scheme,
       format: this.format,
       description: this.description
+    }
+  }
+}
+
+// tslint:disable-next-line: max-classes-per-file
+export class NOAuthenticator extends Authenticator {
+  public authenticationType = AuthenticationType.NONE
+  public async authenticate() {
+    return true
+  }
+  public getDescriptor() {
+    return {
+      id: this.id,
+      name: this.name,
+      authenticationType: this.authenticationType
     }
   }
 }

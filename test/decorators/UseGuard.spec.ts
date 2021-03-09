@@ -1,12 +1,11 @@
 import 'reflect-metadata'
-import { UseGuard, FilterMiddleware, Guard, Middleware, Authenticator } from '../../src'
+import { UseGuard, Guard } from '../../src'
 import { MetadataKey } from '../../src'
-import { Action, Post } from '../../src'
-import { Controller, Luren } from '../../src'
+import { Post } from '../../src'
+import { Controller } from '../../src'
 import { APITokenAuthenticator, HttpAuthenticator } from '../../src'
-import request from 'supertest'
 import { List } from 'immutable'
-import { MiddlewareFilter } from '../lib/MiddlewareFilter'
+import { MiddlewarePack } from '../lib/MiddlewarePack'
 
 describe('UseGuard', () => {
   it('authenticate the controller', () => {
@@ -33,64 +32,16 @@ describe('UseGuard', () => {
         return 'ok'
       }
     }
-    const ctrlGuards: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController.prototype) || List()
-    const guard = ctrlGuards.find((item) => item instanceof Guard)
-    expect(guard).toEqual(apiTokenAuth)
-    const actionGuards = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, TestController.prototype, 'foo')
-    const actionGuard = actionGuards.find((item) => item instanceof Guard)
-    expect(actionGuard).toEqual(httpAuth)
-  })
-})
-
-describe('DisableGuards', () => {
-  it('disable guards for the controller', () => {
-    const filter = (guard) => guard instanceof Authenticator
-    // tslint:disable-next-line: max-classes-per-file
-    @Controller()
-    class TestController {
-      @FilterMiddleware({ scope: Guard, exclude: { filter } })
-      @Action()
-      public foo() {
-        return 'ok'
-      }
-    }
-    const filters: List<MiddlewareFilter> = Reflect.getMetadata(
-      MetadataKey.MIDDLEWARE_FILTER,
+    const ctrlGuards: List<MiddlewarePack> =
+      Reflect.getMetadata(MetadataKey.MIDDLEWARE_PACKS, TestController.prototype) || List()
+    const guardPack = ctrlGuards.find((item) => item.middleware instanceof Guard)
+    expect(guardPack?.middleware).toEqual(apiTokenAuth)
+    const actionGuards: List<MiddlewarePack> = Reflect.getOwnMetadata(
+      MetadataKey.MIDDLEWARE_PACKS,
       TestController.prototype,
       'foo'
     )
-    expect(filters.find((m) => m.scope === Guard && m.exclude?.filter === filter)).not.toBeUndefined()
-  })
-  it('should disable  authenticator if the controller has set it', async () => {
-    const apiTokenAuth = new APITokenAuthenticator(
-      async (token) => {
-        return token === 'test_token'
-      },
-      {
-        name: 'api_key',
-        key: 'authorization',
-        source: 'header'
-      }
-    )
-    // tslint:disable-next-line: max-classes-per-file
-    @UseGuard(apiTokenAuth)
-    @Controller()
-    class TestController {
-      @Action()
-      @FilterMiddleware({ scope: Guard, exclude: { type: Authenticator } })
-      public foo() {
-        return 'ok'
-      }
-      @Action()
-      public bar() {
-        return 'ok'
-      }
-    }
-    const ctrl = new TestController()
-    const app = new Luren()
-    app.register(ctrl)
-    const res = await request(app.callback()).get('/tests/foo').expect(200)
-    expect(res.text).toEqual('ok')
-    await request(app.callback()).get('/tests/bar').expect(401)
+    const actionGuard = actionGuards.find((item) => item.middleware instanceof Guard)
+    expect(actionGuard?.middleware).toEqual(httpAuth)
   })
 })

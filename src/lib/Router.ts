@@ -22,8 +22,34 @@ export class Route {
     const action = async (ctx: Context, next: Next) => {
       return actionModule.actionExecutor.execute(ctx, next)
     }
-    const middlewareStack = actionModule.middleware.map((m) => m.toRawMiddleware())
-    this.stack = middlewareStack.push(action)
+
+    let middlewarePacks = actionModule.controllerModule.appModule.middlewarePacks.concat(
+      actionModule.controllerModule.middlewarePacks.concat(actionModule.middlewarePacks)
+    )
+    const moduleCtx = new ModuleContext(
+      actionModule.controllerModule.appModule,
+      actionModule.controllerModule,
+      actionModule
+    )
+    middlewarePacks = middlewarePacks.filter((item) => (item.shouldMount ? item.shouldMount(moduleCtx) : true))
+    let packs = middlewarePacks.reverse().toArray()
+    const middleware: Middleware[] = []
+    while (packs.length > 0) {
+      let [pack, ...rest] = packs
+      if (!pack.isPlaceholder) {
+        middleware.push(pack.middleware)
+      }
+
+      const filter = pack.filter
+      if (filter && rest.length > 0) {
+        rest = rest.filter((item) => (item.middleware.type === pack.middleware.type ? filter(item.middleware) : true))
+      }
+      packs = rest
+    }
+
+    const middlewareStack = middleware.reverse().map((m) => m.toRawMiddleware())
+    middlewareStack.push(action)
+    this.stack = List(middlewareStack)
     this.path = actionModule.getFullPath()
     const keys: Key[] = []
     const pathRegExp = pathToRegexp(this.path, keys)
@@ -62,6 +88,7 @@ export class Route {
 
 // tslint:disable-next-line: max-classes-per-file
 export class Router extends Middleware {
+  public type: string = 'ROUTER'
   private _routes: List<Route> = List()
   public appModule: AppModule
   constructor(appModule: AppModule) {

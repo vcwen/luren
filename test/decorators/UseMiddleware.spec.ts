@@ -21,6 +21,7 @@ import { Prop, Schema } from 'luren-schema'
 import fs from 'fs'
 import Path from 'path'
 import request from 'supertest'
+import { MiddlewarePack } from '../lib/MiddlewarePack'
 jest.unmock('@koa/router')
 
 // tslint:disable-next-line: max-classes-per-file
@@ -95,35 +96,41 @@ export default class PersonController {
 describe('UseMiddleware ', () => {
   describe('metadata', () => {
     it('should set middleware for controller', () => {
-      const middleware1 = Middleware.fromRawMiddleware((ctx: Context) => {
+      const middleware1 = Middleware.fromRawMiddleware('', (ctx: Context) => {
         ctx.body = 'ok'
       })
       // tslint:disable-next-line: max-classes-per-file
       @Controller()
       @UseMiddleware(middleware1)
       class TestController {}
-      const middleware: List<any> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController.prototype)
-      expect(middleware.size).toBe(1)
-      expect(middleware.contains(middleware1)).toBeTruthy()
+      const middlewarePacks: List<MiddlewarePack> = Reflect.getMetadata(
+        MetadataKey.MIDDLEWARE_PACKS,
+        TestController.prototype
+      )
+      expect(middlewarePacks.size).toBe(1)
+      expect(middlewarePacks.map((item) => item.middleware).contains(middleware1)).toBeTruthy()
     })
     it('should set middleware before controller in order', () => {
-      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
+      const middleware1 = Middleware.fromRawMiddleware('CUSTOM', (ctx) => {
         ctx.body = 'ok'
       })
-      const middleware2 = Middleware.fromRawMiddleware((ctx) => {
+      const middleware2 = Middleware.fromRawMiddleware('CUSTOM', (ctx) => {
         ctx.body = 'override'
       })
       // tslint:disable-next-line:max-classes-per-file
       @Controller()
-      @UseMiddleware(middleware1, middleware2)
+      @UseMiddleware([middleware1, middleware2])
       class TestController {}
-      const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, TestController.prototype)
+      const middlewarePacks: List<MiddlewarePack> = Reflect.getMetadata(
+        MetadataKey.MIDDLEWARE_PACKS,
+        TestController.prototype
+      )
       // tslint:disable-next-line:no-magic-numbers
-      expect(middleware.size).toBe(2)
-      expect(middleware.toArray()).toEqual([middleware1, middleware2])
+      expect(middlewarePacks.size).toBe(2)
+      expect(middlewarePacks.map((it) => it.middleware).toArray()).toEqual([middleware1, middleware2])
     })
     it('should set middleware for route', () => {
-      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
+      const middleware1 = Middleware.fromRawMiddleware('CUSTOM', (ctx) => {
         ctx.body = 'ok'
       })
       // tslint:disable-next-line:max-classes-per-file
@@ -136,48 +143,48 @@ describe('UseMiddleware ', () => {
         }
       }
       const ctrl = new TestController()
-      const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
+      const middleware: List<MiddlewarePack> = Reflect.getMetadata(MetadataKey.MIDDLEWARE_PACKS, ctrl, 'test')
       expect(middleware.size).toBe(1)
-      expect(middleware.toArray()).toContain(middleware1)
+      expect(middleware.map((it) => it.middleware).toArray()).toContain(middleware1)
     })
     it('should set middleware for route in order', () => {
-      const middleware1 = Middleware.fromRawMiddleware((ctx) => {
+      const middleware1 = Middleware.fromRawMiddleware('CUSTOM', (ctx) => {
         ctx.body = 'ok'
       })
-      const middleware2 = Middleware.fromRawMiddleware((ctx) => {
+      const middleware2 = Middleware.fromRawMiddleware('CUSTOM', (ctx) => {
         ctx.body = 'override'
       })
       // tslint:disable-next-line:max-classes-per-file
       @Controller()
       class TestController {
-        @UseMiddleware(middleware1, middleware2)
+        @UseMiddleware([middleware1, middleware2])
         @Get()
         public test(ctx: Context) {
           ctx.body = 'ok'
         }
       }
       const ctrl = new TestController()
-      const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl, 'test')
+      const middleware: List<MiddlewarePack> = Reflect.getMetadata(MetadataKey.MIDDLEWARE_PACKS, ctrl, 'test')
       // tslint:disable-next-line:no-magic-numbers
       expect(middleware.size).toBe(2)
-      expect(middleware.toArray()).toEqual([middleware1, middleware2])
+      expect(middleware.map((it) => it.middleware).toArray()).toEqual([middleware1, middleware2])
     })
   })
   describe('middleware', () => {
     it('should be mounted in controller', async () => {
-      const middleware1 = Middleware.fromRawMiddleware(async (ctx, next) => {
+      const middleware1 = Middleware.fromRawMiddleware('CUSTOM', async (ctx, next) => {
         ctx.m1 = new Date()
         await new Promise((resolve) => {
           setTimeout(resolve, 1000)
         })
         return next()
       })
-      const middleware2 = Middleware.fromRawMiddleware(async (ctx, next) => {
+      const middleware2 = Middleware.fromRawMiddleware('CUSTOM', async (ctx, next) => {
         ctx.m2 = new Date()
         return next()
       })
       // tslint:disable-next-line:max-classes-per-file
-      @UseMiddleware(middleware1, middleware2)
+      @UseMiddleware([middleware1, middleware2])
       @Controller({ plural: 'tests' })
       class TestController {
         @Get()
@@ -199,14 +206,14 @@ describe('UseMiddleware ', () => {
       expect(Number.parseInt(res2.body, 10) >= 1000).toBeTruthy()
     })
     it('should be mounted in action', async () => {
-      const middleware1 = Middleware.fromRawMiddleware(async (ctx: any, next) => {
+      const middleware1 = Middleware.fromRawMiddleware('CUSTOM', async (ctx: any, next) => {
         ctx.m1 = new Date()
         await new Promise((resolve) => {
           setTimeout(resolve, 1000)
         })
         return next()
       })
-      const middleware2 = Middleware.fromRawMiddleware(async (ctx: any, next) => {
+      const middleware2 = Middleware.fromRawMiddleware('CUSTOM', async (ctx: any, next) => {
         ctx.m2 = new Date()
         return next()
       })

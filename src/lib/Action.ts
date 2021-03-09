@@ -2,7 +2,6 @@ import { List, Map } from 'immutable'
 import { Context, Next } from 'koa'
 import { HttpMethod, HttpStatusCode, MetadataKey, ParamSource } from '../constants'
 import { HttpResponse } from './HttpResponse'
-import { Middleware } from './Middleware'
 import { ParamInfo } from './ParamInfo'
 import { ResponseInfo } from './ResponseInfo'
 import { ControllerModule } from '.'
@@ -17,7 +16,7 @@ import { IncomingFile } from './IncomingFile'
 import { GenericType } from './GenericType'
 import { normalizeHeaderCase } from './utils'
 import mime from 'mime-types'
-import { MiddlewareFilter } from './MiddlewareFilter'
+import { MiddlewarePack } from './MiddlewarePack'
 
 export class ActionExecutor {
   public controller: object
@@ -348,7 +347,7 @@ export class ActionModule {
   public path: string
   public pathRegExp: { regExp: RegExp; params: (string | number)[] }
   public method: HttpMethod
-  public middleware: List<Middleware> = List()
+  public middlewarePacks: List<MiddlewarePack> = List()
   public deprecated: boolean = false
   public version?: string
   public desc?: string
@@ -375,15 +374,9 @@ export class ActionModule {
     this.actionExecutor = new ActionExecutor(this.controllerModule.controller, targetFunction, this.params)
     this.responses = getResponseInfos(controllerModule.controller, targetFunction, actionOwner, genericParams)
     this.summary = actionMetadata.summary
-    const middleware: List<Middleware> =
-      Reflect.getMetadata(MetadataKey.MIDDLEWARE, controllerModule.controller, targetFunction) || List()
-    const middlewareFilters: List<MiddlewareFilter> =
-      Reflect.getMetadata(MetadataKey.MIDDLEWARE_FILTER, controllerModule.controller, targetFunction) || List()
-    const filteredMiddleware = middlewareFilters.reduce(
-      (mw, filter) => filter.filter(mw),
-      controllerModule.middleware.concat(middleware).toArray()
-    )
-    this.middleware = List(filteredMiddleware)
+
+    this.middlewarePacks =
+      Reflect.getMetadata(MetadataKey.MIDDLEWARE_PACKS, controllerModule.controller, targetFunction) || List()
   }
   public getFullPath() {
     const version = this.version ?? this.controllerModule.version ?? ''

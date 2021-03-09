@@ -5,11 +5,22 @@ import { MetadataKey } from '../constants/MetadataKey'
 import { Middleware } from '../lib/Middleware'
 import { getClassInstance } from '../lib/utils'
 import { Constructor } from '../types/Constructor'
-import { Authenticator, Guard } from '../processors'
-import { IMiddleFilterOptions, MiddlewareFilter } from '../lib/MiddlewareFilter'
-
-export function UseMiddleware(...middleware: (Middleware | Constructor<Middleware>)[]) {
+import { Guard } from '../processors'
+import { ModuleContext } from '../lib'
+import { MiddlewarePack } from '../lib/MiddlewarePack'
+export interface IUseMiddlewareOptions {
+  shouldMount?: (moduleContext: ModuleContext) => boolean
+  filter?: (middleware: Middleware) => boolean
+  isPlaceholder?: boolean
+}
+export function UseMiddleware(
+  middleware: (Middleware | Constructor<Middleware>) | (Middleware | Constructor<Middleware>)[],
+  options?: IUseMiddlewareOptions
+) {
   return (...args: any[]) => {
+    if (!Array.isArray(middleware)) {
+      middleware = [middleware]
+    }
     middleware = middleware.map((m) => {
       if (typeof m === 'function') {
         return getClassInstance(m)
@@ -19,59 +30,43 @@ export function UseMiddleware(...middleware: (Middleware | Constructor<Middlewar
         throw TypeError('Invalid middleware type')
       }
     })
-    const newMiddleware = List(middleware)
+    const middlewarePacks = List(middleware.map((m) => new MiddlewarePack(m as Middleware, options)))
     if (args.length === 1) {
       const [constructor] = args
-      const mw: List<any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, constructor.prototype) || List()
-      Reflect.defineMetadata(MetadataKey.MIDDLEWARE, newMiddleware.concat(mw), constructor.prototype)
+      const mwPacks: List<MiddlewarePack> =
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_PACKS, constructor.prototype) || List()
+      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_PACKS, middlewarePacks.concat(mwPacks), constructor.prototype)
     } else {
       const [target, propertyKey] = args
-      const mw: List<any> = Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE, target, propertyKey) || List()
-      Reflect.defineMetadata(MetadataKey.MIDDLEWARE, newMiddleware.concat(mw), target, propertyKey)
+      const mwPacks: List<MiddlewarePack> =
+        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_PACKS, target, propertyKey) || List()
+      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_PACKS, middlewarePacks.concat(mwPacks), target, propertyKey)
     }
   }
 }
 
-export function FilterMiddleware<T extends Middleware = Middleware>(options: {
-  scope?: Constructor<T>
-  include?: IMiddleFilterOptions<T>
-  exclude?: IMiddleFilterOptions<T>
-}) {
-  const filter = new MiddlewareFilter(options)
-  return (...args: any[]) => {
-    if (args.length === 1) {
-      const [constructor] = args
-      const filters: List<MiddlewareFilter> =
-        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_FILTER, constructor.prototype) || List()
-      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), constructor.prototype)
-    } else {
-      const [target, propertyKey] = args
-      const filters: List<MiddlewareFilter> =
-        Reflect.getOwnMetadata(MetadataKey.MIDDLEWARE_FILTER, target, propertyKey) || List()
-      Reflect.defineMetadata(MetadataKey.MIDDLEWARE_FILTER, filters.concat(filter), target, propertyKey)
-    }
+export function UseGuard(
+  guard: Guard | Constructor<Guard> | (Guard | Constructor<Guard>)[],
+  options?: IUseMiddlewareOptions
+) {
+  return UseMiddleware(guard, options)
+}
+
+export function FilterMiddleware(filter: (m: Middleware) => boolean, type: string)
+export function FilterMiddleware(filter: (m: Middleware) => boolean, placeholder?: Middleware)
+export function FilterMiddleware(filter: (m: Middleware) => boolean, option: any) {
+  let m: Middleware
+  if (typeof option === 'string') {
+    const type = option
+    m = new (class extends Middleware {
+      public type = type
+      // tslint:disable-next-line: no-empty
+      public async execute() {}
+    })()
+  } else if (option instanceof Middleware) {
+    m = option
+  } else {
+    throw new Error('the option should be a type string or middleware placeholder object')
   }
-}
-
-export function UseGuards(...guards: (Guard | Constructor<Guard>)[]) {
-  return UseMiddleware(...guards)
-}
-
-export function UseGuard(guard: Guard | Constructor<Guard>) {
-  return UseMiddleware(guard)
-}
-
-export function UseAuthenticator(authenticator: Authenticator) {
-  return UseMiddleware(authenticator)
-}
-
-export function OnlyAuthenticator(authenticator: Authenticator) {
-  return (...args: any[]) => {
-    UseMiddleware(authenticator)(...args)
-    FilterMiddleware({ scope: Authenticator, include: { middleware: [authenticator] } })(...args)
-  }
-}
-
-export function NoAuthenticator() {
-  return FilterMiddleware({ scope: Authenticator, exclude: { type: Authenticator } })
+  return UseMiddleware(m, { filter, isPlaceholder: true })
 }

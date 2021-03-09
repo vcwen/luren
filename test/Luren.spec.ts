@@ -22,10 +22,9 @@ import {
   APITokenAuthenticator,
   HttpAuthenticator,
   UseGuard,
-  FilterMiddleware,
-  Authenticator,
-  Guard,
-  Middleware
+  Middleware,
+  MiddlewareFilter,
+  FilterMiddleware
 } from '../src'
 
 const apiTokenAuth = new APITokenAuthenticator(async (token) => {
@@ -63,7 +62,7 @@ export default class PersonController {
   }
   @Action({ method: HttpMethod.PUT })
   @Response({ type: { criteria: 'object', skip: 'number?' } })
-  @UseMiddleware(Middleware.fromRawMiddleware(bodyParser() as any))
+  @UseMiddleware(Middleware.fromRawMiddleware('CUSTOM', bodyParser() as any))
   public hog(
     @Param({ name: 'filter', in: 'body', type: { criteria: 'object', skip: 'number?', limit: 'number?' }, root: true })
     filter: object
@@ -319,7 +318,7 @@ describe('Luren', () => {
     // await request(app.callback()).get('/anothers/bar').set('access_token', 'test_token').expect(200)
   })
   it('should override authenticators', async () => {
-    const apiTokenAuth = new APITokenAuthenticator(
+    const tokenAuth = new APITokenAuthenticator(
       async (token) => {
         return token === 'test_token'
       },
@@ -332,15 +331,16 @@ describe('Luren', () => {
     const httpAuth = new HttpAuthenticator(async (token) => {
       return token === 'http_token'
     })
+
     // tslint:disable-next-line: max-classes-per-file
-    @FilterMiddleware({ target: Guard, exclude: { type: Authenticator } })
     @Controller()
     class TestController {
+      @FilterMiddleware(MiddlewareFilter.EXCLUSIVE, 'AUTHENTICATOR')
       @Action()
       public foo() {
         return 'ok'
       }
-      @UseGuard(httpAuth)
+      @UseGuard(httpAuth, { filter: MiddlewareFilter.EXCLUSIVE })
       @Action()
       public bar() {
         return 'ok'
@@ -348,7 +348,7 @@ describe('Luren', () => {
     }
     const ctrl = new TestController()
     const app = new Luren()
-    app.useGuards(apiTokenAuth)
+    app.useGuards(tokenAuth)
     app.register(ctrl)
     // tslint:disable-next-line: max-classes-per-file
     @Controller()

@@ -1,18 +1,17 @@
 import { List } from 'immutable'
 import { ActionModule } from './Action'
-import { Middleware } from './Middleware'
+import { MiddlewarePack } from './MiddlewarePack'
 import Path from 'path'
 import { CtrlMetadata } from '../decorators'
 import { MetadataKey } from '../constants'
 import { pathToRegexp } from 'path-to-regexp'
-import { MiddlewareFilter } from './MiddlewareFilter'
 import { AppModule } from './AppModule'
 
 export class ControllerModule {
-  appModule: AppModule
+  public appModule: AppModule
   public controller: object
   public actionModules: List<ActionModule> = List()
-  public middleware: List<Middleware> = List()
+  public middlewarePacks: List<MiddlewarePack> = List()
   public name: string
   public plural?: string
   public prefix: string = ''
@@ -36,13 +35,7 @@ export class ControllerModule {
       end: false
     })
     this.desc = ctrlMetadata.desc
-    const middleware: List<Middleware> = Reflect.getMetadata(MetadataKey.MIDDLEWARE, ctrl) || List()
-    const middlewareFilters: List<MiddlewareFilter> = Reflect.getMetadata(MetadataKey.MIDDLEWARE_FILTER, ctrl) || List()
-    const filteredMiddleware = middlewareFilters.reduce(
-      (mw, filter) => filter.filter(mw),
-      this.appModule.middleware.concat(middleware).toArray()
-    )
-    this.middleware = List(filteredMiddleware)
+    this.middlewarePacks = Reflect.getMetadata(MetadataKey.MIDDLEWARE_PACKS, ctrl) || List()
   }
   public getFullPath() {
     return Path.join(this.prefix, this.version ?? '', this.path)

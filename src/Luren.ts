@@ -15,6 +15,7 @@ import helmet from 'koa-helmet'
 import { AppModule } from './lib/AppModule'
 import { Router } from './lib/Router'
 import { ResponseConverter } from './processors'
+import { MiddlewarePack } from './lib/MiddlewarePack'
 
 const debug = Debug('luren')
 
@@ -99,7 +100,9 @@ export class Luren<StateT = any, CustomT = any> extends Koa<StateT, CustomT> {
         throw TypeError('Invalid middleware type')
       }
     })
-    this._appModule.middleware = this._appModule.middleware.concat(middlewareInstances)
+    this._appModule.middlewarePacks = this._appModule.middlewarePacks.concat(
+      middlewareInstances.map((m) => new MiddlewarePack(m))
+    )
     return this
   }
 
