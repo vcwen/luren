@@ -15,7 +15,7 @@
     "debug": "^4.1.1",
     "decamelize": "^3.2.0",
     "fast-safe-stringify": "^2.0.7",
-    "file-type": "^14.6.2",
+    "file-type": "^16.5.4",
     "formidable": "^1.2.2",
     "globby": "^11.0.0",
     "header-case": "^2.0.3",
